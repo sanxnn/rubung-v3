@@ -10,7 +10,7 @@ class Payment extends Model
     use HasFactory;
     protected $fillable = [
         'order_id', 'midtrans_transaction_id', 'payment_type',
-        'payment_status', 'amount', 'paid_at'
+        'payment_status', 'amount', 'paid_at', 'snap_token'
     ];
     protected $casts = [
         'amount' => 'integer', 'paid_at' => 'datetime'

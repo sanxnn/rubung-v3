@@ -91,37 +91,11 @@
                 <span>Promosi</span>
             </a>
 
-            {{-- Pengiriman (Shipments & Reschedules) --}}
-            <a href=""
-                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition text-sm">
-                <i class="fa-solid fa-truck-fast w-5 text-center"></i>
-                <span>Pengiriman</span>
-            </a>
-
-
-            {{-- Notifikasi --}}
-            <a href=""
-                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition text-sm">
-                <i class="fa-solid fa-bell w-5 text-center"></i>
-                <span>Notifikasi</span>
-            </a>
-
-            <p class="px-3 pt-7 mb-3 text-[10px] font-semibold uppercase tracking-widest text-gray-400">
-                System
-            </p>
-
             {{-- Laporan --}}
             <a href=""
                 class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition text-sm">
                 <i class="fa-solid fa-chart-line w-5 text-center"></i>
                 <span>Laporan</span>
-            </a>
-
-            {{-- Pengaturan --}}
-            <a href=""
-                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition text-sm">
-                <i class="fa-solid fa-gear w-5 text-center"></i>
-                <span>Pengaturan</span>
             </a>
         </nav>
     </div>

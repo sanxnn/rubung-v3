@@ -15,7 +15,7 @@ return new class extends Migration
             $table->id();
             $table->foreignId('order_id')->constrained('orders')->restrictOnDelete()
                 ->comment('Non-null, semua payment terhubung ke order');
-            $table->string('midtrans_transaction_id', 100)->unique();
+            $table->string('midtrans_transaction_id', 100)->unique()->nullable()->change();
             $table->string('payment_type', 50)->comment('gopay, bank_transfer, credit_card, dll');
             $table->string('payment_status', 50)->default('pending')
                 ->comment('pending, success, failed, expire');

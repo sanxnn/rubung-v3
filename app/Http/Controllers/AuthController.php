@@ -86,7 +86,7 @@ class AuthController extends Controller
             unset($validated['password']);
         }
 
-        Auth::user()->update;
+        $admin->update($validated);
 
         return redirect()
             ->route('admin.profile')

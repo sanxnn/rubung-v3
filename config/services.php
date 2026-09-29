@@ -28,6 +28,13 @@ return [
         'region' => env('AWS_DEFAULT_REGION', 'us-east-1'),
     ],
 
+    'rajongkir' => [
+        'api_key' => env('RAJAONGKIR_API_KEY'),
+        'origin_search' => env('RAJAONGKIR_ORIGIN_SEARCH', 'Sumbersari,Jember'),
+        'courier' => env('RAJAONGKIR_COURIER', 'jnt'),
+        'weight' => (int) env('RAJAONGKIR_WEIGHT', 2000),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

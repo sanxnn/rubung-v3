@@ -7,94 +7,316 @@ use Illuminate\Http\Resources\Json\JsonResource;
 
 class OrderResource extends JsonResource
 {
-    public function toArray(Request $request): array
-    {
+    public function toArray(
+        Request $request
+    ): array {
         return [
-            'id' => $this->id,
-            'order_number' => $this->order_number,
+            'id' =>
+                $this->id,
 
-            'status' => $this->status,
+            'order_number' =>
+                $this->order_number,
 
-            'is_custom_order' => $this->isCustomOrder(),
+            'status' =>
+                $this->status,
+
+            'is_custom_order' =>
+                $this->isCustomOrder(),
+
+            /*
+            |--------------------------------------------------------------------------
+            | PRICING
+            |--------------------------------------------------------------------------
+            */
 
             'pricing' => [
-                'subtotal' => $this->subtotal,
-                'discount_date_cantik' => $this->discount_date_cantik,
-                'discount_voucher' => $this->discount_voucher,
-                'total_discount' => $this->total_discount,
-                'shipping_cost' => $this->shipping_cost,
-                'final_amount' => $this->final_amount,
+                'subtotal' =>
+                    $this->subtotal,
+
+                'discount_date_cantik' =>
+                    $this
+                        ->discount_date_cantik,
+
+                'discount_voucher' =>
+                    $this
+                        ->discount_voucher,
+
+                'total_discount' =>
+                    $this
+                        ->total_discount,
+
+                'shipping_cost' =>
+                    $this
+                        ->shipping_cost,
+
+                'final_amount' =>
+                    $this
+                        ->final_amount,
             ],
+
+            /*
+            |--------------------------------------------------------------------------
+            | PROMO
+            |--------------------------------------------------------------------------
+            */
 
             'promo' => [
-                'date_promo' => $this->whenLoaded('datePromo', function () {
-                    return $this->datePromo ? [
-                        'id' => $this->datePromo->id,
-                        'name' => $this->datePromo->name,
-                    ] : null;
-                }),
+                'date_promo' =>
+                    $this->whenLoaded(
+                        'datePromo',
+                        function () {
+                            return $this
+                                ->datePromo
+                                ? [
+                                    'id' =>
+                                        $this
+                                            ->datePromo
+                                            ->id,
 
-                'voucher' => $this->whenLoaded('voucher', function () {
-                    return $this->voucher ? [
-                        'id' => $this->voucher->id,
-                        'code' => $this->voucher->code,
-                    ] : null;
-                }),
+                                    'name' =>
+                                        $this
+                                            ->datePromo
+                                            ->name,
+                                ]
+                                : null;
+                        }
+                    ),
+
+                'voucher' =>
+                    $this->whenLoaded(
+                        'voucher',
+                        function () {
+                            return $this
+                                ->voucher
+                                ? [
+                                    'id' =>
+                                        $this
+                                            ->voucher
+                                            ->id,
+
+                                    'code' =>
+                                        $this
+                                            ->voucher
+                                            ->code,
+                                ]
+                                : null;
+                        }
+                    ),
             ],
+
+            /*
+            |--------------------------------------------------------------------------
+            | SHIPPING
+            |--------------------------------------------------------------------------
+            */
 
             'shipping' => [
-                'courier' => $this->shipping_courier,
-                'resi_number' => $this->resi_number,
-                'cost' => $this->shipping_cost,
+                'courier' =>
+                    $this
+                        ->shipping_courier,
+
+                'resi_number' =>
+                    $this
+                        ->resi_number,
+
+                'cost' =>
+                    $this
+                        ->shipping_cost,
+
+                'weight' =>
+                    2000,
             ],
+
+            /*
+            |--------------------------------------------------------------------------
+            | ADDRESS SNAPSHOT
+            |--------------------------------------------------------------------------
+            */
 
             'address' => [
-                'recipient_name' => $this->snapshot_recipient_name,
-                'phone' => $this->snapshot_phone,
-                'province' => $this->snapshot_province,
-                'city' => $this->snapshot_city,
-                'postal_code' => $this->snapshot_postal_code,
-                'detail' => $this->snapshot_detail,
+                'recipient_name' =>
+                    $this
+                        ->snapshot_recipient_name,
+
+                'phone' =>
+                    $this
+                        ->snapshot_phone,
+
+                'province' =>
+                    $this
+                        ->snapshot_province,
+
+                'city' =>
+                    $this
+                        ->snapshot_city,
+
+                'postal_code' =>
+                    $this
+                        ->snapshot_postal_code,
+
+                'detail' =>
+                    $this
+                        ->snapshot_detail,
             ],
 
-            'notes' => $this->notes,
+            /*
+            |--------------------------------------------------------------------------
+            | NOTES
+            |--------------------------------------------------------------------------
+            */
 
-            'items' => $this->whenLoaded('items', function () {
-                return $this->items->map(function ($item) {
-                    return [
-                        'id' => $item->id,
-                        'product_variant_id' => $item->product_variant_id,
-                        'product_name' => $item->product_name,
-                        'variant_name' => $item->variant_name,
-                        'quantity' => $item->quantity,
-                        'unit_price' => $item->unit_price,
-                        'subtotal' => $item->subtotal,
-                    ];
-                });
-            }),
+            'notes' =>
+                $this->notes,
 
-            'custom_order' => $this->whenLoaded('customOrder', function () {
-                return $this->customOrder ? [
-                    'id' => $this->customOrder->id,
-                    'reference_number' => $this->customOrder->reference_number,
-                    'status' => $this->customOrder->status,
-                    'description' => $this->customOrder->description,
-                    'estimated_price' => $this->customOrder->estimated_price,
-                    'estimated_time' => $this->customOrder->estimated_time,
-                ] : null;
-            }),
+            /*
+            |--------------------------------------------------------------------------
+            | ITEMS
+            |--------------------------------------------------------------------------
+            */
 
-            'payment' => $this->whenLoaded('payment', function () {
-                return $this->payment ? [
-                    'payment_type' => $this->payment->payment_type,
-                    'payment_status' => $this->payment->payment_status,
-                    'amount' => $this->payment->amount,
-                    'paid_at' => $this->payment->paid_at,
-                ] : null;
-            }),
+            'items' =>
+                $this->whenLoaded(
+                    'items',
+                    function () {
+                        return $this
+                            ->items
+                            ->map(
+                                function (
+                                    $item
+                                ) {
+                                    return [
+                                        'id' =>
+                                            $item->id,
 
-            'created_at' => $this->created_at,
-            'updated_at' => $this->updated_at,
+                                        'product_variant_id' =>
+                                            $item
+                                                ->product_variant_id,
+
+                                        'product_name' =>
+                                            $item
+                                                ->product_name,
+
+                                        'variant_name' =>
+                                            $item
+                                                ->variant_name,
+
+                                        'quantity' =>
+                                            $item
+                                                ->quantity,
+
+                                        'unit_price' =>
+                                            $item
+                                                ->unit_price,
+
+                                        'subtotal' =>
+                                            $item
+                                                ->subtotal,
+                                    ];
+                                }
+                            );
+                    }
+                ),
+
+            /*
+            |--------------------------------------------------------------------------
+            | CUSTOM ORDER
+            |--------------------------------------------------------------------------
+            */
+
+            'custom_order' =>
+                $this->whenLoaded(
+                    'customOrder',
+                    function () {
+                        return $this
+                            ->customOrder
+                            ? [
+                                'id' =>
+                                    $this
+                                        ->customOrder
+                                        ->id,
+
+                                'reference_number' =>
+                                    $this
+                                        ->customOrder
+                                        ->reference_number,
+
+                                'status' =>
+                                    $this
+                                        ->customOrder
+                                        ->status,
+
+                                'description' =>
+                                    $this
+                                        ->customOrder
+                                        ->description,
+
+                                'estimated_price' =>
+                                    $this
+                                        ->customOrder
+                                        ->estimated_price,
+
+                                'estimated_time' =>
+                                    $this
+                                        ->customOrder
+                                        ->estimated_time,
+                            ]
+                            : null;
+                    }
+                ),
+
+            /*
+            |--------------------------------------------------------------------------
+            | PAYMENT
+            |--------------------------------------------------------------------------
+            */
+
+            'payment' =>
+                $this->whenLoaded(
+                    'payment',
+                    function () {
+                        return $this
+                            ->payment
+                            ? [
+                                'payment_type' =>
+                                    $this
+                                        ->payment
+                                        ->payment_type,
+
+                                'payment_status' =>
+                                    $this
+                                        ->payment
+                                        ->payment_status,
+
+                                'amount' =>
+                                    $this
+                                        ->payment
+                                        ->amount,
+
+                                'snap_token' =>
+                                    $this
+                                        ->payment
+                                        ->snap_token,
+
+                                'paid_at' =>
+                                    $this
+                                        ->payment
+                                        ->paid_at,
+                            ]
+                            : null;
+                    }
+                ),
+
+            /*
+            |--------------------------------------------------------------------------
+            | TIMESTAMPS
+            |--------------------------------------------------------------------------
+            */
+
+            'created_at' =>
+                $this->created_at,
+
+            'updated_at' =>
+                $this->updated_at,
         ];
     }
 }
