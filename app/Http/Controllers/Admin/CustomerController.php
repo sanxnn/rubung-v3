@@ -56,22 +56,22 @@ class CustomerController extends Controller
 
 
     // Menyimpan pelanggan baru
-    public function store(Request $request)
-    {
-        $validated = $request->validate([
-            'name' => 'required|string|max:255',
-            'email' => 'required|string|email|max:255|unique:users,email',
-            'phone' => 'nullable|string|max:20',
-            'password' => 'required|string|min:8|confirmed',
-        ]);
+    // public function store(Request $request)
+    // {
+    //     $validated = $request->validate([
+    //         'name' => 'required|string|max:255',
+    //         'email' => 'required|string|email|max:255|unique:users,email',
+    //         'phone' => 'nullable|string|max:20',
+    //         'password' => 'required|string|min:8|confirmed',
+    //     ]);
 
-        $validated['password'] = Hash::make($validated['password']);
-        $validated['role'] = 'customer';
+    //     $validated['password'] = Hash::make($validated['password']);
+    //     $validated['role'] = 'customer';
 
-        User::create($validated);
+    //     User::create($validated);
 
-        return redirect()->route('customers.index')->with('success', 'Pelanggan berhasil ditambahkan.');
-    }
+    //     return redirect()->route('customers.index')->with('success', 'Pelanggan berhasil ditambahkan.');
+    // }
 
 
     // Memperbarui data pelanggan

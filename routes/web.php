@@ -67,7 +67,7 @@ Route::middleware(['auth', 'role'])->group(function () {
         Route::delete('/products/bundles/{product}', [ProductController::class, 'destroyBundle'])->name('bundles.destroy');
 
         Route::get('/customer', [CustomerController::class, 'index'])->name('customers.index');
-        Route::post('/customer', [CustomerController::class, 'store'])->name('customers.store');
+        // Route::post('/customer', [CustomerController::class, 'store'])->name('customers.store');
         Route::put('/customer/{customer}', [CustomerController::class, 'update'])->name('customers.update');
         Route::delete('/customer/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
 

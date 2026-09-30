@@ -11,11 +11,11 @@
             </div>
 
             {{-- TOMBOL CREATE --}}
-            <button type="button" onclick="MicroModal.show('modal-create-customer')"
+            {{-- <button type="button" onclick="MicroModal.show('modal-create-customer')"
                 class="inline-flex items-center justify-center gap-2 px-4 py-2.5 rounded-xl bg-blue-600 hover:bg-blue-700 text-white font-semibold text-sm shadow-sm hover:shadow-md transition-all duration-200">
                 <i class="fa-solid fa-plus"></i>
                 <span>Tambah Pelanggan</span>
-            </button>
+            </button> --}}
         </div>
 
         {{-- Alert Section --}}
@@ -232,7 +232,7 @@
         {{-- ========================================================= --}}
         {{-- MODAL 1: CREATE CUSTOMER --}}
         {{-- ========================================================= --}}
-        <div class="modal micromodal-slide" id="modal-create-customer" aria-hidden="true">
+        {{-- <div class="modal micromodal-slide" id="modal-create-customer" aria-hidden="true">
             <div class="modal__overlay" tabindex="-1" data-micromodal-close>
                 <div class="modal__container w-full max-w-md bg-white rounded-2xl shadow-xl" role="dialog" aria-modal="true" aria-labelledby="modal-create-title">
                     <header class="p-6 border-b border-gray-100 flex justify-between items-start">
@@ -281,7 +281,7 @@
                     </form>
                 </div>
             </div>
-        </div>
+        </div> --}}
 
         {{-- ========================================================= --}}
         {{-- MODAL 2, 3, 4: DETAIL, EDIT & DELETE (Generated per Customer) --}}
