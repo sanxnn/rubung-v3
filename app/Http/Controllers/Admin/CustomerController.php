@@ -80,10 +80,20 @@ class CustomerController extends Controller
         abort_if($customer->role !== 'customer', 404);
 
         $validated = $request->validate([
-            'name' => 'required|string|max:255',
+            'name' => [
+                'required',
+                'string',
+                'max:255',
+                'regex:/^[A-Za-z\s-]+$/',
+            ],
+
             'email' => 'required|string|email|max:255|unique:users,email,' . $customer->id,
+
             'phone' => 'nullable|string|max:20',
+
             'password' => 'nullable|string|min:8|confirmed',
+        ], [
+            'name.regex' => 'Nama hanya boleh menggunakan huruf, spasi, dan tanda strip (-). Angka dan simbol lainnya tidak diperbolehkan.',
         ]);
 
         // Hanya update password jika diisi
@@ -95,7 +105,7 @@ class CustomerController extends Controller
 
         $customer->update($validated);
 
-        return redirect()->route('customers.index')->with('success', 'Data pelanggan berhasil diperbarui.');
+        return redirect()->route('admin.customers.index')->with('success', 'Data pelanggan berhasil diperbarui.');
     }
 
     // Menghapus pelanggan
@@ -104,6 +114,6 @@ class CustomerController extends Controller
         abort_if($customer->role !== 'customer', 404);
         $customer->delete();
 
-        return redirect()->route('customers.index')->with('success', 'Pelanggan berhasil dihapus.');
+        return redirect()->route('admin.customers.index')->with('success', 'Pelanggan berhasil dihapus.');
     }
 }
