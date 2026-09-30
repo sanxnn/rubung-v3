@@ -41,6 +41,7 @@ class CategoryController extends Controller
                 'string',
                 'max:100',
                 'regex:/^[A-Za-z\s()-]+$/',
+                Rule::unique('categories', 'name'),
             ],
             'slug' => [
                 'nullable',
@@ -58,6 +59,7 @@ class CategoryController extends Controller
                 'boolean',
             ],
         ], [
+            'name.unique' => 'Nama sudah digunakan.',
             'name.required' => 'Nama kategori wajib diisi.',
             'name.string' => 'Nama kategori harus berupa teks.',
             'name.max' => 'Nama kategori tidak boleh lebih dari 100 karakter.',
@@ -96,6 +98,7 @@ class CategoryController extends Controller
                 'string',
                 'max:100',
                 'regex:/^[A-Za-z\s()-]+$/',
+                Rule::unique('categories', 'name')->ignore($category->id),
             ],
             'slug' => [
                 'nullable',
@@ -114,6 +117,7 @@ class CategoryController extends Controller
                 'boolean',
             ],
         ], [
+            'name.unique' => 'Nama sudah digunakan.',
             'name.required' => 'Nama kategori wajib diisi.',
             'name.string' => 'Nama kategori harus berupa teks.',
             'name.max' => 'Nama kategori tidak boleh lebih dari 100 karakter.',
