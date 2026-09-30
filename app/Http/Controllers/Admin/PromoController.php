@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Http\Controllers\Controller;
 use App\Models\DatePromo;
 use App\Models\Voucher;
+use Carbon\Carbon;
 use Illuminate\Http\Request;
 use Illuminate\Validation\Rule;
 
@@ -33,11 +34,15 @@ class PromoController extends Controller
                 'required',
                 'string',
                 'max:100',
+                'regex:/^[A-Za-z0-9\s.-]+$/',
+                Rule::unique('date_promos', 'name'),
             ],
+
             'discount_type' => [
                 'required',
                 Rule::in(['percentage', 'fixed']),
             ],
+
             'discount_value' => [
                 'required',
                 'integer',
@@ -51,19 +56,32 @@ class PromoController extends Controller
                     }
                 },
             ],
+
             'start_datetime' => [
                 'required',
                 'date',
+                'after_or_equal:now',
             ],
+
             'end_datetime' => [
                 'required',
                 'date',
                 'after_or_equal:start_datetime',
+                'after_or_equal:now',
             ],
+
             'is_active' => [
                 'nullable',
                 'boolean',
             ],
+        ], [
+            'name.regex' => 'Nama promo hanya boleh menggunakan huruf, angka, spasi, titik (.) dan tanda strip (-).',
+
+            'name.unique' => 'Nama promo sudah digunakan.',
+
+            'start_datetime.after_or_equal' => 'Tanggal mulai promo tidak boleh berada di masa lalu.',
+
+            'end_datetime.after_or_equal' => 'Tanggal selesai promo tidak boleh berada di masa lalu.',
         ]);
 
         DatePromo::create([
@@ -88,11 +106,15 @@ class PromoController extends Controller
                 'required',
                 'string',
                 'max:100',
+                'regex:/^[A-Za-z0-9\s.-]+$/',
+                Rule::unique('date_promos', 'name')->ignore($datePromo->id),
             ],
+
             'discount_type' => [
                 'required',
                 Rule::in(['percentage', 'fixed']),
             ],
+
             'discount_value' => [
                 'required',
                 'integer',
@@ -106,19 +128,29 @@ class PromoController extends Controller
                     }
                 },
             ],
+
             'start_datetime' => [
                 'required',
                 'date',
             ],
+
             'end_datetime' => [
                 'required',
                 'date',
                 'after_or_equal:start_datetime',
+                'after_or_equal:now',
             ],
+
             'is_active' => [
                 'nullable',
                 'boolean',
             ],
+        ], [
+            'name.regex' => 'Nama promo hanya boleh menggunakan huruf, angka, spasi, titik (.) dan tanda strip (-).',
+
+            'name.unique' => 'Nama promo sudah digunakan.',
+
+            'end_datetime.after_or_equal' => 'Tanggal selesai promo tidak boleh berada di masa lalu.',
         ]);
 
         $datePromo->update([
@@ -158,6 +190,7 @@ class PromoController extends Controller
         );
     }
 
+
     public function storeVoucher(Request $request)
     {
         $validated = $request->validate([
@@ -166,12 +199,14 @@ class PromoController extends Controller
                 'string',
                 'max:50',
                 'regex:/^[A-Za-z0-9_-]+$/',
-                'unique:vouchers,code',
+                Rule::unique('vouchers', 'code'),
             ],
+
             'discount_type' => [
                 'required',
                 Rule::in(['percentage', 'fixed']),
             ],
+
             'discount_value' => [
                 'required',
                 'integer',
@@ -185,35 +220,75 @@ class PromoController extends Controller
                     }
                 },
             ],
+
             'min_purchase' => [
                 'nullable',
                 'integer',
                 'min:0',
             ],
+
             'max_discount' => [
                 'nullable',
                 'integer',
                 'min:1',
                 'required_if:discount_type,percentage',
             ],
+
             'usage_limit' => [
                 'nullable',
                 'integer',
                 'min:1',
             ],
+
             'start_date' => [
                 'required',
                 'date',
+                'after_or_equal:today',
             ],
+
             'end_date' => [
                 'required',
                 'date',
                 'after_or_equal:start_date',
+                'after_or_equal:today',
             ],
+
             'is_active' => [
                 'nullable',
                 'boolean',
             ],
+        ], [
+            'code.required' => 'Kode voucher wajib diisi.',
+            'code.max' => 'Kode voucher tidak boleh lebih dari 50 karakter.',
+            'code.regex' => 'Kode voucher hanya boleh menggunakan huruf, angka, garis bawah (_) dan tanda strip (-).',
+            'code.unique' => 'Kode voucher sudah digunakan.',
+
+            'discount_type.required' => 'Jenis diskon wajib dipilih.',
+            'discount_type.in' => 'Jenis diskon tidak valid.',
+
+            'discount_value.required' => 'Nilai diskon wajib diisi.',
+            'discount_value.integer' => 'Nilai diskon harus berupa angka.',
+            'discount_value.min' => 'Nilai diskon minimal 1.',
+
+            'min_purchase.integer' => 'Minimal pembelian harus berupa angka.',
+            'min_purchase.min' => 'Minimal pembelian tidak boleh negatif.',
+
+            'max_discount.required_if' => 'Maksimal diskon wajib diisi untuk diskon persentase.',
+            'max_discount.integer' => 'Maksimal diskon harus berupa angka.',
+            'max_discount.min' => 'Maksimal diskon minimal 1.',
+
+            'usage_limit.integer' => 'Batas penggunaan harus berupa angka.',
+            'usage_limit.min' => 'Batas penggunaan minimal 1.',
+
+            'start_date.required' => 'Tanggal mulai wajib diisi.',
+            'start_date.date' => 'Format tanggal mulai tidak valid.',
+            'start_date.after_or_equal' => 'Tanggal mulai voucher tidak boleh berada di masa lalu.',
+
+            'end_date.required' => 'Tanggal selesai wajib diisi.',
+            'end_date.date' => 'Format tanggal selesai tidak valid.',
+            'end_date.after_or_equal' => 'Tanggal selesai voucher tidak boleh sebelum tanggal mulai atau sudah lewat.',
+
+            'is_active.boolean' => 'Status voucher tidak valid.',
         ]);
 
         Voucher::create([
@@ -248,10 +323,12 @@ class PromoController extends Controller
                 Rule::unique('vouchers', 'code')
                     ->ignore($voucher->id),
             ],
+
             'discount_type' => [
                 'required',
                 Rule::in(['percentage', 'fixed']),
             ],
+
             'discount_value' => [
                 'required',
                 'integer',
@@ -265,35 +342,73 @@ class PromoController extends Controller
                     }
                 },
             ],
+
             'min_purchase' => [
                 'nullable',
                 'integer',
                 'min:0',
             ],
+
             'max_discount' => [
                 'nullable',
                 'integer',
                 'min:1',
                 'required_if:discount_type,percentage',
             ],
+
             'usage_limit' => [
                 'nullable',
                 'integer',
                 'min:1',
             ],
+
             'start_date' => [
                 'required',
                 'date',
             ],
+
             'end_date' => [
                 'required',
                 'date',
                 'after_or_equal:start_date',
+                'after_or_equal:today',
             ],
+
             'is_active' => [
                 'nullable',
                 'boolean',
             ],
+        ], [
+            'code.required' => 'Kode voucher wajib diisi.',
+            'code.max' => 'Kode voucher tidak boleh lebih dari 50 karakter.',
+            'code.regex' => 'Kode voucher hanya boleh menggunakan huruf, angka, garis bawah (_) dan tanda strip (-).',
+            'code.unique' => 'Kode voucher sudah digunakan.',
+
+            'discount_type.required' => 'Jenis diskon wajib dipilih.',
+            'discount_type.in' => 'Jenis diskon tidak valid.',
+
+            'discount_value.required' => 'Nilai diskon wajib diisi.',
+            'discount_value.integer' => 'Nilai diskon harus berupa angka.',
+            'discount_value.min' => 'Nilai diskon minimal 1.',
+
+            'min_purchase.integer' => 'Minimal pembelian harus berupa angka.',
+            'min_purchase.min' => 'Minimal pembelian tidak boleh negatif.',
+
+            'max_discount.required_if' => 'Maksimal diskon wajib diisi untuk diskon persentase.',
+            'max_discount.integer' => 'Maksimal diskon harus berupa angka.',
+            'max_discount.min' => 'Maksimal diskon minimal 1.',
+
+            'usage_limit.integer' => 'Batas penggunaan harus berupa angka.',
+            'usage_limit.min' => 'Batas penggunaan minimal 1.',
+
+            'start_date.required' => 'Tanggal mulai wajib diisi.',
+            'start_date.date' => 'Format tanggal mulai tidak valid.',
+
+            'end_date.required' => 'Tanggal selesai wajib diisi.',
+            'end_date.date' => 'Format tanggal selesai tidak valid.',
+            'end_date.after_or_equal' => 'Tanggal selesai voucher tidak boleh sebelum tanggal mulai atau sudah lewat.',
+
+            'is_active.boolean' => 'Status voucher tidak valid.',
         ]);
 
         $voucher->update([
