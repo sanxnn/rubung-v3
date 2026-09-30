@@ -28,7 +28,7 @@ class ProductVariantController extends Controller
                 'required',
                 'string',
                 'max:100',
-                'regex:/^[A-Za-z\s()-]+$/',
+                'regex:/^[A-Za-z0-9\s()-]+$/',
                 Rule::unique('product_variants', 'name')
                     ->where('product_id', $product->id),
             ],
@@ -42,7 +42,7 @@ class ProductVariantController extends Controller
             'price' => 'required|integer|min:0',
             'stock' => 'required|integer|min:0',
         ], [
-            'name.regex' => 'Nama varian hanya boleh menggunakan huruf, spasi, tanda kurung ( ) dan tanda strip (-). Angka dan simbol lainnya tidak diperbolehkan.',
+            'name.regex' => 'Nama varian hanya boleh menggunakan huruf, angka, spasi, tanda kurung ( ) dan tanda strip (-). Angka dan simbol lainnya tidak diperbolehkan.',
             'name.unique' => 'Nama varian sudah digunakan.',
             'name.required' => 'Nama varian wajib diisi.',
             'sku.required' => 'SKU wajib diisi.',
@@ -129,7 +129,7 @@ class ProductVariantController extends Controller
                 'required',
                 'string',
                 'max:100',
-                'regex:/^[A-Za-z\s()-]+$/',
+                'regex:/^[A-Za-z0-9\s()-]+$/',
                 Rule::unique('product_variants', 'name')
                     ->where('product_id', $product->id)
                     ->ignore($variant->id),
@@ -145,7 +145,7 @@ class ProductVariantController extends Controller
             'price' => 'required|integer|min:0',
             'stock' => 'required|integer|min:0',
         ], [
-            'name.regex' => 'Nama varian hanya boleh menggunakan huruf, spasi, tanda kurung ( ) dan tanda strip (-). Angka dan simbol lainnya tidak diperbolehkan.',
+            'name.regex' => 'Nama varian hanya boleh menggunakan huruf, angka, spasi, tanda kurung ( ) dan tanda strip (-). Angka dan simbol lainnya tidak diperbolehkan.',
             'name.unique' => 'Nama varian sudah digunakan.',
             'name.required' => 'Nama varian wajib diisi.',
             'sku.required' => 'SKU wajib diisi.',
