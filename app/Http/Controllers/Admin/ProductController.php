@@ -41,11 +41,13 @@ class ProductController extends Controller
         $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
             'subcategory_id' => 'nullable|exists:subcategories,id',
-            'name' => 'required|string|max:150',
+            'name' => ['required', 'string', 'max:150', 'regex:/^[A-Za-z\s()-]+$/', Rule::unique('products', 'name')],
             'slug' => 'nullable|string|max:150|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/|unique:products,slug',
             'description' => 'nullable|string|max:1000',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ], [
+            'name.regex' => 'Nama produk hanya boleh menggunakan huruf, spasi, tanda kurung ( ) dan tanda strip (-). Angka dan simbol lainnya tidak diperbolehkan.',
+            'name.unique' => 'Nama sudah digunakan.',
             'category_id.required' => 'Kategori wajib dipilih.',
             'name.required' => 'Nama produk wajib diisi.',
             'slug.regex' => 'Slug hanya boleh berisi huruf kecil, angka, dan tanda strip (-).',
@@ -84,11 +86,13 @@ class ProductController extends Controller
         $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
             'subcategory_id' => 'nullable|exists:subcategories,id',
-            'name' => 'required|string|max:150',
+            'name' => ['required', 'string', 'max:150', 'regex:/^[A-Za-z\s()-]+$/', Rule::unique('products', 'name')->ignore($product->id)],
             'slug' => ['nullable', 'string', 'max:150', 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/', Rule::unique('products', 'slug')->ignore($product->id)],
             'description' => 'nullable|string|max:1000',
             'image' => 'nullable|image|mimes:jpeg,png,jpg,webp|max:2048',
         ], [
+            'name.regex' => 'Nama produk hanya boleh menggunakan huruf, spasi, tanda kurung ( ) dan tanda strip (-). Angka dan simbol lainnya tidak diperbolehkan.',
+            'name.unique' => 'Nama sudah digunakan.',
             'category_id.required' => 'Kategori wajib dipilih.',
             'name.required' => 'Nama produk wajib diisi.',
             'slug.regex' => 'Slug hanya boleh berisi huruf kecil, angka, dan tanda strip (-).',
@@ -199,7 +203,7 @@ class ProductController extends Controller
 
         $requestData = $request->all();
 
-    $cleanComponents = [];
+        $cleanComponents = [];
 
         if (isset($requestData['components']) && is_array($requestData['components'])) {
             foreach ($requestData['components'] as $component) {
@@ -218,7 +222,13 @@ class ProductController extends Controller
         $request->replace($requestData);
 
         $validated = $request->validate([
-            'name' => 'required|string|max:150',
+            'name' => [
+                'required',
+                'string',
+                'max:150',
+                'regex:/^[A-Za-z\s()-]+$/',
+                Rule::unique('products', 'name'),
+            ],
 
             'slug' => [
                 'nullable',
@@ -265,6 +275,12 @@ class ProductController extends Controller
                 'min:1',
             ],
         ], [
+            'name.regex' =>
+                'Nama paket hanya boleh menggunakan huruf, spasi, tanda kurung ( ) dan tanda strip (-). Angka dan simbol lainnya tidak diperbolehkan.',
+
+            'name.unique' =>
+                'Nama sudah digunakan.',
+
             'name.required' =>
                 'Nama paket wajib diisi.',
 
@@ -444,7 +460,13 @@ class ProductController extends Controller
         $request->replace($requestData);
 
         $validated = $request->validate([
-            'name' => 'required|string|max:150',
+            'name' => [
+                'required',
+                'string',
+                'max:150',
+                'regex:/^[A-Za-z\s()-]+$/',
+                Rule::unique('products', 'name')->ignore($product->id),
+            ],
 
             'slug' => [
                 'nullable',
@@ -494,6 +516,42 @@ class ProductController extends Controller
                 'integer',
                 'min:1',
             ],
+        ], [
+            'name.required' => 'Nama paket wajib diisi.',
+            'name.max' => 'Nama paket tidak boleh lebih dari 150 karakter.',
+            'name.regex' => 'Nama paket hanya boleh menggunakan huruf, spasi, tanda kurung ( ) dan tanda strip (-). Angka dan simbol lainnya tidak diperbolehkan.',
+            'name.unique' => 'Nama sudah digunakan.',
+
+            'slug.regex' => 'Slug hanya boleh berisi huruf kecil, angka, dan tanda strip (-).',
+            'slug.max' => 'Slug tidak boleh lebih dari 150 karakter.',
+            'slug.unique' => 'Slug ini sudah digunakan oleh produk lain.',
+
+            'description.max' => 'Deskripsi tidak boleh lebih dari 1000 karakter.',
+
+            'image.image' => 'File yang diunggah harus berupa gambar.',
+            'image.mimes' => 'Format gambar harus jpeg, png, jpg, atau webp.',
+            'image.max' => 'Ukuran gambar maksimal 2MB.',
+
+            'bundle_sku.required' => 'SKU paket wajib diisi.',
+            'bundle_sku.max' => 'SKU paket tidak boleh lebih dari 50 karakter.',
+            'bundle_sku.regex' => 'SKU hanya boleh menggunakan huruf besar, angka, dan tanda strip (-).',
+            'bundle_sku.unique' => 'SKU paket sudah digunakan.',
+
+            'bundle_price.required' => 'Harga paket wajib diisi.',
+            'bundle_price.integer' => 'Harga paket harus berupa angka.',
+            'bundle_price.min' => 'Harga paket tidak boleh negatif.',
+
+            'components.required' => 'Paket wajib memiliki minimal 1 komponen.',
+            'components.array' => 'Format komponen paket tidak valid.',
+            'components.min' => 'Paket wajib memiliki minimal 1 komponen.',
+
+            'components.*.variant_id.required' => 'Komponen wajib dipilih.',
+            'components.*.variant_id.integer' => 'Komponen tidak valid.',
+            'components.*.variant_id.exists' => 'Komponen yang dipilih tidak ditemukan.',
+
+            'components.*.quantity.required' => 'Jumlah komponen wajib diisi.',
+            'components.*.quantity.integer' => 'Jumlah komponen harus berupa angka.',
+            'components.*.quantity.min' => 'Jumlah komponen minimal 1.',
         ]);
 
         $componentIds = collect($validated['components'])->pluck('variant_id');

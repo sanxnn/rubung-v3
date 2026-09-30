@@ -24,7 +24,14 @@ class ProductVariantController extends Controller
     public function store(Request $request, Product $product)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:100',
+            'name' => [
+                'required',
+                'string',
+                'max:100',
+                'regex:/^[A-Za-z\s()-]+$/',
+                Rule::unique('product_variants', 'name')
+                    ->where('product_id', $product->id),
+            ],
             'sku' => [
                 'required',
                 'string',
@@ -35,6 +42,8 @@ class ProductVariantController extends Controller
             'price' => 'required|integer|min:0',
             'stock' => 'required|integer|min:0',
         ], [
+            'name.regex' => 'Nama varian hanya boleh menggunakan huruf, spasi, tanda kurung ( ) dan tanda strip (-). Angka dan simbol lainnya tidak diperbolehkan.',
+            'name.unique' => 'Nama varian sudah digunakan.',
             'name.required' => 'Nama varian wajib diisi.',
             'sku.required' => 'SKU wajib diisi.',
             'sku.regex' => 'SKU hanya boleh mengandung huruf besar, angka, dan tanda strip (-).',
@@ -116,7 +125,15 @@ class ProductVariantController extends Controller
         }
 
         $validated = $request->validate([
-            'name' => 'required|string|max:100',
+            'name' => [
+                'required',
+                'string',
+                'max:100',
+                'regex:/^[A-Za-z\s()-]+$/',
+                Rule::unique('product_variants', 'name')
+                    ->where('product_id', $product->id)
+                    ->ignore($variant->id),
+            ],
             'sku' => [
                 'required',
                 'string',
@@ -128,6 +145,8 @@ class ProductVariantController extends Controller
             'price' => 'required|integer|min:0',
             'stock' => 'required|integer|min:0',
         ], [
+            'name.regex' => 'Nama varian hanya boleh menggunakan huruf, spasi, tanda kurung ( ) dan tanda strip (-). Angka dan simbol lainnya tidak diperbolehkan.',
+            'name.unique' => 'Nama varian sudah digunakan.',
             'name.required' => 'Nama varian wajib diisi.',
             'sku.required' => 'SKU wajib diisi.',
             'sku.regex' => 'SKU hanya boleh mengandung huruf besar, angka, dan tanda strip (-).',
