@@ -73,6 +73,7 @@ class AuthController extends Controller
                 'nullable',
                 'string',
                 'max:20',
+                'regex:/^[0-9]+$/',
             ],
 
             'password' => [
@@ -83,6 +84,7 @@ class AuthController extends Controller
             ],
         ], [
             'name.regex' => "Nama hanya boleh menggunakan huruf, spasi, tanda strip (-), dan apostrof ('). Angka dan simbol lainnya tidak diperbolehkan.",
+            'phone.regex' => 'Nomor telepon hanya boleh menggunakan angka.',
         ]);
 
         if (empty($validated['password'])) {
