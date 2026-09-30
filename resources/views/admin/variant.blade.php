@@ -143,7 +143,7 @@
                         </div>
                         <div class="grid grid-cols-2 gap-4">
                             <div>
-                                <label class="block text-xs font-bold text-gray-500 mb-1 uppercase">SKU <span
+                                <label class="block text-xs font-bold text-gray-500 mb-1">SKU <span
                                         class="text-red-500">*</span></label>
                                 <input type="text" name="sku" required
                                     class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm font-mono uppercase outline-none focus:border-[#F4C430] focus:ring-2 focus:ring-yellow-100"
