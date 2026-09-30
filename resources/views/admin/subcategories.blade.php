@@ -30,6 +30,20 @@
             </div>
         @endif
 
+        @if ($errors->any())
+            <div class="mb-6 rounded-xl border border-red-200 bg-red-50 p-4 shadow-sm flex items-start gap-3">
+                <i class="fa-solid fa-triangle-exclamation mt-0.5 text-lg text-red-600"></i>
+                <div class="flex-1">
+                    <p class="text-sm font-bold text-red-800 mb-1">Terjadi kesalahan:</p>
+                    <ul class="list-disc list-inside text-sm text-red-700 space-y-1">
+                        @foreach ($errors->all() as $error)
+                            <li>{{ $error }}</li>
+                        @endforeach
+                    </ul>
+                </div>
+            </div>
+        @endif
+
         {{-- Table --}}
         <div class="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
             <table class="w-full text-left">
@@ -118,7 +132,7 @@
                                 placeholder="Kosongkan untuk generate otomatis">
                         </div>
 
- 
+
                         <footer class="pt-4 flex gap-3">
                             <button type="button" data-micromodal-close
                                 class="flex-1 py-3 bg-gray-100 text-gray-600 rounded-xl font-bold hover:bg-gray-200">Batal</button>
@@ -141,8 +155,9 @@
                                 <i class="fa-solid fa-xmark text-lg"></i>
                             </button>
                         </header>
-                        <form action="{{ route('admin.subcategories.update', ['category' => $category, 'subcategory' => $sub]) }}" method="POST"
-                            class="p-6 space-y-5">
+                        <form
+                            action="{{ route('admin.subcategories.update', ['category' => $category, 'subcategory' => $sub]) }}"
+                            method="POST" class="p-6 space-y-5">
                             @csrf
                             @method('PUT')
                             <div>
@@ -186,8 +201,9 @@
                             <p class="text-sm text-gray-500">Subkategori <b>{{ $sub->name }}</b> akan dihapus permanen.
                             </p>
                         </div>
-                        <form action="{{ route('admin.subcategories.destroy', ['category' => $category, 'subcategory' => $sub]) }}" method="POST"
-                            class="p-6 pt-0 flex gap-3">
+                        <form
+                            action="{{ route('admin.subcategories.destroy', ['category' => $category, 'subcategory' => $sub]) }}"
+                            method="POST" class="p-6 pt-0 flex gap-3">
                             @csrf
                             @method('DELETE')
                             <button type="button" data-micromodal-close

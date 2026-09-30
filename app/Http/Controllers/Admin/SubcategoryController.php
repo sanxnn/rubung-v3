@@ -19,14 +19,12 @@ class SubcategoryController extends Controller
         $validated = $request->validate([
             'name' => ['required', 'string', 'max:100', 'regex:/^[A-Za-z\s()-]+$/'],
             'slug' => 'nullable|string|max:100|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
-            'description' => 'nullable|string|max:500',
         ], [
             'name.regex' => 'Nama subkategori hanya boleh menggunakan huruf, spasi, tanda kurung ( ) dan tanda strip (-). Angka dan simbol lainnya tidak diperbolehkan.',
             'name.required' => 'Nama subkategori wajib diisi.',
             'name.max' => 'Nama subkategori tidak boleh lebih dari 100 karakter.',
             'slug.regex' => 'Format slug tidak valid. Hanya boleh menggunakan huruf kecil, angka, dan tanda strip (-).',
             'slug.max' => 'Slug tidak boleh lebih dari 100 karakter.',
-            'description.max' => 'Deskripsi tidak boleh lebih dari 500 karakter.',
         ]);
 
         $slug = $this->processSlug(
