@@ -59,6 +59,7 @@ class AuthController extends Controller
                 'required',
                 'string',
                 'max:255',
+                'regex:/^[A-Za-z\s\'-]+$/',
             ],
 
             'email' => [
@@ -80,6 +81,8 @@ class AuthController extends Controller
                 'min:8',
                 'confirmed',
             ],
+        ], [
+            'name.regex' => "Nama hanya boleh menggunakan huruf, spasi, tanda strip (-), dan apostrof ('). Angka dan simbol lainnya tidak diperbolehkan.",
         ]);
 
         if (empty($validated['password'])) {
