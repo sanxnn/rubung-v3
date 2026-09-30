@@ -23,8 +23,8 @@ class CategoryController extends Controller
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
                 $q->where('name', 'like', '%' . $request->search . '%')
-                  ->orWhere('description', 'like', '%' . $request->search . '%')
-                  ->orWhere('slug', 'like', '%' . $request->search . '%');
+                    ->orWhere('description', 'like', '%' . $request->search . '%')
+                    ->orWhere('slug', 'like', '%' . $request->search . '%');
             });
         }
 
@@ -36,20 +36,45 @@ class CategoryController extends Controller
     public function store(Request $request)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:100',
-            'slug' => 'nullable|string|max:100|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
-            'description' => 'nullable|string|max:500',
-            'has_subcategories' => 'nullable|boolean',
+            'name' => [
+                'required',
+                'string',
+                'max:100',
+                'regex:/^[A-Za-z\s()-]+$/',
+            ],
+            'slug' => [
+                'nullable',
+                'string',
+                'max:100',
+                'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
+            ],
+            'description' => [
+                'nullable',
+                'string',
+                'max:500',
+            ],
+            'has_subcategories' => [
+                'nullable',
+                'boolean',
+            ],
         ], [
             'name.required' => 'Nama kategori wajib diisi.',
+            'name.string' => 'Nama kategori harus berupa teks.',
             'name.max' => 'Nama kategori tidak boleh lebih dari 100 karakter.',
+            'name.regex' => 'Nama kategori hanya boleh menggunakan huruf, spasi, tanda kurung ( ) dan tanda strip (-). Angka dan simbol lainnya tidak diperbolehkan.',
+
             'slug.regex' => 'Format slug tidak valid. Hanya boleh menggunakan huruf kecil, angka, dan tanda strip (-).',
             'slug.max' => 'Slug tidak boleh lebih dari 100 karakter.',
-            'description.required' => 'Deskripsi tidak boleh kosong',
+
+            'description.string' => 'Deskripsi harus berupa teks.',
             'description.max' => 'Deskripsi tidak boleh lebih dari 500 karakter.',
         ]);
 
-        $slug = $this->processSlug($validated['slug'] ?? null, $validated['name'], Category::class);
+        $slug = $this->processSlug(
+            $validated['slug'] ?? null,
+            $validated['name'],
+            Category::class
+        );
 
         Category::create([
             'name' => $validated['name'],
@@ -58,13 +83,20 @@ class CategoryController extends Controller
             'has_subcategories' => $request->boolean('has_subcategories'),
         ]);
 
-        return redirect()->route('admin.categories.index')->with('success', 'Kategori berhasil ditambahkan.');
+        return redirect()
+            ->route('admin.categories.index')
+            ->with('success', 'Kategori berhasil ditambahkan.');
     }
 
     public function update(Request $request, Category $category)
     {
         $validated = $request->validate([
-            'name' => 'required|string|max:100',
+            'name' => [
+                'required',
+                'string',
+                'max:100',
+                'regex:/^[A-Za-z\s()-]+$/',
+            ],
             'slug' => [
                 'nullable',
                 'string',
@@ -72,19 +104,35 @@ class CategoryController extends Controller
                 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
                 Rule::unique('categories', 'slug')->ignore($category->id),
             ],
-            'description' => 'nullable|string|max:500',
-            'has_subcategories' => 'nullable|boolean',
+            'description' => [
+                'nullable',
+                'string',
+                'max:500',
+            ],
+            'has_subcategories' => [
+                'nullable',
+                'boolean',
+            ],
         ], [
             'name.required' => 'Nama kategori wajib diisi.',
+            'name.string' => 'Nama kategori harus berupa teks.',
             'name.max' => 'Nama kategori tidak boleh lebih dari 100 karakter.',
+            'name.regex' => 'Nama kategori hanya boleh menggunakan huruf, spasi, tanda kurung ( ) dan tanda strip (-). Angka dan simbol lainnya tidak diperbolehkan.',
+
             'slug.regex' => 'Format slug tidak valid. Hanya boleh menggunakan huruf kecil, angka, dan tanda strip (-).',
             'slug.max' => 'Slug tidak boleh lebih dari 100 karakter.',
             'slug.unique' => 'Slug ini sudah digunakan oleh kategori lain. Silakan gunakan yang berbeda.',
-            'description.required' => 'Deskripsi tidak boleh kosong',
+
+            'description.string' => 'Deskripsi harus berupa teks.',
             'description.max' => 'Deskripsi tidak boleh lebih dari 500 karakter.',
         ]);
 
-        $slug = $this->processSlug($validated['slug'] ?? null, $validated['name'], Category::class, $category->id);
+        $slug = $this->processSlug(
+            $validated['slug'] ?? null,
+            $validated['name'],
+            Category::class,
+            $category->id
+        );
 
         $category->update([
             'name' => $validated['name'],
@@ -93,7 +141,9 @@ class CategoryController extends Controller
             'has_subcategories' => $request->boolean('has_subcategories'),
         ]);
 
-        return redirect()->route('admin.categories.index')->with('success', 'Kategori berhasil diperbarui.');
+        return redirect()
+            ->route('admin.categories.index')
+            ->with('success', 'Kategori berhasil diperbarui.');
     }
 
     public function destroy(Category $category)
@@ -111,41 +161,63 @@ class CategoryController extends Controller
         }
 
         $category->delete();
+
         return back()->with('success', 'Kategori berhasil dihapus.');
     }
 
     public function subcategories(Category $category)
     {
-        abort_unless($category->has_subcategories, 403, 'Kategori ini tidak mengizinkan subkategori.');
+        abort_unless(
+            $category->has_subcategories,
+            403,
+            'Kategori ini tidak mengizinkan subkategori.'
+        );
 
-        $subcategories = $category->subcategories()->withCount('products')->latest()->get();
+        $subcategories = $category
+            ->subcategories()
+            ->withCount('products')
+            ->latest()
+            ->get();
 
-        return view('admin.subcategories', compact('category', 'subcategories'));
+        return view(
+            'admin.subcategories',
+            compact('category', 'subcategories')
+        );
     }
 
     /**
-     * Logic ketat untuk pemrosesan Slug (Manual atau Otomatis)
+     * Logic pemrosesan slug (manual atau otomatis).
      */
-    private function processSlug(?string $inputSlug, string $name, string $model, ?int $excludeId = null, ?int $parentId = null): string
-    {
-        // 1. Jika input slug ada, gunakan. Jika tidak, generate dari name.
-        $slug = !empty(trim($inputSlug)) ? Str::slug($inputSlug) : Str::slug($name);
+    private function processSlug(
+        ?string $inputSlug,
+        string $name,
+        string $model,
+        ?int $excludeId = null,
+        ?int $parentId = null
+    ): string {
+        // Jika slug diisi, gunakan slug tersebut.
+        // Jika kosong, generate dari nama.
+        $slug = !empty(trim($inputSlug))
+            ? Str::slug($inputSlug)
+            : Str::slug($name);
 
-        // 2. Fallback jika regex gagal (misal user input karakter aneh)
+        // Fallback jika hasil slug tidak sesuai format.
         if (!preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slug)) {
             $slug = 'item-' . uniqid();
         }
 
-        // 3. Cek keunikan
+        // Cek keunikan slug.
         $query = $model::where('slug', $slug);
+
         if ($excludeId) {
             $query->where('id', '!=', $excludeId);
         }
+
         if ($parentId) {
             $query->where('category_id', $parentId);
         }
 
-        // 4. Jika bentrok, tambahkan timestamp agar tetap unik
+        // Jika slug bentrok, tambahkan timestamp.
         if ($query->exists()) {
             $slug .= '-' . time();
         }

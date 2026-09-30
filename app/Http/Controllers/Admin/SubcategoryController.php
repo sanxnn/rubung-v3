@@ -17,10 +17,11 @@ class SubcategoryController extends Controller
         abort_unless($category->has_subcategories, 403, 'Kategori ini tidak mengizinkan subkategori.');
 
         $validated = $request->validate([
-            'name' => 'required|string|max:100',
+            'name' => ['required', 'string', 'max:100', 'regex:/^[A-Za-z\s()-]+$/'],
             'slug' => 'nullable|string|max:100|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
             'description' => 'nullable|string|max:500',
         ], [
+            'name.regex' => 'Nama subkategori hanya boleh menggunakan huruf, spasi, tanda kurung ( ) dan tanda strip (-). Angka dan simbol lainnya tidak diperbolehkan.',
             'name.required' => 'Nama subkategori wajib diisi.',
             'name.max' => 'Nama subkategori tidak boleh lebih dari 100 karakter.',
             'slug.regex' => 'Format slug tidak valid. Hanya boleh menggunakan huruf kecil, angka, dan tanda strip (-).',
@@ -52,7 +53,7 @@ class SubcategoryController extends Controller
         abort_if($subcategory->category_id !== $category->id, 403, 'Aksi tidak valid.');
 
         $validated = $request->validate([
-            'name' => 'required|string|max:100',
+            'name' => ['required', 'string', 'max:100', 'regex:/^[A-Za-z\s()-]+$/'],
             'slug' => [
                 'nullable',
                 'string',
@@ -62,6 +63,7 @@ class SubcategoryController extends Controller
             ],
             'description' => 'nullable|string|max:500',
         ], [
+            'name.regex' => 'Nama subkategori hanya boleh menggunakan huruf, spasi, tanda kurung ( ) dan tanda strip (-). Angka dan simbol lainnya tidak diperbolehkan.',
             'name.required' => 'Nama subkategori wajib diisi.',
             'name.max' => 'Nama subkategori tidak boleh lebih dari 100 karakter.',
             'slug.regex' => 'Format slug tidak valid. Hanya boleh menggunakan huruf kecil, angka, dan tanda strip (-).',
