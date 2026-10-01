@@ -31,34 +31,22 @@ class OrderController extends Controller
                     'like',
                     "%{$search}%"
                 )
-                    ->orWhere(
-                        'recipient_name',
-                        'like',
-                        "%{$search}%"
-                    )
-                    ->orWhere(
-                        'phone',
-                        'like',
-                        "%{$search}%"
-                    )
-                    ->orWhereHas('user', function ($userQuery) use ($search) {
-                        $userQuery
-                            ->where(
-                                'name',
-                                'like',
-                                "%{$search}%"
-                            )
-                            ->orWhere(
-                                'email',
-                                'like',
-                                "%{$search}%"
-                            )
-                            ->orWhere(
-                                'phone',
-                                'like',
-                                "%{$search}%"
-                            );
-                    });
+                ->orWhere(
+                    'snapshot_recipient_name',
+                    'like',
+                    "%{$search}%"
+                )
+                ->orWhere(
+                    'snapshot_phone',
+                    'like',
+                    "%{$search}%"
+                )
+                ->orWhereHas('user', function ($userQuery) use ($search) {
+                    $userQuery
+                        ->where('name', 'like', "%{$search}%")
+                        ->orWhere('email', 'like', "%{$search}%")
+                        ->orWhere('phone', 'like', "%{$search}%");
+                });
             });
         }
 
