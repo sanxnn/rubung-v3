@@ -110,10 +110,25 @@ class CustomerController extends Controller
 
     // Menghapus pelanggan
     public function destroy(User $customer)
-    {
-        abort_if($customer->role !== 'customer', 404);
-        $customer->delete();
+{
+    abort_if($customer->role !== 'customer', 404);
 
-        return redirect()->route('admin.customers.index')->with('success', 'Pelanggan berhasil dihapus.');
+    if ($customer->orders()->exists()) {
+        return back()->withErrors([
+            'delete' => 'Pelanggan tidak dapat dihapus karena masih memiliki data pesanan.'
+        ]);
     }
+
+    if ($customer->addresses()->exists()) {
+        return back()->withErrors([
+            'delete' => 'Pelanggan tidak dapat dihapus karena masih memiliki alamat tersimpan.'
+        ]);
+    }
+
+    $customer->delete();
+
+    return redirect()
+        ->route('admin.customers.index')
+        ->with('success', 'Pelanggan berhasil dihapus.');
+}
 }
