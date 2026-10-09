@@ -8,9 +8,9 @@
         {{-- ========================================================= --}}
         <div class="flex flex-col gap-4 mb-6 sm:flex-row sm:items-center sm:justify-between">
             <div>
-                <h2 class="text-xl font-bold text-gray-900">Kelola Promo</h2>
+                <h2 class="text-xl font-bold text-gray-900">Kelola Voucher</h2>
                 <p class="mt-1 text-sm text-gray-500">
-                    Kelola promo tanggal cantik diskon untuk pelanggan.
+                    Kelola promo voucher diskon untuk pelanggan.
                 </p>
             </div>
 
@@ -50,75 +50,68 @@
         {{-- ========================================================= --}}
         {{-- SUMMARY CARDS --}}
         {{-- ========================================================= --}}
-        <div class="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-4">
+        <div class="mb-8 grid grid-cols-1 gap-4 sm:grid-cols-2 xl:grid-cols-3">
 
-            {{-- Total Promo --}}
+            {{-- Total Voucher --}}
             <div
                 class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
                 <div class="flex items-center justify-between">
-
                     <div>
                         <p class="text-sm font-medium text-gray-500">
-                            Total Promo
+                            Total Voucher
                         </p>
 
                         <h3 class="mt-2 text-2xl font-bold text-gray-900">
-                            {{ $datePromos->total() }}
+                            {{ $stats['total'] }}
                         </h3>
 
                         <p class="mt-1 text-xs text-gray-400">
-                            Semua promo tanggal
+                            Semua kode voucher
                         </p>
                     </div>
 
-                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-yellow-100 text-[#D4A900]">
-                        <i class="fa-solid fa-calendar-days text-lg"></i>
+                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                        <i class="fa-solid fa-ticket text-lg"></i>
                     </div>
-
                 </div>
             </div>
 
-
-            {{-- Promo Aktif --}}
+            {{-- Voucher Aktif --}}
             <div
                 class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
                 <div class="flex items-center justify-between">
-
                     <div>
                         <p class="text-sm font-medium text-gray-500">
-                            Promo Aktif
+                            Voucher Aktif
                         </p>
 
                         <h3 class="mt-2 text-2xl font-bold text-gray-900">
-                            {{ $activeDatePromos }}
+                            {{ $stats['active'] }}
                         </h3>
 
                         <p class="mt-1 text-xs text-green-600">
                             <i class="fa-solid fa-circle-check mr-1"></i>
-                            Sedang berjalan
+                            Bisa digunakan
                         </p>
                     </div>
 
                     <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-green-50 text-green-600">
-                        <i class="fa-solid fa-bolt text-lg"></i>
+                        <i class="fa-solid fa-circle-check text-lg"></i>
                     </div>
-
                 </div>
             </div>
 
-
-            {{-- Promo Mendatang --}}
+            {{-- Akan Datang --}}
             <div
                 class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
                 <div class="flex items-center justify-between">
-
                     <div>
                         <p class="text-sm font-medium text-gray-500">
-                            Promo Mendatang
+                            Akan Datang
                         </p>
 
                         <h3 class="mt-2 text-2xl font-bold text-gray-900">
-                            {{ $upcomingDatePromos }}
+                            {{ $stats['upcoming'] }}
                         </h3>
 
                         <p class="mt-1 text-xs text-blue-600">
@@ -130,68 +123,114 @@
                     <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
                         <i class="fa-solid fa-calendar-plus text-lg"></i>
                     </div>
-
                 </div>
             </div>
 
-
-            {{-- Promo Selesai --}}
+            {{-- Sudah Berakhir --}}
             <div
                 class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
                 <div class="flex items-center justify-between">
-
                     <div>
                         <p class="text-sm font-medium text-gray-500">
-                            Promo Selesai
+                            Sudah Berakhir
                         </p>
 
                         <h3 class="mt-2 text-2xl font-bold text-gray-900">
-                            {{ $finishedDatePromos }}
+                            {{ $stats['expired'] }}
                         </h3>
 
-                        <p class="mt-1 text-xs text-gray-500">
-                            <i class="fa-solid fa-circle-xmark mr-1"></i>
-                            Sudah berakhir
+                        <p class="mt-1 text-xs text-red-600">
+                            <i class="fa-solid fa-calendar-xmark mr-1"></i>
+                            Tidak berlaku
                         </p>
                     </div>
 
-                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-gray-100 text-gray-500">
+                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-red-50 text-red-600">
                         <i class="fa-solid fa-calendar-xmark text-lg"></i>
                     </div>
+                </div>
+            </div>
 
+            {{-- Total Penggunaan --}}
+            <div
+                class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">
+                            Total Penggunaan
+                        </p>
+
+                        <h3 class="mt-2 text-2xl font-bold text-gray-900">
+                            {{ $stats['used'] }}
+                        </h3>
+
+                        <p class="mt-1 text-xs text-purple-600">
+                            <i class="fa-solid fa-chart-simple mr-1"></i>
+                            Voucher telah digunakan
+                        </p>
+                    </div>
+
+                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-purple-50 text-purple-600">
+                        <i class="fa-solid fa-chart-column text-lg"></i>
+                    </div>
+                </div>
+            </div>
+
+            {{-- Kuota Habis --}}
+            <div
+                class="rounded-2xl border border-gray-100 bg-white p-5 shadow-sm transition-all duration-300 hover:-translate-y-0.5 hover:shadow-md">
+                <div class="flex items-center justify-between">
+                    <div>
+                        <p class="text-sm font-medium text-gray-500">
+                            Kuota Habis
+                        </p>
+
+                        <h3 class="mt-2 text-2xl font-bold text-gray-900">
+                            {{ $stats['quota_full'] }}
+                        </h3>
+
+                        <p class="mt-1 text-xs text-orange-600">
+                            <i class="fa-solid fa-ban mr-1"></i>
+                            Tidak dapat digunakan
+                        </p>
+                    </div>
+
+                    <div class="flex h-12 w-12 items-center justify-center rounded-xl bg-orange-50 text-orange-600">
+                        <i class="fa-solid fa-hourglass-end text-lg"></i>
+                    </div>
                 </div>
             </div>
 
         </div>
 
         {{-- ========================================================= --}}
-        {{-- PROMO TANGGAL --}}
+        {{-- VOUCHER --}}
         {{-- ========================================================= --}}
-        <div class="mb-8 overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
+        <div class="overflow-hidden rounded-2xl border border-gray-100 bg-white shadow-sm">
 
             {{-- Section Header --}}
             <div class="border-b border-gray-100 p-5">
                 <div class="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
                     <div>
                         <div class="flex items-center gap-2">
-                            <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-yellow-50 text-[#D4A900]">
-                                <i class="fa-solid fa-calendar-days"></i>
+                            <div class="flex h-9 w-9 items-center justify-center rounded-lg bg-blue-50 text-blue-600">
+                                <i class="fa-solid fa-ticket"></i>
                             </div>
 
                             <h3 class="text-base font-bold text-gray-900">
-                                Promo Tanggal
+                                Voucher
                             </h3>
                         </div>
 
                         <p class="mt-2 text-xs text-gray-500">
-                            Promo khusus berdasarkan periode tanggal tertentu.
+                            Kelola kode voucher dan aturan penggunaannya.
                         </p>
                     </div>
 
-                    <button type="button" onclick="MicroModal.show('modal-create-date')"
-                        class="inline-flex items-center justify-center gap-2 rounded-xl bg-yellow-50 px-4 py-2.5 text-sm font-semibold text-[#A77E00] transition hover:bg-yellow-100">
+                    <button type="button" onclick="MicroModal.show('modal-create-voucher')"
+                        class="inline-flex items-center justify-center gap-2 rounded-xl bg-blue-50 px-4 py-2.5 text-sm font-semibold text-blue-700 transition hover:bg-blue-100">
                         <i class="fa-solid fa-plus"></i>
-                        Tambah Promo
+                        Tambah Voucher
                     </button>
                 </div>
             </div>
@@ -201,12 +240,17 @@
                 <table class="w-full text-left">
                     <thead class="bg-gray-50">
                         <tr class="border-b border-gray-100">
+
                             <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-500">
-                                Promo
+                                Kode Voucher
                             </th>
 
                             <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-500">
                                 Diskon
+                            </th>
+
+                            <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-500">
+                                Minimum Belanja
                             </th>
 
                             <th class="px-6 py-4 text-xs font-semibold uppercase tracking-wider text-gray-500">
@@ -220,81 +264,99 @@
                             <th class="px-6 py-4 text-right text-xs font-semibold uppercase tracking-wider text-gray-500">
                                 Aksi
                             </th>
+
                         </tr>
                     </thead>
 
                     <tbody class="divide-y divide-gray-100">
-                        @forelse ($datePromos as $promo)
+
+                        @forelse ($vouchers as $voucher)
                             @php
-                                $isActiveNow = $promo->isActiveNow();
-                                $isUpcoming = $promo->start_datetime && now()->lt($promo->start_datetime);
-                                $isEnded = $promo->end_datetime && now()->gt($promo->end_datetime);
+                                $isValid = $voucher->isValid();
+                                $isUpcoming = $voucher->start_date && today()->lt($voucher->start_date);
                             @endphp
 
                             <tr class="transition hover:bg-gray-50">
 
-                                {{-- Promo --}}
+                                {{-- Code --}}
                                 <td class="px-6 py-4">
-                                    <div class="flex items-start gap-3">
+                                    <div class="flex items-center gap-3">
+
                                         <div
-                                            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-yellow-50 text-[#D4A900]">
-                                            <i class="fa-solid fa-calendar-star"></i>
+                                            class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                                            <i class="fa-solid fa-ticket"></i>
                                         </div>
 
                                         <div>
-                                            <p class="font-bold text-gray-900">
-                                                {{ $promo->name }}
+                                            <p class="font-mono font-bold tracking-wide text-gray-900">
+                                                {{ $voucher->code }}
                                             </p>
 
                                             <p class="mt-1 text-xs text-gray-400">
-                                                ID Promo #{{ $promo->id }}
+                                                Digunakan {{ $voucher->used_count }}
+                                                @if ($voucher->usage_limit)
+                                                    / {{ $voucher->usage_limit }}
+                                                @else
+                                                    kali
+                                                @endif
                                             </p>
                                         </div>
+
                                     </div>
                                 </td>
 
                                 {{-- Diskon --}}
                                 <td class="px-6 py-4">
                                     <span
-                                        class="inline-flex items-center rounded-lg bg-yellow-50 px-3 py-1.5 text-sm font-bold text-[#A77E00]">
-                                        @if ($promo->discount_type === 'percentage')
-                                            {{ $promo->discount_value }}%
+                                        class="inline-flex items-center rounded-lg bg-blue-50 px-3 py-1.5 text-sm font-bold text-blue-700">
+                                        @if ($voucher->discount_type === 'percentage')
+                                            {{ $voucher->discount_value }}%
                                         @else
-                                            Rp {{ number_format($promo->discount_value, 0, ',', '.') }}
+                                            Rp {{ number_format($voucher->discount_value, 0, ',', '.') }}
                                         @endif
                                     </span>
+
+                                    @if ($voucher->discount_type === 'percentage' && $voucher->max_discount)
+                                        <p class="mt-1 text-[10px] text-gray-400">
+                                            Maks. Rp {{ number_format($voucher->max_discount, 0, ',', '.') }}
+                                        </p>
+                                    @endif
+                                </td>
+
+                                {{-- Minimum --}}
+                                <td class="px-6 py-4">
+                                    <p class="text-sm font-semibold text-gray-700">
+                                        Rp {{ number_format($voucher->min_purchase, 0, ',', '.') }}
+                                    </p>
                                 </td>
 
                                 {{-- Periode --}}
                                 <td class="px-6 py-4">
                                     <div class="text-xs text-gray-600">
                                         <div class="flex items-center gap-2">
-                                            <i class="fa-regular fa-clock w-4 text-gray-400"></i>
-                                            <span>
-                                                {{ $promo->start_datetime->format('d M Y, H:i') }}
-                                            </span>
+                                            <i class="fa-regular fa-calendar w-4 text-gray-400"></i>
+                                            {{ $voucher->start_date->format('d M Y') }}
                                         </div>
 
                                         <div class="my-1 ml-1.5 h-3 border-l border-gray-200"></div>
 
                                         <div class="flex items-center gap-2">
                                             <i class="fa-solid fa-flag-checkered w-4 text-gray-400"></i>
-                                            <span>
-                                                {{ $promo->end_datetime->format('d M Y, H:i') }}
-                                            </span>
+                                            {{ $voucher->end_date->format('d M Y') }}
                                         </div>
                                     </div>
                                 </td>
 
                                 {{-- Status --}}
                                 <td class="px-6 py-4 text-center">
-                                    @if (!$promo->is_active)
+
+                                    @if (!$voucher->is_active)
                                         <span
                                             class="inline-flex items-center gap-1.5 rounded-full bg-gray-100 px-3 py-1.5 text-xs font-semibold text-gray-500">
                                             <span class="h-1.5 w-1.5 rounded-full bg-gray-400"></span>
                                             Nonaktif
                                         </span>
-                                    @elseif ($isActiveNow)
+                                    @elseif ($isValid)
                                         <span
                                             class="inline-flex items-center gap-1.5 rounded-full bg-green-50 px-3 py-1.5 text-xs font-semibold text-green-700">
                                             <span class="h-1.5 w-1.5 rounded-full bg-green-500"></span>
@@ -313,6 +375,7 @@
                                             Berakhir
                                         </span>
                                     @endif
+
                                 </td>
 
                                 {{-- Aksi --}}
@@ -320,21 +383,21 @@
                                     <div class="flex justify-end gap-2">
 
                                         {{-- Toggle --}}
-                                        <form action="{{ route('admin.date.toggle', $promo) }}" method="POST">
+                                        <form action="{{ route('admin.voucher.toggle', $voucher) }}" method="POST">
                                             @csrf
                                             @method('PATCH')
 
                                             <button type="submit"
-                                                title="{{ $promo->is_active ? 'Nonaktifkan' : 'Aktifkan' }}"
+                                                title="{{ $voucher->is_active ? 'Nonaktifkan' : 'Aktifkan' }}"
                                                 class="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-500 transition hover:border-green-300 hover:bg-green-50 hover:text-green-700">
                                                 <i
-                                                    class="fa-solid {{ $promo->is_active ? 'fa-toggle-on' : 'fa-toggle-off' }} text-sm"></i>
+                                                    class="fa-solid {{ $voucher->is_active ? 'fa-toggle-on' : 'fa-toggle-off' }} text-sm"></i>
                                             </button>
                                         </form>
 
                                         {{-- Edit --}}
                                         <button type="button"
-                                            onclick="MicroModal.show('modal-edit-date-{{ $promo->id }}')"
+                                            onclick="MicroModal.show('modal-edit-voucher-{{ $voucher->id }}')"
                                             title="Edit"
                                             class="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-500 transition hover:border-yellow-300 hover:bg-yellow-50 hover:text-yellow-700">
                                             <i class="fa-solid fa-pen text-sm"></i>
@@ -342,7 +405,7 @@
 
                                         {{-- Delete --}}
                                         <button type="button"
-                                            onclick="MicroModal.show('modal-delete-date-{{ $promo->id }}')"
+                                            onclick="MicroModal.show('modal-delete-voucher-{{ $voucher->id }}')"
                                             title="Hapus"
                                             class="flex h-9 w-9 items-center justify-center rounded-lg border border-gray-200 text-gray-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600">
                                             <i class="fa-regular fa-trash-can text-sm"></i>
@@ -354,54 +417,62 @@
                             </tr>
 
                         @empty
+
                             <tr>
-                                <td colspan="5" class="px-6 py-12 text-center text-gray-500">
-                                    <i class="fa-solid fa-calendar-xmark mb-3 text-3xl text-gray-300"></i>
+                                <td colspan="6" class="px-6 py-12 text-center text-gray-500">
+                                    <i class="fa-solid fa-ticket-slash mb-3 text-3xl text-gray-300"></i>
                                     <p class="text-sm">
-                                        Belum ada promo tanggal.
+                                        Belum ada voucher.
                                     </p>
                                 </td>
                             </tr>
                         @endforelse
+
                     </tbody>
                 </table>
             </div>
 
             {{-- Mobile Cards --}}
             <div class="divide-y divide-gray-100 md:hidden">
-                @forelse ($datePromos as $promo)
+
+                @forelse ($vouchers as $voucher)
                     @php
-                        $isActiveNow = $promo->isActiveNow();
-                        $isUpcoming = $promo->start_datetime && now()->lt($promo->start_datetime);
+                        $isValid = $voucher->isValid();
+                        $isUpcoming = $voucher->start_date && today()->lt($voucher->start_date);
                     @endphp
 
                     <div class="p-5">
                         <div class="flex items-start gap-3">
 
                             <div
-                                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-yellow-50 text-[#D4A900]">
-                                <i class="fa-solid fa-calendar-star"></i>
+                                class="flex h-11 w-11 shrink-0 items-center justify-center rounded-xl bg-blue-50 text-blue-600">
+                                <i class="fa-solid fa-ticket"></i>
                             </div>
 
                             <div class="min-w-0 flex-1">
 
                                 <div class="flex items-start justify-between gap-3">
                                     <div>
-                                        <p class="font-bold text-gray-900">
-                                            {{ $promo->name }}
+                                        <p class="font-mono font-bold tracking-wide text-gray-900">
+                                            {{ $voucher->code }}
                                         </p>
 
                                         <p class="mt-1 text-xs text-gray-400">
-                                            #{{ $promo->id }}
+                                            Digunakan {{ $voucher->used_count }}
+                                            @if ($voucher->usage_limit)
+                                                / {{ $voucher->usage_limit }}
+                                            @else
+                                                kali
+                                            @endif
                                         </p>
                                     </div>
 
-                                    @if (!$promo->is_active)
+                                    @if (!$voucher->is_active)
                                         <span
                                             class="rounded-full bg-gray-100 px-2.5 py-1 text-[10px] font-semibold text-gray-500">
                                             Nonaktif
                                         </span>
-                                    @elseif ($isActiveNow)
+                                    @elseif ($isValid)
                                         <span
                                             class="rounded-full bg-green-50 px-2.5 py-1 text-[10px] font-semibold text-green-700">
                                             Aktif
@@ -420,48 +491,54 @@
                                 </div>
 
                                 <div class="mt-3 flex flex-wrap gap-2">
-                                    <span class="rounded-lg bg-yellow-50 px-2.5 py-1 text-xs font-bold text-[#A77E00]">
-                                        @if ($promo->discount_type === 'percentage')
-                                            {{ $promo->discount_value }}%
+
+                                    <span class="rounded-lg bg-blue-50 px-2.5 py-1 text-xs font-bold text-blue-700">
+                                        @if ($voucher->discount_type === 'percentage')
+                                            {{ $voucher->discount_value }}%
                                         @else
-                                            Rp {{ number_format($promo->discount_value, 0, ',', '.') }}
+                                            Rp {{ number_format($voucher->discount_value, 0, ',', '.') }}
                                         @endif
                                     </span>
+
+                                    <span class="rounded-lg bg-gray-50 px-2.5 py-1 text-xs font-medium text-gray-600">
+                                        Min. Rp {{ number_format($voucher->min_purchase, 0, ',', '.') }}
+                                    </span>
+
                                 </div>
 
                                 <div class="mt-3 space-y-1.5 text-xs text-gray-500">
                                     <p>
-                                        <i class="fa-regular fa-clock mr-1 text-gray-400"></i>
-                                        {{ $promo->start_datetime->format('d M Y, H:i') }}
+                                        <i class="fa-regular fa-calendar mr-1 text-gray-400"></i>
+                                        {{ $voucher->start_date->format('d M Y') }}
                                     </p>
 
                                     <p>
                                         <i class="fa-solid fa-flag-checkered mr-1 text-gray-400"></i>
-                                        {{ $promo->end_datetime->format('d M Y, H:i') }}
+                                        {{ $voucher->end_date->format('d M Y') }}
                                     </p>
                                 </div>
 
                                 <div class="mt-4 flex justify-end gap-2 border-t border-gray-100 pt-3">
 
-                                    <form action="{{ route('admin.date.toggle', $promo) }}" method="POST">
+                                    <form action="{{ route('admin.voucher.toggle', $voucher) }}" method="POST">
                                         @csrf
                                         @method('PATCH')
 
                                         <button type="submit"
                                             class="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 transition hover:border-green-300 hover:bg-green-50 hover:text-green-700">
                                             <i
-                                                class="fa-solid {{ $promo->is_active ? 'fa-toggle-on' : 'fa-toggle-off' }} text-xs"></i>
+                                                class="fa-solid {{ $voucher->is_active ? 'fa-toggle-on' : 'fa-toggle-off' }} text-xs"></i>
                                         </button>
                                     </form>
 
                                     <button type="button"
-                                        onclick="MicroModal.show('modal-edit-date-{{ $promo->id }}')"
+                                        onclick="MicroModal.show('modal-edit-voucher-{{ $voucher->id }}')"
                                         class="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 transition hover:border-yellow-300 hover:bg-yellow-50 hover:text-yellow-700">
                                         <i class="fa-solid fa-pen text-xs"></i>
                                     </button>
 
                                     <button type="button"
-                                        onclick="MicroModal.show('modal-delete-date-{{ $promo->id }}')"
+                                        onclick="MicroModal.show('modal-delete-voucher-{{ $voucher->id }}')"
                                         class="flex h-8 w-8 items-center justify-center rounded-lg border border-gray-200 text-gray-500 transition hover:border-red-200 hover:bg-red-50 hover:text-red-600">
                                         <i class="fa-regular fa-trash-can text-xs"></i>
                                     </button>
@@ -473,42 +550,44 @@
                     </div>
 
                 @empty
+
                     <div class="p-8 text-center text-gray-500">
-                        <i class="fa-solid fa-calendar-xmark mb-3 text-2xl text-gray-300"></i>
+                        <i class="fa-solid fa-ticket-slash mb-3 text-2xl text-gray-300"></i>
                         <p class="text-sm">
-                            Belum ada promo tanggal.
+                            Belum ada voucher.
                         </p>
                     </div>
                 @endforelse
+
             </div>
 
             {{-- Pagination --}}
-            @if ($datePromos->hasPages())
+            @if ($vouchers->hasPages())
                 <div class="border-t border-gray-100 px-5 py-4">
-                    {{ $datePromos->links() }}
+                    {{ $vouchers->links() }}
                 </div>
             @endif
         </div>
 
 
         {{-- ========================================================= --}}
-        {{-- MODAL CREATE DATE PROMO --}}
+        {{-- MODAL CREATE VOUCHER --}}
         {{-- ========================================================= --}}
-        <div class="modal micromodal-slide" id="modal-create-date" aria-hidden="true">
+        <div class="modal micromodal-slide" id="modal-create-voucher" aria-hidden="true">
 
             <div class="modal__overlay" tabindex="-1" data-micromodal-close>
 
                 <div class="modal__container w-full max-w-md rounded-2xl bg-white shadow-xl" role="dialog"
-                    aria-modal="true" aria-labelledby="modal-create-date-title">
+                    aria-modal="true" aria-labelledby="modal-create-voucher-title">
 
                     <header class="flex items-start justify-between border-b border-gray-100 p-6">
                         <div>
-                            <h2 id="modal-create-date-title" class="text-xl font-bold text-gray-900">
-                                Tambah Promo Tanggal
+                            <h2 id="modal-create-voucher-title" class="text-xl font-bold text-gray-900">
+                                Tambah Voucher
                             </h2>
 
-                            <p class="mt-1 text-xs font-semibold uppercase tracking-wider text-[#D4A900]">
-                                Promo berdasarkan periode
+                            <p class="mt-1 text-xs font-semibold uppercase tracking-wider text-blue-600">
+                                Kode voucher pelanggan
                             </p>
                         </div>
 
@@ -518,17 +597,17 @@
                         </button>
                     </header>
 
-                    <form action="{{ route('admin.date.store') }}" method="POST" class="space-y-5 p-6">
+                    <form action="{{ route('admin.voucher.store') }}" method="POST" class="space-y-5 p-6">
 
                         @csrf
 
                         <div>
                             <label class="mb-2 block text-[11px] font-bold uppercase tracking-widest text-gray-500">
-                                Nama Promo <span class="text-red-500">*</span>
+                                Kode Voucher <span class="text-red-500">*</span>
                             </label>
 
-                            <input type="text" name="name" required placeholder="Contoh: Promo 10.10"
-                                class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none transition-all focus:border-[#F4C430] focus:bg-white focus:ring-2 focus:ring-[#F4C430]/30">
+                            <input type="text" name="code" required maxlength="50" placeholder="Contoh: RUBUNG10"
+                                class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 font-mono text-sm uppercase text-gray-800 outline-none transition-all focus:border-blue-400 focus:bg-white focus:ring-2 focus:ring-blue-100">
                         </div>
 
                         <div class="grid grid-cols-2 gap-3">
@@ -539,7 +618,7 @@
                                 </label>
 
                                 <select name="discount_type" required
-                                    class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none focus:border-[#F4C430] focus:ring-2 focus:ring-yellow-100">
+                                    class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100">
                                     <option value="percentage">Persentase</option>
                                     <option value="fixed">Nominal</option>
                                 </select>
@@ -551,37 +630,72 @@
                                 </label>
 
                                 <input type="number" name="discount_value" min="1" required placeholder="10"
-                                    class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none focus:border-[#F4C430] focus:ring-2 focus:ring-yellow-100">
+                                    class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100">
                             </div>
 
                         </div>
 
                         <div>
                             <label class="mb-2 block text-[11px] font-bold uppercase tracking-widest text-gray-500">
-                                Mulai Promo <span class="text-red-500">*</span>
+                                Minimal Belanja
                             </label>
 
-                            <input type="datetime-local" name="start_datetime" required
-                                class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none focus:border-[#F4C430] focus:ring-2 focus:ring-yellow-100">
+                            <input type="number" name="min_purchase" min="0" value="0"
+                                class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100">
                         </div>
 
-                        <div>
-                            <label class="mb-2 block text-[11px] font-bold uppercase tracking-widest text-gray-500">
-                                Berakhir Promo <span class="text-red-500">*</span>
-                            </label>
+                        <div class="grid grid-cols-2 gap-3">
 
-                            <input type="datetime-local" name="end_datetime" required
-                                class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none focus:border-[#F4C430] focus:ring-2 focus:ring-yellow-100">
+                            <div>
+                                <label class="mb-2 block text-[11px] font-bold uppercase tracking-widest text-gray-500">
+                                    Maks. Diskon
+                                </label>
+
+                                <input type="number" name="max_discount" min="0" placeholder="Opsional"
+                                    class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100">
+                            </div>
+
+                            <div>
+                                <label class="mb-2 block text-[11px] font-bold uppercase tracking-widest text-gray-500">
+                                    Batas Penggunaan
+                                </label>
+
+                                <input type="number" name="usage_limit" min="1" placeholder="Unlimited"
+                                    class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100">
+                            </div>
+
+                        </div>
+
+                        <div class="grid grid-cols-2 gap-3">
+
+                            <div>
+                                <label class="mb-2 block text-[11px] font-bold uppercase tracking-widest text-gray-500">
+                                    Mulai <span class="text-red-500">*</span>
+                                </label>
+
+                                <input type="date" name="start_date" required
+                                    class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100">
+                            </div>
+
+                            <div>
+                                <label class="mb-2 block text-[11px] font-bold uppercase tracking-widest text-gray-500">
+                                    Berakhir <span class="text-red-500">*</span>
+                                </label>
+
+                                <input type="date" name="end_date" required
+                                    class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100">
+                            </div>
+
                         </div>
 
                         <div class="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 p-4">
                             <div>
                                 <p class="text-[11px] font-bold uppercase tracking-widest text-gray-700">
-                                    Aktifkan Promo
+                                    Aktifkan Voucher
                                 </p>
 
                                 <p class="mt-1 text-xs text-gray-500">
-                                    Promo dapat digunakan sesuai periode.
+                                    Voucher dapat langsung digunakan.
                                 </p>
                             </div>
 
@@ -589,7 +703,7 @@
                                 <input type="checkbox" name="is_active" value="1" checked class="peer sr-only">
 
                                 <div
-                                    class="after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-[#D4A900] peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-yellow-100 h-6 w-11 rounded-full bg-gray-200">
+                                    class="after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white peer-focus:outline-none peer-focus:ring-4 peer-focus:ring-blue-100 h-6 w-11 rounded-full bg-gray-200">
                                 </div>
                             </label>
                         </div>
@@ -601,9 +715,9 @@
                             </button>
 
                             <button type="submit"
-                                class="flex-1 rounded-xl bg-[#D4A900] py-3 font-bold text-white shadow-lg shadow-[#F4C430]/30 transition hover:bg-[#B88900]">
+                                class="flex-1 rounded-xl bg-blue-600 py-3 font-bold text-white shadow-lg shadow-blue-100 transition hover:bg-blue-700">
                                 <i class="fa-solid fa-floppy-disk mr-2"></i>
-                                Simpan Promo
+                                Simpan Voucher
                             </button>
                         </footer>
 
@@ -613,14 +727,13 @@
             </div>
         </div>
 
-
         {{-- ========================================================= --}}
-        {{-- EDIT & DELETE MODALS --}}
+        {{-- VOUCHER EDIT & DELETE --}}
         {{-- ========================================================= --}}
 
-        @foreach ($datePromos as $promo)
-            {{-- EDIT DATE --}}
-            <div class="modal micromodal-slide" id="modal-edit-date-{{ $promo->id }}" aria-hidden="true">
+        @foreach ($vouchers as $voucher)
+            {{-- EDIT VOUCHER --}}
+            <div class="modal micromodal-slide" id="modal-edit-voucher-{{ $voucher->id }}" aria-hidden="true">
 
                 <div class="modal__overlay" tabindex="-1" data-micromodal-close>
 
@@ -628,13 +741,14 @@
                         aria-modal="true">
 
                         <header class="flex items-start justify-between border-b border-gray-100 p-6">
+
                             <div>
                                 <h2 class="text-xl font-bold text-gray-900">
-                                    Edit Promo Tanggal
+                                    Edit Voucher
                                 </h2>
 
-                                <p class="mt-1 text-xs font-semibold uppercase tracking-wider text-[#D4A900]">
-                                    Update informasi promo
+                                <p class="mt-1 text-xs font-semibold uppercase tracking-wider text-blue-600">
+                                    Update informasi voucher
                                 </p>
                             </div>
 
@@ -642,20 +756,23 @@
                                 class="flex h-9 w-9 items-center justify-center rounded-xl text-gray-400 hover:bg-gray-100">
                                 <i class="fa-solid fa-xmark text-lg"></i>
                             </button>
+
                         </header>
 
-                        <form action="{{ route('admin.date.update', $promo) }}" method="POST" class="space-y-5 p-6">
+                        <form action="{{ route('admin.voucher.update', $voucher) }}" method="POST"
+                            class="space-y-5 p-6">
 
                             @csrf
                             @method('PUT')
 
                             <div>
                                 <label class="mb-2 block text-[11px] font-bold uppercase tracking-widest text-gray-500">
-                                    Nama Promo <span class="text-red-500">*</span>
+                                    Kode Voucher
                                 </label>
 
-                                <input type="text" name="name" value="{{ $promo->name }}" required
-                                    class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm text-gray-800 outline-none focus:border-[#F4C430] focus:ring-2 focus:ring-yellow-100">
+                                <input type="text" name="code" value="{{ $voucher->code }}" maxlength="50"
+                                    required
+                                    class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 font-mono text-sm uppercase outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100">
                             </div>
 
                             <div class="grid grid-cols-2 gap-3">
@@ -667,13 +784,13 @@
                                     </label>
 
                                     <select name="discount_type"
-                                        class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-[#F4C430] focus:ring-2 focus:ring-yellow-100">
+                                        class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100">
 
-                                        <option value="percentage" @selected($promo->discount_type === 'percentage')>
+                                        <option value="percentage" @selected($voucher->discount_type === 'percentage')>
                                             Persentase
                                         </option>
 
-                                        <option value="fixed" @selected($promo->discount_type === 'fixed')>
+                                        <option value="fixed" @selected($voucher->discount_type === 'fixed')>
                                             Nominal
                                         </option>
 
@@ -687,81 +804,110 @@
                                     </label>
 
                                     <input type="number" name="discount_value" min="1"
-                                        value="{{ $promo->discount_value }}" required
-                                        class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-[#F4C430] focus:ring-2 focus:ring-yellow-100">
+                                        value="{{ $voucher->discount_value }}" required
+                                        class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100">
                                 </div>
 
                             </div>
 
                             <div>
                                 <label class="mb-2 block text-[11px] font-bold uppercase tracking-widest text-gray-500">
-                                    Mulai Promo
+                                    Minimal Belanja
                                 </label>
 
-                                <input type="datetime-local" name="start_datetime"
-                                    value="{{ $promo->start_datetime->format('Y-m-d\TH:i') }}" required
-                                    class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-[#F4C430] focus:ring-2 focus:ring-yellow-100">
+                                <input type="number" name="min_purchase" min="0"
+                                    value="{{ $voucher->min_purchase }}"
+                                    class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100">
                             </div>
 
-                            <div>
-                                <label class="mb-2 block text-[11px] font-bold uppercase tracking-widest text-gray-500">
-                                    Berakhir Promo
-                                </label>
-
-                                <input type="datetime-local" name="end_datetime"
-                                    value="{{ $promo->end_datetime->format('Y-m-d\TH:i') }}" required
-                                    class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-[#F4C430] focus:ring-2 focus:ring-yellow-100">
-                            </div>
-
-                            <div
-                                class="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 p-4">
+                            <div class="grid grid-cols-2 gap-3">
 
                                 <div>
-                                    <p class="text-[11px] font-bold uppercase tracking-widest text-gray-700">
-                                        Status Promo
-                                    </p>
+                                    <label
+                                        class="mb-2 block text-[11px] font-bold uppercase tracking-widest text-gray-500">
+                                        Maks. Diskon
+                                    </label>
 
-                                    <p class="mt-1 text-xs text-gray-500">
-                                        Aktifkan atau nonaktifkan promo.
-                                    </p>
+                                    <input type="number" name="max_discount" min="0"
+                                        value="{{ $voucher->max_discount }}"
+                                        class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100">
                                 </div>
 
+                                <div>
+                                    <label
+                                        class="mb-2 block text-[11px] font-bold uppercase tracking-widest text-gray-500">
+                                        Batas Penggunaan
+                                    </label>
+
+                                    <input type="number" name="usage_limit" min="1"
+                                        value="{{ $voucher->usage_limit }}"
+                                        class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100">
+                                </div>
+
+                            </div>
+
+                            <div class="grid grid-cols-2 gap-3">
+
+                                <div>
+                                    <label
+                                        class="mb-2 block text-[11px] font-bold uppercase tracking-widest text-gray-500">
+                                        Mulai
+                                    </label>
+
+                                    <input type="date" name="start_date"
+                                        value="{{ $voucher->start_date->format('Y-m-d') }}" required
+                                        class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100">
+                                </div>
+
+                                <div>
+                                    <label
+                                        class="mb-2 block text-[11px] font-bold uppercase tracking-widest text-gray-500">
+                                        Berakhir
+                                    </label>
+
+                                    <input type="date" name="end_date"
+                                        value="{{ $voucher->end_date->format('Y-m-d') }}" required
+                                        class="w-full rounded-xl border border-gray-200 bg-gray-50 px-4 py-3 text-sm outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100">
+                                </div>
+                            </div>
+                            <div
+                                class="flex items-center justify-between rounded-xl border border-gray-200 bg-gray-50 p-4">
+                                <div>
+                                    <p class="text-[11px] font-bold uppercase tracking-widest text-gray-700">
+                                        Status Voucher
+                                    </p>
+                                    <p class="mt-1 text-xs text-gray-500">
+                                        Aktifkan atau nonaktifkan voucher.
+                                    </p>
+                                </div>
                                 <label class="relative inline-flex cursor-pointer items-center">
-
-                                    <input type="checkbox" name="is_active" value="1" @checked($promo->is_active)
+                                    <input type="checkbox" name="is_active" value="1" @checked($voucher->is_active)
                                         class="peer sr-only">
-
                                     <div
-                                        class="after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-[#D4A900] peer-checked:after:translate-x-full peer-checked:after:border-white h-6 w-11 rounded-full bg-gray-200">
+                                        class="after:absolute after:left-[2px] after:top-[2px] after:h-5 after:w-5 after:rounded-full after:border after:border-gray-300 after:bg-white after:transition-all after:content-[''] peer-checked:bg-blue-600 peer-checked:after:translate-x-full peer-checked:after:border-white h-6 w-11 rounded-full bg-gray-200">
                                     </div>
 
                                 </label>
-
                             </div>
 
                             <footer class="flex gap-3 pt-4">
-
                                 <button type="button" data-micromodal-close
                                     class="flex-1 rounded-xl bg-gray-100 py-3 font-bold text-gray-600 hover:bg-gray-200">
                                     Batal
                                 </button>
-
                                 <button type="submit"
-                                    class="flex-1 rounded-xl bg-[#D4A900] py-3 font-bold text-white shadow-lg shadow-[#F4C430]/30 hover:bg-[#B88900]">
+                                    class="flex-1 rounded-xl bg-blue-600 py-3 font-bold text-white shadow-lg shadow-blue-100 hover:bg-blue-700">
                                     <i class="fa-solid fa-floppy-disk mr-2"></i>
                                     Perbarui
                                 </button>
-
                             </footer>
-
                         </form>
-
                     </div>
                 </div>
             </div>
 
-            {{-- DELETE DATE --}}
-            <div class="modal micromodal-slide" id="modal-delete-date-{{ $promo->id }}" aria-hidden="true">
+            {{-- DELETE VOUCHER --}}
+            <div class="modal micromodal-slide" id="modal-delete-voucher-{{ $voucher->id }}" aria-hidden="true">
 
                 <div class="modal__overlay" tabindex="-1" data-micromodal-close>
 
@@ -776,18 +922,20 @@
                             </div>
 
                             <h2 class="mb-2 text-xl font-bold text-gray-900">
-                                Hapus Promo?
+                                Hapus Voucher?
                             </h2>
 
                             <p class="text-sm leading-relaxed text-gray-500">
-                                Promo
-                                <b class="text-gray-900">{{ $promo->name }}</b>
+                                Voucher
+                                <b class="font-mono text-gray-900">
+                                    {{ $voucher->code }}
+                                </b>
                                 akan dihapus secara permanen.
                             </p>
 
                         </div>
 
-                        <form action="{{ route('admin.date.destroy', $promo) }}" method="POST"
+                        <form action="{{ route('admin.voucher.destroy', $voucher) }}" method="POST"
                             class="flex gap-3 p-6 pt-0">
 
                             @csrf

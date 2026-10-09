@@ -9,6 +9,8 @@ use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\SubcategoryController;
 use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\PromoController;
+use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\AuthController;
 use Illuminate\Support\Facades\Route;
 
@@ -72,13 +74,18 @@ Route::middleware(['auth', 'role'])->group(function () {
         Route::delete('/customer/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
 
         Route::get('/promo', [PromoController::class, 'index'])->name('promo.index');
-        Route::post('/date', [PromoController::class, 'storeDatePromo'])->name('date.store');
-        Route::put('/date/{datePromo}', [PromoController::class, 'updateDatePromo'])->name('date.update');
-        Route::delete('/date/{datePromo}', [PromoController::class, 'destroyDatePromo'])->name('date.destroy');
+        Route::post('/date', [PromoController::class, 'store'])->name('date.store');
+        Route::put('/date/{datePromo}', [PromoController::class, 'update'])->name('date.update');
+        Route::delete('/date/{datePromo}', [PromoController::class, 'destroy'])->name('date.destroy');
         Route::patch('/date/{datePromo}/toggle', [PromoController::class, 'toggleDatePromo'])->name('date.toggle');
-        Route::post('/voucher', [PromoController::class, 'storeVoucher'])->name('voucher.store');
-        Route::put('/voucher/{voucher}', [PromoController::class, 'updateVoucher'])->name('voucher.update');
-        Route::delete('/voucher/{voucher}', [PromoController::class, 'destroyVoucher'])->name('voucher.destroy');
-        Route::patch('/voucher/{voucher}/toggle', [PromoController::class, 'toggleVoucher'])->name('voucher.toggle');
+
+        Route::get('/voucher', [VoucherController::class, 'index'])->name('voucher.index');
+        Route::post('/voucher', [VoucherController::class, 'store'])->name('voucher.store');
+        Route::put('/voucher/{voucher}', [VoucherController::class, 'update'])->name('voucher.update');
+        Route::delete('/voucher/{voucher}', [VoucherController::class, 'destroy'])->name('voucher.destroy');
+        Route::patch('/voucher/{voucher}/toggle', [VoucherController::class, 'toggleVoucher'])->name('voucher.toggle');
+
+        Route::get('/reports', [ReportController::class, 'index'])->name('reports.index');
+        Route::get('/reports/export', [ReportController::class, 'export'])->name('reports.export');
     });
 });

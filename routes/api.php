@@ -16,9 +16,14 @@ Route::prefix('auth')->group(function () {
 
     Route::post('/register', [AuthController::class, 'register']);
     Route::post('/login', [AuthController::class, 'login']);
+    Route::post('/email/verify', [AuthController::class, 'verifyEmail']);
+    Route::post('/email/resend', [AuthController::class, 'resendVerificationOtp']);
+    Route::post('/password/forgot', [AuthController::class, 'forgotPassword']);
+    Route::post('/password/reset', [AuthController::class, 'resetPassword']);
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
+        Route::put('/profile', [AuthController::class, 'updateProfile']);
         Route::post('/logout', [AuthController::class, 'logout']);
 
     });

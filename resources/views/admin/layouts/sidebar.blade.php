@@ -91,9 +91,16 @@
                 <span>Promosi</span>
             </a>
 
+            <a href="{{ route('admin.voucher.index') }}"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition text-sm
+                {{ request()->routeIs('admin.voucher.index') ? 'bg-[#FFF8D8] text-[#A47B00]' : '' }}">
+                <i class="fa-solid fa-tags w-5 text-center"></i>
+                <span>Voucher</span>
+            </a>
+
             {{-- Laporan --}}
-            <a href=""
-                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition text-sm">
+            <a href="{{ route('admin.reports.index') }}"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition text-sm {{ request()->routeIs('admin.reports.index') ? 'bg-[#FFF8D8] text-[#A47B00]' : '' }}">
                 <i class="fa-solid fa-chart-line w-5 text-center"></i>
                 <span>Laporan</span>
             </a>
