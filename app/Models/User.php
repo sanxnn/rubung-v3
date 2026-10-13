@@ -16,6 +16,9 @@ class User extends Authenticatable
         'name',
         'email',
         'phone',
+        'gender',
+        'birth_place',
+        'birth_date',
         'password',
         'role',
     ];
@@ -28,6 +31,7 @@ class User extends Authenticatable
     protected $casts = [
         'email_verified_at' => 'datetime',
         'password' => 'hashed',
+        'birth_date' => 'date',
     ];
 
     public function addresses()
