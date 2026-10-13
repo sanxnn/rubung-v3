@@ -36,10 +36,14 @@ class AuthController extends Controller
             'phone' => $validated['phone'] ?? null,
             'gender' => $validated['gender'],
             'birth_date' => $validated['birth_date'],
-            'password' => $validated['password'],
+            // FIX: Pastikan password di-hash saat registrasi
+            'password' => Hash::make($validated['password']),
             'role' => 'customer',
             'email_verified_at' => null,
         ]);
+
+        // FIX: Blok pengecekan exists() yang buggy telah dihapus.
+        // Validasi 'unique:users,email' di atas sudah menangani duplikasi.
 
         $otp = $this->createOtp($user, 'email_verification');
         $this->sendOtpEmail($user->email, $user->name, $otp, 'email_verification');
@@ -279,18 +283,19 @@ class AuthController extends Controller
             ->where('role', 'customer')
             ->first();
 
-        if (!$user) {
-            return response()->json(['message' => 'Jika email terdaftar, OTP reset password akan dikirim ke email tersebut.']);
+        // Pesan generik untuk keamanan (mencegah enumerasi email)
+        $message = 'Jika email terdaftar, OTP reset password akan dikirim ke email tersebut.';
+
+        if ($user) {
+            EmailOtp::where('user_id', $user->id)
+                ->where('purpose', 'password_reset')
+                ->delete();
+
+            $otp = $this->createOtp($user, 'password_reset');
+            $this->sendOtpEmail($user->email, $user->name, $otp, 'password_reset');
         }
 
-        EmailOtp::where('user_id', $user->id)
-            ->where('purpose', 'password_reset')
-            ->delete();
-
-        $otp = $this->createOtp($user, 'password_reset');
-        $this->sendOtpEmail($user->email, $user->name, $otp, 'password_reset');
-
-        return response()->json(['message' => 'Jika email terdaftar, OTP reset password telah dikirim ke email Anda.']);
+        return response()->json(['message' => $message]);
     }
 
     /*
@@ -338,7 +343,8 @@ class AuthController extends Controller
         }
 
         DB::transaction(function () use ($user, $otpRecord, $validated) {
-            $user->password = $validated['password'];
+            // FIX: Password harus di-hash sebelum disimpan
+            $user->password = Hash::make($validated['password']);
             $user->save();
 
             $otpRecord->used_at = now();
