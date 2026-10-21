@@ -17,12 +17,21 @@ class EmailOtp extends Model
         'expires_at',
         'attempts',
         'used_at',
+        'verified_at',
+        'reset_token_hash',
+        'reset_token_expires_at',
     ];
 
-    protected $casts = [
-        'expires_at' => 'datetime',
-        'used_at' => 'datetime',
-    ];
+    protected function casts(): array
+    {
+        return [
+            'expires_at' => 'datetime',
+            'used_at' => 'datetime',
+            'verified_at' => 'datetime',
+            'reset_token_expires_at' => 'datetime',
+            'attempts' => 'integer',
+        ];
+    }
 
     public function user()
     {

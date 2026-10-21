@@ -19,6 +19,7 @@ Route::prefix('auth')->group(function () {
     Route::post('/email/verify', [AuthController::class, 'verifyEmail']);
     Route::post('/email/resend', [AuthController::class, 'resendVerificationOtp']);
     Route::post('/password/forgot', [AuthController::class, 'forgotPassword']);
+    Route::post('/password/verify-otp', [AuthController::class, 'verifyPasswordResetOtp']);
     Route::post('/password/reset', [AuthController::class, 'resetPassword']);
 
     Route::middleware('auth:sanctum')->group(function () {

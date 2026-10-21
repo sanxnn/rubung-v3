@@ -11,6 +11,7 @@ use Illuminate\Support\Facades\Hash;
 use Illuminate\Support\Facades\Mail;
 use Illuminate\Validation\Rule;
 use Illuminate\Validation\ValidationException;
+use Illuminate\Support\Str;
 
 class AuthController extends Controller
 {
@@ -25,7 +26,7 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:100'],
             'email' => ['required', 'email', 'max:100', 'unique:users,email'],
             'phone' => ['nullable', 'string', 'max:20'],
-            'gender' => ['required', Rule::in(['male', 'female'])],
+            'gender' => ['required', Rule::in(['Male', 'Female'])],
             'birth_date' => ['required', 'date', 'before:today'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
@@ -132,7 +133,7 @@ class AuthController extends Controller
             'name' => ['required', 'string', 'max:100'],
             'phone' => ['nullable', 'string', 'max:20'],
             'email' => ['required', 'email', 'max:100', 'unique:users,email,' . $user->id],
-            'gender' => ['required', Rule::in(['male', 'female'])],
+            'gender' => ['required', Rule::in(['Male', 'Female'])],
             'birth_date' => ['required', 'date', 'before:today'],
         ]);
 
@@ -300,14 +301,86 @@ class AuthController extends Controller
 
     /*
     |--------------------------------------------------------------------------
+    | Verify Password Reset OTP - Step 2
+    |--------------------------------------------------------------------------
+    */
+    public function verifyPasswordResetOtp(Request $request)
+    {
+        $validated = $request->validate([
+            'email' => ['required', 'email', 'max:100'],
+            'otp' => ['required', 'digits:6'],
+        ]);
+
+        $user = User::where('email', $validated['email'])
+            ->where('role', 'customer')
+            ->first();
+
+        if (!$user) {
+            return response()->json([
+                'message' => 'OTP tidak valid atau sudah kedaluwarsa.',
+            ], 422);
+        }
+
+        $otpRecord = EmailOtp::where('user_id', $user->id)
+            ->where('purpose', 'password_reset')
+            ->whereNull('used_at')
+            ->latest('id')
+            ->first();
+
+        if (!$otpRecord) {
+            return response()->json([
+                'message' => 'OTP tidak ditemukan. Silakan minta OTP baru.',
+            ], 422);
+        }
+
+        if ($otpRecord->isExpired()) {
+            return response()->json([
+                'message' => 'OTP sudah kedaluwarsa. Silakan minta OTP baru.',
+            ], 422);
+        }
+
+        if ($otpRecord->attempts >= 5) {
+            return response()->json([
+                'message' => 'Percobaan OTP telah melebihi batas. Silakan minta OTP baru.',
+            ], 429);
+        }
+
+        if (!Hash::check($validated['otp'], $otpRecord->otp_hash)) {
+            $otpRecord->increment('attempts');
+
+            return response()->json([
+                'message' => 'OTP tidak valid.',
+            ], 422);
+        }
+
+        // Buat token sementara setelah OTP dinyatakan valid.
+        $resetToken = Str::random(64);
+
+        $otpRecord->verified_at = now();
+        $otpRecord->reset_token_hash = Hash::make($resetToken);
+        $otpRecord->reset_token_expires_at = now()->addMinutes(10);
+        $otpRecord->save();
+
+        return response()->json([
+            'message' => 'OTP berhasil diverifikasi. Silakan buat password baru.',
+            'data' => [
+                'email' => $user->email,
+                'reset_token' => $resetToken,
+                'expires_in' => 600,
+            ],
+        ]);
+    }
+
+    /*
+    |--------------------------------------------------------------------------
     | Reset Password
     |--------------------------------------------------------------------------
     */
     public function resetPassword(Request $request)
     {
         $validated = $request->validate([
-            'email' => ['required', 'email'],
-            'otp' => ['required', 'digits:6'],
+            'email' => ['required', 'email', 'max:100'],
+            'reset_token' => ['required', 'string', 'size:64'],
             'password' => ['required', 'string', 'min:8', 'confirmed'],
         ]);
 
@@ -316,44 +389,47 @@ class AuthController extends Controller
             ->first();
 
         if (!$user) {
-            return response()->json(['message' => 'Data reset password tidak valid.'], 422);
+            return response()->json([
+                'message' => 'Data reset password tidak valid atau sudah kedaluwarsa.',
+            ], 422);
         }
 
         $otpRecord = EmailOtp::where('user_id', $user->id)
             ->where('purpose', 'password_reset')
             ->whereNull('used_at')
-            ->latest()
+            ->whereNotNull('verified_at')
+            ->whereNotNull('reset_token_hash')
+            ->latest('id')
             ->first();
 
-        if (!$otpRecord) {
-            return response()->json(['message' => 'OTP tidak ditemukan. Silakan minta OTP baru.'], 422);
-        }
-
-        if ($otpRecord->isExpired()) {
-            return response()->json(['message' => 'OTP sudah kedaluwarsa. Silakan minta OTP baru.'], 422);
-        }
-
-        if ($otpRecord->attempts >= 5) {
-            return response()->json(['message' => 'Percobaan OTP telah melebihi batas. Silakan minta OTP baru.'], 429);
-        }
-
-        if (!Hash::check($validated['otp'], $otpRecord->otp_hash)) {
-            $otpRecord->increment('attempts');
-            return response()->json(['message' => 'OTP tidak valid.'], 422);
+        if (
+            !$otpRecord ||
+            !$otpRecord->reset_token_expires_at ||
+            $otpRecord->reset_token_expires_at->isPast() ||
+            !Hash::check($validated['reset_token'], $otpRecord->reset_token_hash)
+        ) {
+            return response()->json([
+                'message' => 'Token reset password tidak valid atau sudah kedaluwarsa. Silakan ulangi proses lupa password.',
+            ], 422);
         }
 
         DB::transaction(function () use ($user, $otpRecord, $validated) {
-            // FIX: Password harus di-hash sebelum disimpan
             $user->password = Hash::make($validated['password']);
             $user->save();
 
+            // Token hanya boleh digunakan sekali.
             $otpRecord->used_at = now();
+            $otpRecord->reset_token_hash = null;
+            $otpRecord->reset_token_expires_at = null;
             $otpRecord->save();
 
+            // Cabut token login lama agar semua sesi harus login kembali.
             $user->tokens()->delete();
         });
 
-        return response()->json(['message' => 'Password berhasil diubah. Silakan login kembali.']);
+        return response()->json([
+            'message' => 'Password berhasil diubah. Silakan login kembali.',
+        ]);
     }
 
     /*
