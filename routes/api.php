@@ -10,6 +10,8 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProductController;
 use Illuminate\Http\Request;
+use Illuminate\Support\Facades\File;
+use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -31,7 +33,29 @@ Route::prefix('auth')->group(function () {
 
 });
 
+Route::get('/storage-image/{path}', function ($path) {
+        // Arahkan ke folder storage/app/public
+        $filePath = storage_path('app/public/' . $path);
+
+        if (!File::exists($filePath)) {
+            return response()->json(['message' => 'File tidak ditemukan'], 404);
+        }
+
+        $file = File::get($filePath);
+        $type = File::mimeType($filePath);
+
+        $response = Response::make($file, 200);
+        $response->header("Content-Type", $type);
+
+        // ⚠️ HEADER INI WAJIB ADA AGAR FLUTTER WEB BISA MEMBACA GAMBAR
+        $response->header("Access-Control-Allow-Origin", "*");
+
+        return $response;
+    })->where('path', '.*');
+
 Route::middleware('auth:sanctum')->group(function () {
+
+
 
     Route::prefix('addresses')->group(function () {
         Route::get('/', [AddressController::class, 'index']);
