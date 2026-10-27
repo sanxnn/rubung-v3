@@ -28,16 +28,14 @@ class ProductController extends Controller
             });
         }
 
-        if ($request->filled('category')) {
-            $query->whereHas('category', function ($query) use ($request) {
-                $query->where('slug', $request->category);
-            });
+       if ($request->filled('category_id')) {
+            // Langsung filter berdasarkan kolom category_id di tabel products
+            $query->where('category_id', $request->category_id);
         }
 
-        if ($request->filled('subcategory')) {
-            $query->whereHas('subcategory', function ($query) use ($request) {
-                $query->where('slug', $request->subcategory);
-            });
+        // 3. (Opsional) Filter Subcategory jika nanti dibutuhkan
+        if ($request->filled('subcategory_id')) {
+            $query->where('subcategory_id', $request->subcategory_id);
         }
 
         $products = $query
