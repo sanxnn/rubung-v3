@@ -14,6 +14,7 @@ Dokumen ini menjelaskan backend yang **sudah tersedia** untuk aplikasi Flutter p
 
 | Hal | Nilai saat ini |
 | --- | --- |
+| Base URL production (aktif) | `https://batikrubungkuning.sanxnn.my.id/api` — gunakan ini untuk build Flutter production. |
 | Base URL lokal | `http://10.0.2.2:8000/api` untuk Android emulator; `http://localhost:8000/api` untuk Flutter desktop/web di mesin yang sama. Perangkat fisik memakai IP LAN server. |
 | Header JSON | `Accept: application/json` dan `Content-Type: application/json` untuk request berbadan JSON. |
 | Endpoint privat | `Authorization: Bearer <token>` dari login atau registrasi. Simpan token di penyimpanan aman perangkat. |
@@ -22,6 +23,8 @@ Dokumen ini menjelaskan backend yang **sudah tersedia** untuk aplikasi Flutter p
 | Gambar | `image` adalah path relatif, misalnya `products/batik.jpg`. Tampilkan melalui `<BASE_URL>/storage-image/products/batik.jpg` atau URL `/storage/...` setelah `php artisan storage:link`. Endpoint gambar mengembalikan file, bukan JSON. |
 | Pagination | `page` mulai dari 1. Format pagination katalog produk berbeda dari resource collection; lihat contoh di bawah. |
 | Error umum | `401` token tidak ada/tidak valid, `403` akses ditolak atau email belum diverifikasi, `404` ID tidak ditemukan/bukan milik pelanggan, `422` validasi atau aturan bisnis, `429` batas percobaan. |
+
+Contoh URL lengkap production: `GET https://batikrubungkuning.sanxnn.my.id/api/products?category_id=1&page=1`. Semua path di tabel endpoint di bawah digabungkan dengan salah satu base URL di atas. URL pada contoh pagination memakai domain production.
 
 Contoh error validasi Laravel (`422`):
 
@@ -142,13 +145,13 @@ Contoh: `GET /products?search=batik&category_id=1&subcategory_id=3&page=1`. Semu
         ]
       }
     ],
-    "first_page_url": "http://localhost:8000/api/products?page=1",
+    "first_page_url": "https://batikrubungkuning.sanxnn.my.id/api/products?page=1",
     "from": 1,
     "last_page": 1,
-    "last_page_url": "http://localhost:8000/api/products?page=1",
+    "last_page_url": "https://batikrubungkuning.sanxnn.my.id/api/products?page=1",
     "links": [],
     "next_page_url": null,
-    "path": "http://localhost:8000/api/products",
+    "path": "https://batikrubungkuning.sanxnn.my.id/api/products",
     "per_page": 12,
     "prev_page_url": null,
     "to": 1,
@@ -212,8 +215,8 @@ Contoh: `GET /products?search=batik&category_id=1&subcategory_id=3&page=1`. Semu
       ]
     }
   ],
-  "links": { "first": "http://localhost:8000/api/bundles?page=1", "last": "http://localhost:8000/api/bundles?page=1", "prev": null, "next": null },
-  "meta": { "current_page": 1, "from": 1, "last_page": 1, "links": [], "path": "http://localhost:8000/api/bundles", "per_page": 12, "to": 1, "total": 1 },
+  "links": { "first": "https://batikrubungkuning.sanxnn.my.id/api/bundles?page=1", "last": "https://batikrubungkuning.sanxnn.my.id/api/bundles?page=1", "prev": null, "next": null },
+  "meta": { "current_page": 1, "from": 1, "last_page": 1, "links": [], "path": "https://batikrubungkuning.sanxnn.my.id/api/bundles", "per_page": 12, "to": 1, "total": 1 },
   "message": "Data bundling berhasil diambil."
 }
 ```
@@ -429,8 +432,8 @@ Jika token pending sudah ada, endpoint yang sama mengembalikan `{"message":"Pemb
   "data": [
     { "id": 25, "order_number": "BRK-20261111080000-ABCDE", "status": "paid", "is_custom_order": false, "pricing": { "subtotal": 500000, "discount_date_cantik": 0, "discount_voucher": 50000, "total_discount": 50000, "shipping_cost": 20000, "final_amount": 470000 }, "items": [], "payment": { "payment_type": "bank_transfer", "payment_status": "success", "amount": 470000, "snap_token": "contoh-snap-token", "paid_at": "2026-11-11T08:10:00.000000Z" } }
   ],
-  "links": { "first": "http://localhost:8000/api/orders?page=1", "last": "http://localhost:8000/api/orders?page=1", "prev": null, "next": null },
-  "meta": { "current_page": 1, "from": 1, "last_page": 1, "links": [], "path": "http://localhost:8000/api/orders", "per_page": 10, "to": 1, "total": 1 }
+  "links": { "first": "https://batikrubungkuning.sanxnn.my.id/api/orders?page=1", "last": "https://batikrubungkuning.sanxnn.my.id/api/orders?page=1", "prev": null, "next": null },
+  "meta": { "current_page": 1, "from": 1, "last_page": 1, "links": [], "path": "https://batikrubungkuning.sanxnn.my.id/api/orders", "per_page": 10, "to": 1, "total": 1 }
 }
 ```
 
@@ -502,6 +505,6 @@ Response `201`:
 | 3. Akun dan transaksi | Tinggi | OTP email, login/profil, alamat, keranjang, checkout, Snap Midtrans, polling/refresh detail order, riwayat, pembatalan pending. Uji bersama MySQL, RajaOngkir, SMTP, dan Midtrans sandbox. |
 | 4. Custom order | Sedang | Permintaan teks, daftar/detail, quotation, approve, pembayaran, dan pembatalan. |
 | 5. Perluasan API | Sedang | Jika dibutuhkan desain Flutter: endpoint pratinjau ongkir/promo/voucher sebelum checkout, daftar voucher publik, upload lampiran custom order, dan filter/sort produk menurut harga/stok. Selaraskan pula `shipping.weight` pada response order dengan berat konfigurasi. Endpoint perluasan tersebut **belum tersedia**; jangan panggil sebagai endpoint aktif. |
-| 6. Operasional | Sedang | Tetapkan kontrak API versi stabil, tambah pengujian respons JSON dan perangkat nyata, serta atur URL publik HTTPS dan webhook Midtrans di environment produksi. |
+| 6. Operasional | Sedang | Tetapkan kontrak API versi stabil, tambah pengujian respons JSON dan perangkat nyata terhadap URL production, serta pastikan webhook Midtrans mengarah ke URL production. |
 
 Dokumen ini mencatat perilaku backend saat ini, bukan janji endpoint baru. Jika kontrak API berubah, perbarui contoh response dan model Flutter bersama perubahan controller/resource terkait.
