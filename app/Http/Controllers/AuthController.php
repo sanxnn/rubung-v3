@@ -2,7 +2,6 @@
 
 namespace App\Http\Controllers;
 
-use App\Models\User;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
 use Illuminate\Validation\Rule;
@@ -21,8 +20,9 @@ class AuthController extends Controller
             'password' => 'required|string',
         ]);
 
-        if (Auth::attempt($credentials)) {
+        if (Auth::attempt([...$credentials, 'role' => 'admin'])) {
             $request->session()->regenerate();
+
             return redirect()->intended('/dashboard');
         }
 
@@ -36,6 +36,7 @@ class AuthController extends Controller
         Auth::logout();
         $request->session()->invalidate();
         $request->session()->regenerateToken();
+
         return redirect('/login');
     }
 
@@ -58,14 +59,14 @@ class AuthController extends Controller
             'name' => [
                 'required',
                 'string',
-                'max:255',
+                'max:100',
                 'regex:/^[A-Za-z\s\'-]+$/',
             ],
 
             'email' => [
                 'required',
                 'email',
-                'max:255',
+                'max:100',
                 Rule::unique('users', 'email')->ignore($admin->id),
             ],
 
@@ -97,6 +98,4 @@ class AuthController extends Controller
             ->route('admin.profile')
             ->with('success', 'Profile berhasil diperbarui.');
     }
-
-
 }

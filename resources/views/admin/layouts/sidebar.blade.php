@@ -43,7 +43,7 @@
                     <span>Pesanan</span>
                 </div>
                 <span class="px-2 py-0.5 rounded-full bg-red-50 text-red-500 text-[10px] font-semibold">
-                    8
+                    {{ \App\Models\Order::where('status', 'pending_payment')->count() }}
                 </span>
             </a>
 

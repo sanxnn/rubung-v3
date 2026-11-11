@@ -1,26 +1,28 @@
 <?php
 
 use App\Http\Controllers\Admin\CategoryController;
+use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\CustomOrderController;
 use App\Http\Controllers\Admin\DashboardController;
 use App\Http\Controllers\Admin\OrderController;
 use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductVariantController;
-use App\Http\Controllers\Admin\SubcategoryController;
-use App\Http\Controllers\Admin\CustomerController;
 use App\Http\Controllers\Admin\PromoController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\SubcategoryController;
 use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\AuthController;
+use App\Http\Controllers\ContactController;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
     return view('company-profile');
 });
+Route::post('/contact', [ContactController::class, 'send'])->middleware('throttle:3,1')->name('contact.send');
 
 Route::middleware('guest')->group(function () {
     Route::get('/login', [AuthController::class, 'login'])->name('login');
-    Route::post('/login', [AuthController::class, 'authenticate'])->name('authenticate');
+    Route::post('/login', [AuthController::class, 'authenticate'])->middleware('throttle:10,1')->name('authenticate');
 });
 
 Route::middleware(['auth', 'role'])->group(function () {
@@ -69,7 +71,7 @@ Route::middleware(['auth', 'role'])->group(function () {
         Route::delete('/products/bundles/{product}', [ProductController::class, 'destroyBundle'])->name('bundles.destroy');
 
         Route::get('/customer', [CustomerController::class, 'index'])->name('customers.index');
-        // Route::post('/customer', [CustomerController::class, 'store'])->name('customers.store');
+        Route::post('/customer', [CustomerController::class, 'store'])->name('customers.store');
         Route::put('/customer/{customer}', [CustomerController::class, 'update'])->name('customers.update');
         Route::delete('/customer/{customer}', [CustomerController::class, 'destroy'])->name('customers.destroy');
 

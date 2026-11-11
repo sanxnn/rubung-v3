@@ -17,10 +17,9 @@ class SubcategorySeeder extends Seeder
             $subcategories = ['Batik Tulis', 'Batik Cap', 'Batik Kombinasi'];
 
             foreach ($subcategories as $name) {
-                Subcategory::create([
+                Subcategory::firstOrCreate(['slug' => Str::slug($name)], [
                     'category_id' => $batikCategory->id,
                     'name' => $name,
-                    'slug' => Str::slug($name),
                 ]);
             }
         }

@@ -3,26 +3,25 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
+use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductVariant;
-use App\Models\ProductBundleItem;
+use Illuminate\Http\RedirectResponse;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\Log;
+use Illuminate\Validation\Rule;
 
 class ProductVariantController extends Controller
 {
     /**
      * Menyimpan varian baru (PCS atau Paket)
      *
-     * @param Request $request
-     * @param Product $product
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function store(Request $request, Product $product)
     {
+        abort_if($product->variants()->whereHas('bundleComponents')->exists(), 403);
         $validated = $request->validate([
             'name' => [
                 'required',
@@ -58,7 +57,7 @@ class ProductVariantController extends Controller
         if ($product->category?->name === 'Bundling') {
             return back()
                 ->withErrors([
-                    'variant' => 'Varian paket bundling harus dibuat melalui halaman Paket Bundling.'
+                    'variant' => 'Varian paket bundling harus dibuat melalui halaman Paket Bundling.',
                 ])
                 ->withInput();
         }
@@ -82,11 +81,11 @@ class ProductVariantController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            Log::error('Variant Store Error: ' . $e->getMessage());
+            Log::error('Variant Store Error: '.$e->getMessage());
 
             return back()
                 ->withErrors([
-                    'system' => 'Terjadi kesalahan sistem saat menyimpan varian.'
+                    'system' => 'Terjadi kesalahan sistem saat menyimpan varian.',
                 ])
                 ->withInput();
         }
@@ -96,10 +95,7 @@ class ProductVariantController extends Controller
     /**
      * Memperbarui varian yang sudah ada
      *
-     * @param Request $request
-     * @param Product $product
-     * @param ProductVariant $variant
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function update(Request $request, Product $product, ProductVariant $variant)
     {
@@ -110,7 +106,7 @@ class ProductVariantController extends Controller
         if ($variant->bundleComponents()->exists()) {
             return back()
                 ->withErrors([
-                    'variant' => 'Varian paket bundling harus dikelola melalui halaman Paket Bundling.'
+                    'variant' => 'Varian paket bundling harus dikelola melalui halaman Paket Bundling.',
                 ])
                 ->withInput();
         }
@@ -119,7 +115,7 @@ class ProductVariantController extends Controller
         if ($product->category?->name === 'Bundling') {
             return back()
                 ->withErrors([
-                    'variant' => 'Produk bundling harus dikelola melalui halaman Paket Bundling.'
+                    'variant' => 'Produk bundling harus dikelola melalui halaman Paket Bundling.',
                 ])
                 ->withInput();
         }
@@ -176,11 +172,11 @@ class ProductVariantController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            Log::error('Variant Update Error: ' . $e->getMessage());
+            Log::error('Variant Update Error: '.$e->getMessage());
 
             return back()
                 ->withErrors([
-                    'system' => 'Terjadi kesalahan sistem saat memperbarui varian.'
+                    'system' => 'Terjadi kesalahan sistem saat memperbarui varian.',
                 ])
                 ->withInput();
         }
@@ -190,27 +186,29 @@ class ProductVariantController extends Controller
     /**
      * Menghapus varian
      *
-     * @param Product $product
-     * @param ProductVariant $variant
-     * @return \Illuminate\Http\RedirectResponse
+     * @return RedirectResponse
      */
     public function destroy(Product $product, ProductVariant $variant)
     {
         abort_if($variant->product_id !== $product->id, 403, 'Akses ditolak.');
 
+        if (OrderItem::where('product_variant_id', $variant->id)
+            ->whereHas('order', fn ($query) => $query->where('status', 'pending_payment'))
+            ->exists()) {
+            return back()->withErrors(['delete' => 'Varian masih digunakan oleh pesanan yang menunggu pembayaran.']);
+        }
+
         // Varian ini sedang digunakan sebagai komponen bundle.
         if ($variant->bundleAsComponent()->exists()) {
             return back()->withErrors([
-                'delete' =>
-                    'Gagal menghapus varian. Varian ini masih menjadi komponen dalam paket bundling.'
+                'delete' => 'Gagal menghapus varian. Varian ini masih menjadi komponen dalam paket bundling.',
             ]);
         }
 
         // Jangan hapus bundle lewat controller varian biasa.
         if ($variant->bundleComponents()->exists()) {
             return back()->withErrors([
-                'delete' =>
-                    'Paket bundling harus dihapus melalui halaman Paket Bundling.'
+                'delete' => 'Paket bundling harus dihapus melalui halaman Paket Bundling.',
             ]);
         }
 
@@ -228,11 +226,10 @@ class ProductVariantController extends Controller
         } catch (\Exception $e) {
             DB::rollBack();
 
-            Log::error('Variant Delete Error: ' . $e->getMessage());
+            Log::error('Variant Delete Error: '.$e->getMessage());
 
             return back()->withErrors([
-                'system' =>
-                    'Gagal menghapus varian karena kendala database.'
+                'system' => 'Gagal menghapus varian karena kendala database.',
             ]);
         }
     }

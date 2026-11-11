@@ -312,8 +312,7 @@
                         <div>
                             <label class="block text-[11px] font-bold text-gray-500 mb-2 uppercase tracking-widest">
                                 Deskripsi <span class="text-red-500">*</span></label>
-                            </label>
-                            <textarea required name="description" rows="3"
+                            <textarea required name="description" maxlength="255" rows="3"
                                 class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-800 focus:ring-2 focus:ring-[#F4C430]/50 outline-none transition-all resize-none"
                                 placeholder="Jelaskan singkat tentang kategori ini..."></textarea>
                         </div>
@@ -397,8 +396,7 @@
                             <div>
                                 <label class="block text-[11px] font-bold text-gray-500 mb-2 uppercase tracking-widest">
                                     Deskripsi <span class="text-red-500">*</span></label>
-                                </label>
-                                <textarea required name="description" rows="3"
+                                <textarea required name="description" maxlength="255" rows="3"
                                     class="w-full px-4 py-3 rounded-xl border border-gray-200 bg-gray-50 text-gray-800 focus:ring-2 focus:ring-[#F4C430]/50 outline-none transition-all resize-none"
                                     placeholder="Jelaskan singkat tentang kategori ini...">{{ $category->description }}</textarea>
                             </div>

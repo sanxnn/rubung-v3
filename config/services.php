@@ -35,6 +35,10 @@ return [
         'weight' => (int) env('RAJAONGKIR_WEIGHT', 2000),
     ],
 
+    'contact' => [
+        'email' => env('CONTACT_EMAIL', env('MAIL_FROM_ADDRESS')),
+    ],
+
     'slack' => [
         'notifications' => [
             'bot_user_oauth_token' => env('SLACK_BOT_USER_OAUTH_TOKEN'),

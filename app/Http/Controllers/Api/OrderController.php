@@ -15,9 +15,11 @@ use App\Models\Voucher;
 use App\Services\RajaOngkirService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
 use Midtrans\Config;
 use Midtrans\Snap;
+use Midtrans\Transaction as MidtransTransaction;
 
 class OrderController extends Controller
 {
@@ -114,10 +116,9 @@ class OrderController extends Controller
             )
             ->first();
 
-        if (!$address) {
+        if (! $address) {
             return response()->json([
-                'message' =>
-                    'Alamat tidak ditemukan.',
+                'message' => 'Alamat tidak ditemukan.',
             ], 404);
         }
 
@@ -136,12 +137,11 @@ class OrderController extends Controller
             ->first();
 
         if (
-            !$cart ||
+            ! $cart ||
             $cart->items->isEmpty()
         ) {
             return response()->json([
-                'message' =>
-                    'Keranjang kosong.',
+                'message' => 'Keranjang kosong.',
             ], 422);
         }
 
@@ -170,8 +170,7 @@ class OrderController extends Controller
                     */
 
                     foreach (
-                        $cart->items
-                        as $cartItem
+                        $cart->items as $cartItem
                     ) {
                         $variant =
                             ProductVariant::query()
@@ -185,7 +184,7 @@ class OrderController extends Controller
                                         ->product_variant_id
                                 );
 
-                        if (!$variant) {
+                        if (! $variant) {
                             throw new \Exception(
                                 'Produk pada keranjang sudah tidak tersedia.'
                             );
@@ -225,7 +224,7 @@ class OrderController extends Controller
                         */
 
                         if (
-                            !$isBundle &&
+                            ! $isBundle &&
                             $variant->stock > 0
                         ) {
                             if (
@@ -258,20 +257,16 @@ class OrderController extends Controller
                         */
 
                         $checkoutItems[] = [
-                            'cart_item' =>
-                                $cartItem,
+                            'cart_item' => $cartItem,
 
-                            'variant' =>
-                                $variant,
+                            'variant' => $variant,
 
-                            'is_bundle' =>
-                                $isBundle,
+                            'is_bundle' => $isBundle,
 
-                            'stock_quantity' =>
-                                (
-                                    $isBundle ||
-                                    $variant->stock > 0
-                                )
+                            'stock_quantity' => (
+                                $isBundle ||
+                                $variant->stock > 0
+                            )
                                     ? $cartItem->quantity
                                     : 0,
                         ];
@@ -320,7 +315,7 @@ class OrderController extends Controller
                     $discountVoucher = 0;
 
                     if (
-                        !empty(
+                        ! empty(
                             $validated[
                                 'voucher_code'
                             ]
@@ -341,14 +336,14 @@ class OrderController extends Controller
                                 ->lockForUpdate()
                                 ->first();
 
-                        if (!$voucher) {
+                        if (! $voucher) {
                             throw new \Exception(
                                 'Voucher tidak ditemukan.'
                             );
                         }
 
                         if (
-                            !$voucher->isValid()
+                            ! $voucher->isValid()
                         ) {
                             throw new \Exception(
                                 'Voucher sudah tidak aktif atau kuotanya habis.'
@@ -360,7 +355,7 @@ class OrderController extends Controller
                             $voucher->min_purchase
                         ) {
                             throw new \Exception(
-                                'Minimal pembelian untuk voucher adalah Rp ' .
+                                'Minimal pembelian untuk voucher adalah Rp '.
                                 number_format(
                                     $voucher
                                         ->min_purchase,
@@ -411,7 +406,7 @@ class OrderController extends Controller
                     */
 
                     $rajaOngkir =
-                        new RajaOngkirService();
+                        new RajaOngkirService;
 
                     $shipping =
                         $rajaOngkir
@@ -451,70 +446,49 @@ class OrderController extends Controller
 
                     $order =
                         Order::create([
-                            'user_id' =>
-                                $user->id,
+                            'user_id' => $user->id,
 
-                            'address_id' =>
-                                $address->id,
+                            'address_id' => $address->id,
 
-                            'order_number' =>
-                                $orderNumber,
+                            'order_number' => $orderNumber,
 
-                            'subtotal' =>
-                                $subtotal,
+                            'subtotal' => $subtotal,
 
-                            'discount_date_cantik' =>
-                                $discountDateCantik,
+                            'discount_date_cantik' => $discountDateCantik,
 
-                            'date_promo_id' =>
-                                $datePromo?->id,
+                            'date_promo_id' => $datePromo?->id,
 
-                            'discount_voucher' =>
-                                $discountVoucher,
+                            'discount_voucher' => $discountVoucher,
 
-                            'voucher_id' =>
-                                $voucher?->id,
+                            'voucher_id' => $voucher?->id,
 
-                            'shipping_cost' =>
-                                $shippingCost,
+                            'shipping_cost' => $shippingCost,
 
-                            'final_amount' =>
-                                $finalAmount,
+                            'final_amount' => $finalAmount,
 
-                            'status' =>
-                                'pending_payment',
+                            'status' => 'pending_payment',
 
-                            'stock_reserved_at' =>
-                                now(),
+                            'stock_reserved_at' => now(),
 
-                            'stock_released_at' =>
-                                null,
+                            'stock_released_at' => null,
 
-                            'shipping_courier' =>
-                                'jnt',
+                            'shipping_courier' => $shipping['courier'],
 
-                            'snapshot_recipient_name' =>
-                                $address
-                                    ->recipient_name,
+                            'snapshot_recipient_name' => $address
+                                ->recipient_name,
 
-                            'snapshot_phone' =>
-                                $address->phone,
+                            'snapshot_phone' => $address->phone,
 
-                            'snapshot_province' =>
-                                $address->province,
+                            'snapshot_province' => $address->province,
 
-                            'snapshot_city' =>
-                                $address->city,
+                            'snapshot_city' => $address->city,
 
-                            'snapshot_postal_code' =>
-                                $address
-                                    ->postal_code,
+                            'snapshot_postal_code' => $address
+                                ->postal_code,
 
-                            'snapshot_detail' =>
-                                $address->detail,
+                            'snapshot_detail' => $address->detail,
 
-                            'notes' =>
-                                $validated[
+                            'notes' => $validated[
                                     'notes'
                                 ] ?? null,
                         ]);
@@ -526,8 +500,7 @@ class OrderController extends Controller
                     */
 
                     foreach (
-                        $checkoutItems
-                        as $checkoutItem
+                        $checkoutItems as $checkoutItem
                     ) {
                         $cartItem =
                             $checkoutItem[
@@ -552,31 +525,24 @@ class OrderController extends Controller
                         $order
                             ->items()
                             ->create([
-                                'product_variant_id' =>
-                                    $variant->id,
+                                'product_variant_id' => $variant->id,
 
-                                'product_name' =>
-                                    $variant
-                                        ->product
-                                        ->name,
+                                'product_name' => $variant
+                                    ->product
+                                    ->name,
 
-                                'variant_name' =>
-                                    $variant
-                                        ->name,
+                                'variant_name' => $variant
+                                    ->name,
 
-                                'quantity' =>
-                                    $cartItem
-                                        ->quantity,
+                                'quantity' => $cartItem
+                                    ->quantity,
 
-                                'stock_quantity' =>
-                                    $stockQuantity,
+                                'stock_quantity' => $stockQuantity,
 
-                                'unit_price' =>
-                                    $variant
-                                        ->price,
+                                'unit_price' => $variant
+                                    ->price,
 
-                                'subtotal' =>
-                                    $variant->price *
+                                'subtotal' => $variant->price *
                                     $cartItem
                                         ->quantity,
                             ]);
@@ -649,10 +615,15 @@ class OrderController extends Controller
                 'voucher',
             ]);
 
-            $snapToken =
-                $this->createMidtransPayment(
-                    $order
-                );
+            try {
+                $snapToken = $this->createMidtransPayment($order);
+            } catch (\Throwable $paymentError) {
+                Log::error('Gagal membuat token pembayaran pesanan.', [
+                    'order_id' => $order->id,
+                    'error' => $paymentError->getMessage(),
+                ]);
+                $snapToken = null;
+            }
 
             /*
             |--------------------------------------------------------------------------
@@ -668,33 +639,29 @@ class OrderController extends Controller
             ]);
 
             return response()->json([
-                'message' =>
-                    'Pesanan berhasil dibuat.',
+                'message' => $snapToken
+                    ? 'Pesanan berhasil dibuat.'
+                    : 'Pesanan berhasil dibuat. Silakan ulangi pembuatan pembayaran.',
 
                 'data' => [
-                    'order' =>
-                        new OrderResource(
-                            $order
-                        ),
+                    'order' => new OrderResource(
+                        $order
+                    ),
 
                     'payment' => [
-                        'payment_status' =>
-                            'pending',
+                        'payment_status' => 'pending',
 
-                        'amount' =>
-                            $order
-                                ->final_amount,
+                        'amount' => $order
+                            ->final_amount,
 
-                        'snap_token' =>
-                            $snapToken,
+                        'snap_token' => $snapToken,
                     ],
                 ],
             ], 201);
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' =>
-                    $e->getMessage(),
+                'message' => $e->getMessage(),
             ], 422);
         }
     }
@@ -711,7 +678,7 @@ class OrderController extends Controller
         $serverKey =
             config('midtrans.server_key');
 
-        if (!$serverKey) {
+        if (! $serverKey) {
             throw new \Exception(
                 'Konfigurasi Midtrans belum tersedia.'
             );
@@ -738,8 +705,7 @@ class OrderController extends Controller
         $itemDetails = [];
 
         foreach (
-            $order->items
-            as $item
+            $order->items as $item
         ) {
             $itemDetails[] = [
                 'id' => (string) (
@@ -748,24 +714,21 @@ class OrderController extends Controller
                     ?? $item->id
                 ),
 
-                'price' =>
-                    (int) $item
-                        ->unit_price,
+                'price' => (int) $item
+                    ->unit_price,
 
-                'quantity' =>
-                    (int) $item
-                        ->quantity,
+                'quantity' => (int) $item
+                    ->quantity,
 
-                'name' =>
-                    mb_substr(
-                        $item
-                            ->product_name .
-                        ' - ' .
-                        $item
-                            ->variant_name,
-                        0,
-                        50
-                    ),
+                'name' => mb_substr(
+                    $item
+                        ->product_name.
+                    ' - '.
+                    $item
+                        ->variant_name,
+                    0,
+                    50
+                ),
             ];
         }
 
@@ -780,17 +743,14 @@ class OrderController extends Controller
                 ->discount_date_cantik > 0
         ) {
             $itemDetails[] = [
-                'id' =>
-                    'discount_date_cantik',
+                'id' => 'discount_date_cantik',
 
-                'price' =>
-                    -$order
-                        ->discount_date_cantik,
+                'price' => -$order
+                    ->discount_date_cantik,
 
                 'quantity' => 1,
 
-                'name' =>
-                    'Diskon Tanggal Cantik',
+                'name' => 'Diskon Tanggal Cantik',
             ];
         }
 
@@ -805,17 +765,14 @@ class OrderController extends Controller
                 ->discount_voucher > 0
         ) {
             $itemDetails[] = [
-                'id' =>
-                    'discount_voucher',
+                'id' => 'discount_voucher',
 
-                'price' =>
-                    -$order
-                        ->discount_voucher,
+                'price' => -$order
+                    ->discount_voucher,
 
                 'quantity' => 1,
 
-                'name' =>
-                    'Diskon Voucher',
+                'name' => 'Diskon Voucher',
             ];
         }
 
@@ -829,17 +786,14 @@ class OrderController extends Controller
             $order->shipping_cost > 0
         ) {
             $itemDetails[] = [
-                'id' =>
-                    'shipping',
+                'id' => 'shipping',
 
-                'price' =>
-                    $order
-                        ->shipping_cost,
+                'price' => $order
+                    ->shipping_cost,
 
                 'quantity' => 1,
 
-                'name' =>
-                    'Ongkos Kirim J&T',
+                'name' => 'Ongkos Kirim J&T',
             ];
         }
 
@@ -852,8 +806,7 @@ class OrderController extends Controller
         $itemTotal =
             collect($itemDetails)
                 ->sum(
-                    fn ($item) =>
-                        $item['price'] *
+                    fn ($item) => $item['price'] *
                         $item['quantity']
                 );
 
@@ -874,33 +827,27 @@ class OrderController extends Controller
 
         $params = [
             'transaction_details' => [
-                'order_id' =>
-                    $order->order_number,
+                'order_id' => $order->order_number,
 
-                'gross_amount' =>
-                    (int) $order
-                        ->final_amount,
+                'gross_amount' => (int) $order
+                    ->final_amount,
             ],
 
             'customer_details' => [
-                'first_name' =>
-                    $order
-                        ->user
-                        ->name,
+                'first_name' => $order
+                    ->user
+                    ->name,
 
-                'email' =>
-                    $order
-                        ->user
-                        ->email,
+                'email' => $order
+                    ->user
+                    ->email,
 
-                'phone' =>
-                    $order
-                        ->user
-                        ->phone,
+                'phone' => $order
+                    ->user
+                    ->phone,
             ],
 
-            'item_details' =>
-                $itemDetails,
+            'item_details' => $itemDetails,
         ];
 
         /*
@@ -922,27 +869,20 @@ class OrderController extends Controller
 
         Payment::updateOrCreate(
             [
-                'order_id' =>
-                    $order->id,
+                'order_id' => $order->id,
             ],
             [
-                'midtrans_transaction_id' =>
-                    null,
+                'midtrans_transaction_id' => null,
 
-                'snap_token' =>
-                    $snapToken,
+                'snap_token' => $snapToken,
 
-                'payment_type' =>
-                    'pending',
+                'payment_type' => 'pending',
 
-                'payment_status' =>
-                    'pending',
+                'payment_status' => 'pending',
 
-                'amount' =>
-                    $order->final_amount,
+                'amount' => $order->final_amount,
 
-                'paid_at' =>
-                    null,
+                'paid_at' => null,
             ]
         );
 
@@ -971,9 +911,25 @@ class OrderController extends Controller
             'pending_payment'
         ) {
             return response()->json([
-                'message' =>
-                    'Pesanan tidak dapat dibatalkan pada status ini.',
+                'message' => 'Pesanan tidak dapat dibatalkan pada status ini.',
             ], 422);
+        }
+
+        $payment = $order->payment;
+        if ($payment?->payment_status === 'success') {
+            return response()->json(['message' => 'Pesanan sudah dibayar.'], 422);
+        }
+
+        if ($payment?->snap_token && $payment->payment_status === 'pending') {
+            try {
+                Config::$serverKey = config('midtrans.server_key');
+                Config::$isProduction = config('midtrans.is_production');
+                MidtransTransaction::cancel($order->order_number);
+            } catch (\Throwable $e) {
+                return response()->json([
+                    'message' => 'Pembatalan pembayaran belum terkonfirmasi. Silakan coba lagi.',
+                ], 409);
+            }
         }
 
         try {
@@ -1027,8 +983,7 @@ class OrderController extends Controller
                     */
 
                     $order->update([
-                        'status' =>
-                            'cancelled',
+                        'status' => 'cancelled',
                     ]);
                 }
             );
@@ -1036,24 +991,21 @@ class OrderController extends Controller
             $order->refresh();
 
             return response()->json([
-                'message' =>
-                    'Pesanan berhasil dibatalkan.',
+                'message' => 'Pesanan berhasil dibatalkan.',
 
-                'data' =>
-                    new OrderResource(
-                        $order->load([
-                            'items',
-                            'payment',
-                            'datePromo',
-                            'voucher',
-                        ])
-                    ),
+                'data' => new OrderResource(
+                    $order->load([
+                        'items',
+                        'payment',
+                        'datePromo',
+                        'voucher',
+                    ])
+                ),
             ]);
 
         } catch (\Exception $e) {
             return response()->json([
-                'message' =>
-                    $e->getMessage(),
+                'message' => $e->getMessage(),
             ], 422);
         }
     }
@@ -1068,11 +1020,11 @@ class OrderController extends Controller
     {
         do {
             $number =
-                'BRK-' .
+                'BRK-'.
                 now()->format(
                     'YmdHis'
-                ) .
-                '-' .
+                ).
+                '-'.
                 strtoupper(
                     Str::random(5)
                 );
@@ -1123,7 +1075,7 @@ class OrderController extends Controller
                             ->component_variant_id
                     );
 
-            if (!$componentVariant) {
+            if (! $componentVariant) {
                 return 0;
             }
 
@@ -1174,7 +1126,7 @@ class OrderController extends Controller
                             ->component_variant_id
                     );
 
-            if (!$componentVariant) {
+            if (! $componentVariant) {
                 throw new \Exception(
                     'Komponen bundle tidak ditemukan.'
                 );
@@ -1222,7 +1174,7 @@ class OrderController extends Controller
             $order->items as $item
         ) {
             if (
-                !$item->product_variant_id ||
+                ! $item->product_variant_id ||
                 $item->stock_quantity <= 0
             ) {
                 continue;
@@ -1236,7 +1188,7 @@ class OrderController extends Controller
                             ->product_variant_id
                     );
 
-            if (!$variant) {
+            if (! $variant) {
                 continue;
             }
 
@@ -1269,7 +1221,7 @@ class OrderController extends Controller
                             );
 
                     if (
-                        !$componentVariant
+                        ! $componentVariant
                     ) {
                         continue;
                     }
@@ -1301,8 +1253,7 @@ class OrderController extends Controller
         }
 
         $order->update([
-            'stock_released_at' =>
-                now(),
+            'stock_released_at' => now(),
         ]);
 
         return true;
@@ -1318,7 +1269,7 @@ class OrderController extends Controller
         Order $order
     ): void {
         if (
-            !$order->voucher_id
+            ! $order->voucher_id
         ) {
             return;
         }
@@ -1330,7 +1281,7 @@ class OrderController extends Controller
                     $order->voucher_id
                 );
 
-        if (!$voucher) {
+        if (! $voucher) {
             return;
         }
 

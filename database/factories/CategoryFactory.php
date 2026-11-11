@@ -22,7 +22,7 @@ class CategoryFactory extends Factory
 
     public function batik(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'name' => 'Batik',
             'slug' => 'batik',
             'description' => 'Kategori khusus untuk produk dan kerajinan Batik.',
@@ -32,7 +32,7 @@ class CategoryFactory extends Factory
 
     public function bahan(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'name' => 'Bahan',
             'slug' => 'bahan',
             'description' => 'Kategori khusus untuk berbagai macam bahan baku.',
@@ -42,10 +42,20 @@ class CategoryFactory extends Factory
 
     public function olahanLimbah(): static
     {
-        return $this->state(fn(array $attributes) => [
+        return $this->state(fn (array $attributes) => [
             'name' => 'Olahan Limbah',
             'slug' => 'olahan-limbah',
             'description' => 'Kategori khusus untuk produk olahan dari limbah.',
+            'has_subcategories' => false,
+        ]);
+    }
+
+    public function bundling(): static
+    {
+        return $this->state(fn (array $attributes) => [
+            'name' => 'Bundling',
+            'slug' => 'bundling',
+            'description' => 'Paket bundling dari beberapa varian bahan.',
             'has_subcategories' => false,
         ]);
     }

@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\Order;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\ValidationException;
 
 class OrderController extends Controller
 {
@@ -31,22 +32,22 @@ class OrderController extends Controller
                     'like',
                     "%{$search}%"
                 )
-                ->orWhere(
-                    'snapshot_recipient_name',
-                    'like',
-                    "%{$search}%"
-                )
-                ->orWhere(
-                    'snapshot_phone',
-                    'like',
-                    "%{$search}%"
-                )
-                ->orWhereHas('user', function ($userQuery) use ($search) {
-                    $userQuery
-                        ->where('name', 'like', "%{$search}%")
-                        ->orWhere('email', 'like', "%{$search}%")
-                        ->orWhere('phone', 'like', "%{$search}%");
-                });
+                    ->orWhere(
+                        'snapshot_recipient_name',
+                        'like',
+                        "%{$search}%"
+                    )
+                    ->orWhere(
+                        'snapshot_phone',
+                        'like',
+                        "%{$search}%"
+                    )
+                    ->orWhereHas('user', function ($userQuery) use ($search) {
+                        $userQuery
+                            ->where('name', 'like', "%{$search}%")
+                            ->orWhere('email', 'like', "%{$search}%")
+                            ->orWhere('phone', 'like', "%{$search}%");
+                    });
             });
         }
 
@@ -93,50 +94,42 @@ class OrderController extends Controller
         */
 
         $stats = [
-            'total' =>
-                Order::count(),
+            'total' => Order::count(),
 
-            'pending_payment' =>
-                Order::where(
-                    'status',
-                    'pending_payment'
-                )->count(),
+            'pending_payment' => Order::where(
+                'status',
+                'pending_payment'
+            )->count(),
 
-            'paid' =>
-                Order::where(
-                    'status',
-                    'paid'
-                )->count(),
+            'paid' => Order::where(
+                'status',
+                'paid'
+            )->count(),
 
-            'processing' =>
-                Order::where(
-                    'status',
-                    'processing'
-                )->count(),
+            'processing' => Order::where(
+                'status',
+                'processing'
+            )->count(),
 
-            'packing' =>
-                Order::where(
-                    'status',
-                    'packing'
-                )->count(),
+            'packing' => Order::where(
+                'status',
+                'packing'
+            )->count(),
 
-            'shipped' =>
-                Order::where(
-                    'status',
-                    'shipped'
-                )->count(),
+            'shipped' => Order::where(
+                'status',
+                'shipped'
+            )->count(),
 
-            'completed' =>
-                Order::where(
-                    'status',
-                    'completed'
-                )->count(),
+            'completed' => Order::where(
+                'status',
+                'completed'
+            )->count(),
 
-            'cancelled' =>
-                Order::where(
-                    'status',
-                    'cancelled'
-                )->count(),
+            'cancelled' => Order::where(
+                'status',
+                'cancelled'
+            )->count(),
         ];
 
         return view(
@@ -149,67 +142,67 @@ class OrderController extends Controller
     }
 
     public function show(Order $order)
-{
-    $order->load([
-        'user:id,name,email,phone',
+    {
+        $order->load([
+            'user:id,name,email,phone',
 
-        'address:id,user_id,label,recipient_name,phone,province,city,district,postal_code,detail',
+            'address:id,user_id,label,recipient_name,phone,province,city,district,postal_code,detail',
 
-        'items:id,order_id,product_variant_id,product_name,variant_name,quantity,unit_price,subtotal',
+            'items:id,order_id,product_variant_id,product_name,variant_name,quantity,unit_price,subtotal',
 
-        'statusHistories.changedBy:id,name',
-    ]);
+            'statusHistories.changedBy:id,name',
+        ]);
 
-    $statusLabels = [
-        'pending_payment' => 'Menunggu Pembayaran',
-        'paid' => 'Dibayar',
-        'processing' => 'Diproses',
-        'packing' => 'Dikemas',
-        'shipped' => 'Dikirim',
-        'completed' => 'Selesai',
-        'cancelled' => 'Dibatalkan',
-    ];
+        $statusLabels = [
+            'pending_payment' => 'Menunggu Pembayaran',
+            'paid' => 'Dibayar',
+            'processing' => 'Diproses',
+            'packing' => 'Dikemas',
+            'shipped' => 'Dikirim',
+            'completed' => 'Selesai',
+            'cancelled' => 'Dibatalkan',
+        ];
 
-    /*
-    |--------------------------------------------------------------------------
-    | Status berikutnya
-    |--------------------------------------------------------------------------
-    |
-    | pending_payment -> paid
-    | paid            -> processing
-    | processing      -> packing
-    | packing         -> shipped
-    | shipped         -> completed
-    |
-    | pending_payment tidak bisa diubah manual oleh admin.
-    | paid didapat dari Midtrans/webhook.
-    |
-    */
+        /*
+        |--------------------------------------------------------------------------
+        | Status berikutnya
+        |--------------------------------------------------------------------------
+        |
+        | pending_payment -> paid
+        | paid            -> processing
+        | processing      -> packing
+        | packing         -> shipped
+        | shipped         -> completed
+        |
+        | pending_payment tidak bisa diubah manual oleh admin.
+        | paid didapat dari Midtrans/webhook.
+        |
+        */
 
-    $nextStatuses = [
-        'pending_payment' => null,
-        'paid' => 'processing',
-        'processing' => 'packing',
-        'packing' => 'shipped',
-        'shipped' => 'completed',
-        'completed' => null,
-        'cancelled' => null,
-    ];
+        $nextStatuses = [
+            'pending_payment' => null,
+            'paid' => 'processing',
+            'processing' => 'packing',
+            'packing' => 'shipped',
+            'shipped' => 'completed',
+            'completed' => null,
+            'cancelled' => null,
+        ];
 
-    $allowedStatusOptions = [];
+        $allowedStatusOptions = [];
 
-    $nextStatus = $nextStatuses[$order->status] ?? null;
+        $nextStatus = $nextStatuses[$order->status] ?? null;
 
-    if ($nextStatus) {
-        $allowedStatusOptions[$nextStatus] = $statusLabels[$nextStatus];
+        if ($nextStatus) {
+            $allowedStatusOptions[$nextStatus] = $statusLabels[$nextStatus];
+        }
+
+        return view('admin.orders.show', compact(
+            'order',
+            'statusLabels',
+            'allowedStatusOptions'
+        ));
     }
-
-    return view('admin.orders.show', compact(
-        'order',
-        'statusLabels',
-        'allowedStatusOptions'
-    ));
-}
 
     /*
     |--------------------------------------------------------------------------
@@ -224,7 +217,7 @@ class OrderController extends Controller
         $validated = $request->validate([
             'status' => [
                 'required',
-                'in:processing,packing,shipped,completed,cancelled',
+                'in:processing,packing,shipped,completed',
             ],
 
             'resi_number' => [
@@ -254,23 +247,18 @@ class OrderController extends Controller
         */
 
         $allowedTransitions = [
-            'pending_payment' => [
-                'cancelled',
-            ],
+            'pending_payment' => [],
 
             'paid' => [
                 'processing',
-                'cancelled',
             ],
 
             'processing' => [
                 'packing',
-                'cancelled',
             ],
 
             'packing' => [
                 'shipped',
-                'cancelled',
             ],
 
             'shipped' => [
@@ -293,7 +281,7 @@ class OrderController extends Controller
         */
 
         if (
-            !in_array(
+            ! in_array(
                 $newStatus,
                 $allowedStatuses,
                 true
@@ -350,9 +338,15 @@ class OrderController extends Controller
                 $newStatus,
                 $validated
             ) {
+                $order = Order::query()->lockForUpdate()->findOrFail($order->id);
+                if ($order->status !== $oldStatus) {
+                    throw ValidationException::withMessages([
+                        'status' => 'Status pesanan sudah berubah. Muat ulang halaman.',
+                    ]);
+                }
+
                 $updateData = [
-                    'status' =>
-                        $newStatus,
+                    'status' => $newStatus,
                 ];
 
                 /*
@@ -395,17 +389,13 @@ class OrderController extends Controller
                 $order
                     ->statusHistories()
                     ->create([
-                        'old_status' =>
-                            $oldStatus,
+                        'old_status' => $oldStatus,
 
-                        'new_status' =>
-                            $newStatus,
+                        'new_status' => $newStatus,
 
-                        'changed_by' =>
-                            auth()->id(),
+                        'changed_by' => auth()->id(),
 
-                        'notes' =>
-                            $validated[
+                        'notes' => $validated[
                                 'notes'
                             ] ?? null,
                     ]);
@@ -442,35 +432,27 @@ class OrderController extends Controller
             ],
 
             'shipping_cost' => [
-                'required',
+                'sometimes',
                 'integer',
                 'min:0',
             ],
         ]);
 
+        if (isset($validated['shipping_cost']) &&
+            (int) $validated['shipping_cost'] !== (int) $order->shipping_cost) {
+            return back()->withErrors([
+                'shipping_cost' => 'Ongkir pesanan tidak dapat diubah setelah checkout.',
+            ]);
+        }
+
         $order->update([
-            'shipping_courier' =>
-                $validated[
+            'shipping_courier' => $validated[
                     'shipping_courier'
                 ],
 
-            'resi_number' =>
-                $validated[
+            'resi_number' => $validated[
                     'resi_number'
                 ] ?? null,
-
-            'shipping_cost' =>
-                $validated[
-                    'shipping_cost'
-                ],
-
-            'final_amount' =>
-                $order->subtotal
-                - $order->discount_date_cantik
-                - $order->discount_voucher
-                + $validated[
-                    'shipping_cost'
-                ],
         ]);
 
         return back()->with(

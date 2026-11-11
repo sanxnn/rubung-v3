@@ -10,6 +10,7 @@ use App\Models\ProductVariant;
 use App\Models\Voucher;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Log;
 use Midtrans\Config;
 use Midtrans\Snap;
 
@@ -43,8 +44,7 @@ class PaymentController extends Controller
             'pending_payment'
         ) {
             return response()->json([
-                'message' =>
-                    'Pesanan tidak menunggu pembayaran.',
+                'message' => 'Pesanan tidak menunggu pembayaran.',
             ], 422);
         }
 
@@ -58,8 +58,7 @@ class PaymentController extends Controller
             $order->final_amount <= 0
         ) {
             return response()->json([
-                'message' =>
-                    'Total pembayaran tidak valid.',
+                'message' => 'Total pembayaran tidak valid.',
             ], 422);
         }
 
@@ -79,21 +78,17 @@ class PaymentController extends Controller
             $existingPayment->snap_token
         ) {
             return response()->json([
-                'message' =>
-                    'Pembayaran sudah dibuat.',
+                'message' => 'Pembayaran sudah dibuat.',
 
                 'data' => [
-                    'payment_status' =>
-                        $existingPayment
-                            ->payment_status,
+                    'payment_status' => $existingPayment
+                        ->payment_status,
 
-                    'amount' =>
-                        $existingPayment
-                            ->amount,
+                    'amount' => $existingPayment
+                        ->amount,
 
-                    'snap_token' =>
-                        $existingPayment
-                            ->snap_token,
+                    'snap_token' => $existingPayment
+                        ->snap_token,
                 ],
             ]);
         }
@@ -107,10 +102,9 @@ class PaymentController extends Controller
         $serverKey =
             config('midtrans.server_key');
 
-        if (!$serverKey) {
+        if (! $serverKey) {
             return response()->json([
-                'message' =>
-                    'Konfigurasi pembayaran belum tersedia.',
+                'message' => 'Konfigurasi pembayaran belum tersedia.',
             ], 500);
         }
 
@@ -154,20 +148,17 @@ class PaymentController extends Controller
                     ?? $item->id
                 ),
 
-                'price' =>
-                    (int) $item->unit_price,
+                'price' => (int) $item->unit_price,
 
-                'quantity' =>
-                    (int) $item->quantity,
+                'quantity' => (int) $item->quantity,
 
-                'name' =>
-                    mb_substr(
-                        $item->product_name .
-                        ' - ' .
-                        $item->variant_name,
-                        0,
-                        50
-                    ),
+                'name' => mb_substr(
+                    $item->product_name.
+                    ' - '.
+                    $item->variant_name,
+                    0,
+                    50
+                ),
             ];
         }
 
@@ -181,17 +172,14 @@ class PaymentController extends Controller
             $order->discount_date_cantik > 0
         ) {
             $itemDetails[] = [
-                'id' =>
-                    'discount_date_cantik',
+                'id' => 'discount_date_cantik',
 
-                'price' =>
-                    -$order
-                        ->discount_date_cantik,
+                'price' => -$order
+                    ->discount_date_cantik,
 
                 'quantity' => 1,
 
-                'name' =>
-                    'Diskon Tanggal Cantik',
+                'name' => 'Diskon Tanggal Cantik',
             ];
         }
 
@@ -205,17 +193,14 @@ class PaymentController extends Controller
             $order->discount_voucher > 0
         ) {
             $itemDetails[] = [
-                'id' =>
-                    'discount_voucher',
+                'id' => 'discount_voucher',
 
-                'price' =>
-                    -$order
-                        ->discount_voucher,
+                'price' => -$order
+                    ->discount_voucher,
 
                 'quantity' => 1,
 
-                'name' =>
-                    'Diskon Voucher',
+                'name' => 'Diskon Voucher',
             ];
         }
 
@@ -229,16 +214,13 @@ class PaymentController extends Controller
             $order->shipping_cost > 0
         ) {
             $itemDetails[] = [
-                'id' =>
-                    'shipping',
+                'id' => 'shipping',
 
-                'price' =>
-                    $order->shipping_cost,
+                'price' => $order->shipping_cost,
 
                 'quantity' => 1,
 
-                'name' =>
-                    'Ongkos Kirim J&T',
+                'name' => 'Ongkos Kirim J&T',
             ];
         }
 
@@ -251,8 +233,7 @@ class PaymentController extends Controller
         $itemTotal =
             collect($itemDetails)
                 ->sum(
-                    fn ($item) =>
-                        $item['price'] *
+                    fn ($item) => $item['price'] *
                         $item['quantity']
                 );
 
@@ -261,8 +242,7 @@ class PaymentController extends Controller
             (int) $order->final_amount
         ) {
             return response()->json([
-                'message' =>
-                    'Total pembayaran tidak sesuai.',
+                'message' => 'Total pembayaran tidak sesuai.',
             ], 422);
         }
 
@@ -274,26 +254,20 @@ class PaymentController extends Controller
 
         $params = [
             'transaction_details' => [
-                'order_id' =>
-                    $order->order_number,
+                'order_id' => $order->order_number,
 
-                'gross_amount' =>
-                    (int) $order->final_amount,
+                'gross_amount' => (int) $order->final_amount,
             ],
 
             'customer_details' => [
-                'first_name' =>
-                    $order->user->name,
+                'first_name' => $order->user->name,
 
-                'email' =>
-                    $order->user->email,
+                'email' => $order->user->email,
 
-                'phone' =>
-                    $order->user->phone,
+                'phone' => $order->user->phone,
             ],
 
-            'item_details' =>
-                $itemDetails,
+            'item_details' => $itemDetails,
         ];
 
         /*
@@ -311,8 +285,7 @@ class PaymentController extends Controller
             \Throwable $e
         ) {
             return response()->json([
-                'message' =>
-                    'Gagal membuat pembayaran Midtrans.',
+                'message' => 'Gagal membuat pembayaran Midtrans.',
             ], 500);
         }
 
@@ -322,31 +295,32 @@ class PaymentController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        Payment::updateOrCreate(
-            [
-                'order_id' =>
-                    $order->id,
-            ],
-            [
-                'midtrans_transaction_id' =>
-                    null,
+        $payment = DB::transaction(function () use ($order, $snapToken) {
+            $lockedOrder = Order::query()->lockForUpdate()->findOrFail($order->id);
+            if ($lockedOrder->status !== 'pending_payment') {
+                return null;
+            }
 
-                'snap_token' =>
-                    $snapToken,
+            $existing = Payment::where('order_id', $lockedOrder->id)->first();
+            if ($existing?->payment_status === 'pending' && $existing->snap_token) {
+                return $existing;
+            }
 
-                'payment_type' =>
-                    'pending',
+            return Payment::updateOrCreate(['order_id' => $lockedOrder->id], [
+                'midtrans_transaction_id' => null,
+                'snap_token' => $snapToken,
+                'payment_type' => 'pending',
+                'payment_status' => 'pending',
+                'amount' => $lockedOrder->final_amount,
+                'paid_at' => null,
+            ]);
+        });
 
-                'payment_status' =>
-                    'pending',
+        if (! $payment) {
+            return response()->json(['message' => 'Pesanan tidak lagi menunggu pembayaran.'], 422);
+        }
 
-                'amount' =>
-                    $order->final_amount,
-
-                'paid_at' =>
-                    null,
-            ]
-        );
+        $snapToken = $payment->snap_token;
 
         /*
         |--------------------------------------------------------------------------
@@ -355,18 +329,14 @@ class PaymentController extends Controller
         */
 
         return response()->json([
-            'message' =>
-                'Pembayaran berhasil dibuat.',
+            'message' => 'Pembayaran berhasil dibuat.',
 
             'data' => [
-                'order_number' =>
-                    $order->order_number,
+                'order_number' => $order->order_number,
 
-                'amount' =>
-                    $order->final_amount,
+                'amount' => $order->final_amount,
 
-                'snap_token' =>
-                    $snapToken,
+                'snap_token' => $snapToken,
             ],
         ]);
     }
@@ -412,8 +382,7 @@ class PaymentController extends Controller
 
         if (empty($payload)) {
             return response()->json([
-                'message' =>
-                    'Notification endpoint aktif.',
+                'message' => 'Notification endpoint aktif.',
             ], 200);
         }
 
@@ -435,12 +404,11 @@ class PaymentController extends Controller
             $requiredFields as $field
         ) {
             if (
-                !isset($payload[$field]) ||
+                ! isset($payload[$field]) ||
                 $payload[$field] === ''
             ) {
                 return response()->json([
-                    'message' =>
-                        'Data notification tidak lengkap.',
+                    'message' => 'Data notification tidak lengkap.',
                 ], 200);
             }
         }
@@ -480,10 +448,9 @@ class PaymentController extends Controller
                 )
                 ->first();
 
-        if (!$order) {
+        if (! $order) {
             return response()->json([
-                'message' =>
-                    'Order tidak ditemukan.',
+                'message' => 'Order tidak ditemukan.',
             ], 200);
         }
 
@@ -496,21 +463,20 @@ class PaymentController extends Controller
         $expectedSignature =
             hash(
                 'sha512',
-                $payload['order_id'] .
-                $payload['status_code'] .
-                $payload['gross_amount'] .
+                $payload['order_id'].
+                $payload['status_code'].
+                $payload['gross_amount'].
                 config('midtrans.server_key')
             );
 
         if (
-            !hash_equals(
+            ! hash_equals(
                 $expectedSignature,
                 $payload['signature_key']
             )
         ) {
             return response()->json([
-                'message' =>
-                    'Signature tidak valid.',
+                'message' => 'Signature tidak valid.',
             ], 200);
         }
 
@@ -530,8 +496,7 @@ class PaymentController extends Controller
             (int) $order->final_amount
         ) {
             return response()->json([
-                'message' =>
-                    'Nominal pembayaran tidak sesuai.',
+                'message' => 'Nominal pembayaran tidak sesuai.',
             ], 200);
         }
 
@@ -561,26 +526,32 @@ class PaymentController extends Controller
                                 $order->id
                             );
 
+                    $payment = Payment::where('order_id', $order->id)->first();
+                    if ($payment?->payment_status === 'success') {
+                        return;
+                    }
+
+                    if ($order->status === 'cancelled') {
+                        Log::critical('Pembayaran diterima untuk pesanan yang sudah dibatalkan.', [
+                            'order_id' => $order->id,
+                            'transaction_id' => $transactionId,
+                        ]);
+                    }
+
                     Payment::updateOrCreate(
                         [
-                            'order_id' =>
-                                $order->id,
+                            'order_id' => $order->id,
                         ],
                         [
-                            'midtrans_transaction_id' =>
-                                $transactionId,
+                            'midtrans_transaction_id' => $transactionId,
 
-                            'payment_type' =>
-                                $paymentType,
+                            'payment_type' => $paymentType,
 
-                            'payment_status' =>
-                                'success',
+                            'payment_status' => 'success',
 
-                            'amount' =>
-                                $order->final_amount,
+                            'amount' => $order->final_amount,
 
-                            'paid_at' =>
-                                now(),
+                            'paid_at' => now(),
                         ]
                     );
 
@@ -589,16 +560,14 @@ class PaymentController extends Controller
                         'pending_payment'
                     ) {
                         $order->update([
-                            'status' =>
-                                'paid',
+                            'status' => 'paid',
                         ]);
                     }
                 }
             );
 
             return response()->json([
-                'message' =>
-                    'Pembayaran berhasil.',
+                'message' => 'Pembayaran berhasil.',
             ], 200);
         }
 
@@ -611,32 +580,26 @@ class PaymentController extends Controller
         if (
             $transactionStatus === 'pending'
         ) {
-            Payment::updateOrCreate(
-                [
-                    'order_id' =>
-                        $order->id,
-                ],
-                [
-                    'midtrans_transaction_id' =>
-                        $transactionId,
+            DB::transaction(function () use ($order, $transactionId, $paymentType) {
+                $lockedOrder = Order::query()->lockForUpdate()->findOrFail($order->id);
+                $payment = Payment::where('order_id', $lockedOrder->id)->first();
 
-                    'payment_type' =>
-                        $paymentType,
+                if ($lockedOrder->status !== 'pending_payment' ||
+                    ($payment && $payment->payment_status !== 'pending')) {
+                    return;
+                }
 
-                    'payment_status' =>
-                        'pending',
-
-                    'amount' =>
-                        $order->final_amount,
-
-                    'paid_at' =>
-                        null,
-                ]
-            );
+                Payment::updateOrCreate(['order_id' => $lockedOrder->id], [
+                    'midtrans_transaction_id' => $transactionId,
+                    'payment_type' => $paymentType,
+                    'payment_status' => 'pending',
+                    'amount' => $lockedOrder->final_amount,
+                    'paid_at' => null,
+                ]);
+            });
 
             return response()->json([
-                'message' =>
-                    'Pembayaran masih pending.',
+                'message' => 'Pembayaran masih pending.',
             ], 200);
         }
 
@@ -671,29 +634,29 @@ class PaymentController extends Controller
                                 $order->id
                             );
 
+                    if ($order->status !== 'pending_payment' ||
+                        Payment::where('order_id', $order->id)
+                            ->where('payment_status', 'success')->exists()) {
+                        return;
+                    }
+
                     Payment::updateOrCreate(
                         [
-                            'order_id' =>
-                                $order->id,
+                            'order_id' => $order->id,
                         ],
                         [
-                            'midtrans_transaction_id' =>
-                                $transactionId,
+                            'midtrans_transaction_id' => $transactionId,
 
-                            'payment_type' =>
-                                $paymentType,
+                            'payment_type' => $paymentType,
 
-                            'payment_status' =>
-                                $transactionStatus ===
+                            'payment_status' => $transactionStatus ===
                                 'expire'
                                     ? 'expire'
                                     : 'failed',
 
-                            'amount' =>
-                                $order->final_amount,
+                            'amount' => $order->final_amount,
 
-                            'paid_at' =>
-                                null,
+                            'paid_at' => null,
                         ]
                     );
 
@@ -713,16 +676,14 @@ class PaymentController extends Controller
                         }
 
                         $order->update([
-                            'status' =>
-                                'cancelled',
+                            'status' => 'cancelled',
                         ]);
                     }
                 }
             );
 
             return response()->json([
-                'message' =>
-                    'Pembayaran gagal atau expired.',
+                'message' => 'Pembayaran gagal atau expired.',
             ], 200);
         }
 
@@ -733,8 +694,7 @@ class PaymentController extends Controller
         */
 
         return response()->json([
-            'message' =>
-                'Notification diterima.',
+            'message' => 'Notification diterima.',
         ], 200);
     }
 
@@ -760,7 +720,7 @@ class PaymentController extends Controller
             $order->items as $item
         ) {
             if (
-                !$item->product_variant_id ||
+                ! $item->product_variant_id ||
                 $item->stock_quantity <= 0
             ) {
                 continue;
@@ -773,7 +733,7 @@ class PaymentController extends Controller
                         $item->product_variant_id
                     );
 
-            if (!$variant) {
+            if (! $variant) {
                 continue;
             }
 
@@ -806,7 +766,7 @@ class PaymentController extends Controller
                             );
 
                     if (
-                        !$componentVariant
+                        ! $componentVariant
                     ) {
                         continue;
                     }
@@ -844,8 +804,7 @@ class PaymentController extends Controller
         */
 
         $order->update([
-            'stock_released_at' =>
-                now(),
+            'stock_released_at' => now(),
         ]);
 
         return true;
@@ -861,7 +820,7 @@ class PaymentController extends Controller
         Order $order
     ): void {
         if (
-            !$order->voucher_id
+            ! $order->voucher_id
         ) {
             return;
         }
@@ -873,7 +832,7 @@ class PaymentController extends Controller
                     $order->voucher_id
                 );
 
-        if (!$voucher) {
+        if (! $voucher) {
             return;
         }
 

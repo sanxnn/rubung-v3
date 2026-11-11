@@ -6,8 +6,8 @@ use App\Http\Controllers\Controller;
 use App\Models\Category;
 use App\Models\Subcategory;
 use Illuminate\Http\Request;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class SubcategoryController extends Controller
 {
@@ -17,7 +17,7 @@ class SubcategoryController extends Controller
         abort_unless($category->has_subcategories, 403, 'Kategori ini tidak mengizinkan subkategori.');
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:100', 'regex:/^[A-Za-z\s()-]+$/', Rule::unique('subcategories', 'name')->where('category_id', $category->id),],
+            'name' => ['required', 'string', 'max:100', 'regex:/^[A-Za-z\s()-]+$/', Rule::unique('subcategories', 'name')->where('category_id', $category->id)],
             'slug' => 'nullable|string|max:100|regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
         ], [
             'name.unique' => 'Nama sudah digunakan.',
@@ -32,8 +32,7 @@ class SubcategoryController extends Controller
             $validated['slug'] ?? null,
             $validated['name'],
             Subcategory::class,
-            null,
-            $category->id
+            null
         );
 
         $category->subcategories()->create([
@@ -51,13 +50,13 @@ class SubcategoryController extends Controller
         abort_if($subcategory->category_id !== $category->id, 403, 'Aksi tidak valid.');
 
         $validated = $request->validate([
-            'name' => ['required', 'string', 'max:100', 'regex:/^[A-Za-z\s()-]+$/', Rule::unique('subcategories', 'name')->where('category_id', $category->id)->ignore($subcategory->id),],
+            'name' => ['required', 'string', 'max:100', 'regex:/^[A-Za-z\s()-]+$/', Rule::unique('subcategories', 'name')->where('category_id', $category->id)->ignore($subcategory->id)],
             'slug' => [
                 'nullable',
                 'string',
                 'max:100',
                 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
-                Rule::unique('subcategories', 'slug')->ignore($subcategory->id)->where('category_id', $category->id),
+                Rule::unique('subcategories', 'slug')->ignore($subcategory->id),
             ],
         ], [
             'name.unique' => 'Nama sudah digunakan.',
@@ -73,8 +72,7 @@ class SubcategoryController extends Controller
             $validated['slug'] ?? null,
             $validated['name'],
             Subcategory::class,
-            $subcategory->id,
-            $category->id
+            $subcategory->id
         );
 
         $subcategory->update([
@@ -92,28 +90,36 @@ class SubcategoryController extends Controller
 
         if ($subcategory->products()->exists()) {
             return back()->withErrors([
-                'delete' => 'Subkategori tidak dapat dihapus karena masih memiliki produk yang terhubung.'
+                'delete' => 'Subkategori tidak dapat dihapus karena masih memiliki produk yang terhubung.',
             ]);
         }
 
         $subcategory->delete();
+
         return back()->with('success', 'Subkategori berhasil dihapus.');
     }
 
-    private function processSlug(?string $inputSlug, string $name, string $model, ?int $excludeId = null, ?int $parentId = null): string
+    private function processSlug(?string $inputSlug, string $name, string $model, ?int $excludeId = null): string
     {
-        $slug = !empty(trim($inputSlug)) ? Str::slug($inputSlug) : Str::slug($name);
+        $slug = ! empty(trim($inputSlug)) ? Str::slug($inputSlug) : Str::slug($name);
 
-        if (!preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slug)) {
-            $slug = 'sub-' . uniqid();
+        if (! preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slug)) {
+            $slug = 'sub-'.uniqid();
         }
 
         $query = $model::where('slug', $slug);
-        if ($excludeId) $query->where('id', '!=', $excludeId);
-        if ($parentId) $query->where('category_id', $parentId);
-
-        if ($query->exists()) {
-            $slug .= '-' . time();
+        if ($excludeId) {
+            $query->where('id', '!=', $excludeId);
+        }
+        $base = $slug;
+        $suffix = 2;
+        while ($query->exists()) {
+            $tail = '-'.$suffix++;
+            $slug = substr($base, 0, 100 - strlen($tail)).$tail;
+            $query = $model::where('slug', $slug);
+            if ($excludeId) {
+                $query->where('id', '!=', $excludeId);
+            }
         }
 
         return $slug;

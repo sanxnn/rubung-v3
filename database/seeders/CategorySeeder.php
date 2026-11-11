@@ -9,8 +9,13 @@ class CategorySeeder extends Seeder
 {
     public function run(): void
     {
-        Category::factory()->batik()->create();
-        Category::factory()->bahan()->create();
-        Category::factory()->olahanLimbah()->create();
+        foreach ([
+            Category::factory()->batik()->make(),
+            Category::factory()->bahan()->make(),
+            Category::factory()->olahanLimbah()->make(),
+            Category::factory()->bundling()->make(),
+        ] as $category) {
+            Category::firstOrCreate(['slug' => $category->slug], $category->getAttributes());
+        }
     }
 }

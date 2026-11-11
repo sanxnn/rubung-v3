@@ -54,12 +54,14 @@ class ReportController extends Controller
 
         $totalOrders = (clone $summaryQuery)->count();
 
+        $paidStatuses = ['paid', 'processing', 'packing', 'shipped', 'completed'];
+
         $totalRevenue = (clone $summaryQuery)
-            ->where('status', '!=', 'cancelled')
+            ->whereIn('status', $paidStatuses)
             ->sum('final_amount');
 
         $totalDiscount = (clone $summaryQuery)
-            ->where('status', '!=', 'cancelled')
+            ->whereIn('status', $paidStatuses)
             ->selectRaw(
                 'COALESCE(SUM(discount_date_cantik), 0) +
                  COALESCE(SUM(discount_voucher), 0) as total'
@@ -67,7 +69,7 @@ class ReportController extends Controller
             ->value('total') ?? 0;
 
         $totalShipping = (clone $summaryQuery)
-            ->where('status', '!=', 'cancelled')
+            ->whereIn('status', $paidStatuses)
             ->sum('shipping_cost');
 
         /*
@@ -137,7 +139,7 @@ class ReportController extends Controller
                 $request->input('end_date'),
                 $request->input('status')
             ),
-            'laporan-penjualan-' . now()->format('Y-m-d-His') . '.xlsx'
+            'laporan-penjualan-'.now()->format('Y-m-d-His').'.xlsx'
         );
     }
 }

@@ -4,27 +4,27 @@ namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
 use App\Models\Category;
+use App\Models\OrderItem;
 use App\Models\Product;
 use App\Models\ProductBundleItem;
 use App\Models\ProductVariant;
+use App\Models\Subcategory;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Validation\Rule;
 use Illuminate\Support\Str;
+use Illuminate\Validation\Rule;
 
 class ProductController extends Controller
 {
     public function index(Request $request)
     {
         $query = Product::with(['category', 'subcategory', 'variants'])
-            ->whereHas('category', function ($query) {
-                $query->where('name', '!=', 'Bundling');
-            });
+            ->whereDoesntHave('variants.bundleComponents');
 
         if ($request->filled('search')) {
-            $query->where('name', 'like', '%' . $request->search . '%');
+            $query->where('name', 'like', '%'.$request->search.'%');
         }
 
         $products = $query->latest()->paginate(15);
@@ -56,33 +56,51 @@ class ProductController extends Controller
             'image.max' => 'Ukuran gambar maksimal 2MB.',
         ]);
 
+        if (Category::findOrFail($validated['category_id'])->slug === 'bundling') {
+            return back()->withErrors(['category_id' => 'Paket harus dibuat melalui halaman Paket Bundling.'])->withInput();
+        }
+
         if ($request->filled('subcategory_id')) {
-            $sub = \App\Models\Subcategory::find($request->subcategory_id);
+            $sub = Subcategory::find($request->subcategory_id);
 
             // 1. Cek apakah subkategori benar-benar milik kategori yang dipilih
-            if (!$sub || $sub->category_id != $validated['category_id']) {
+            if (! $sub || $sub->category_id != $validated['category_id']) {
                 return back()->withErrors(['subcategory_id' => 'Subkategori tidak valid atau tidak milik kategori yang dipilih.'])->withInput();
             }
 
             // 2. Cek apakah kategori induk mengizinkan subkategori
-            $cat = \App\Models\Category::find($validated['category_id']);
-            if (!$cat->has_subcategories) {
+            $cat = Category::find($validated['category_id']);
+            if (! $cat->has_subcategories) {
                 return back()->withErrors(['subcategory_id' => 'Kategori yang dipilih tidak mendukung fitur subkategori.'])->withInput();
             }
         }
         // ==========================================
 
-        $validated['slug'] = $validated['slug'] ?: \Illuminate\Support\Str::slug($validated['name']);
-        if ($request->hasFile('image')) {
-            $validated['image'] = $request->file('image')->store('products', 'public');
+        $validated['slug'] = $this->uniqueSlug($validated['slug'] ?? null, $validated['name']);
+        $newImage = null;
+        try {
+            if ($request->hasFile('image')) {
+                $newImage = $request->file('image')->store('products', 'public');
+                $validated['image'] = $newImage;
+            }
+
+            Product::create($validated);
+        } catch (\Throwable $e) {
+            if ($newImage) {
+                Storage::disk('public')->delete($newImage);
+            }
+            Log::error('Product Store Error: '.$e->getMessage());
+
+            return back()->withErrors(['system' => 'Gagal menyimpan produk.'])->withInput();
         }
 
-        Product::create($validated);
         return back()->with('success', 'Produk berhasil ditambahkan.');
     }
 
     public function update(Request $request, Product $product)
     {
+        abort_if($product->variants()->whereHas('bundleComponents')->exists(), 403);
+
         $validated = $request->validate([
             'category_id' => 'required|exists:categories,id',
             'subcategory_id' => 'nullable|exists:subcategories,id',
@@ -99,37 +117,70 @@ class ProductController extends Controller
             'slug.unique' => 'Slug ini sudah digunakan oleh produk lain.',
         ]);
 
+        if (Category::findOrFail($validated['category_id'])->slug === 'bundling') {
+            return back()->withErrors(['category_id' => 'Paket harus dikelola melalui halaman Paket Bundling.'])->withInput();
+        }
+
         if ($request->filled('subcategory_id')) {
-            $sub = \App\Models\Subcategory::find($request->subcategory_id);
-            if (!$sub || $sub->category_id != $validated['category_id']) {
+            $sub = Subcategory::find($request->subcategory_id);
+            if (! $sub || $sub->category_id != $validated['category_id']) {
                 return back()->withErrors(['subcategory_id' => 'Subkategori tidak valid atau tidak milik kategori yang dipilih.'])->withInput();
             }
-            $cat = \App\Models\Category::find($validated['category_id']);
-            if (!$cat->has_subcategories) {
+            $cat = Category::find($validated['category_id']);
+            if (! $cat->has_subcategories) {
                 return back()->withErrors(['subcategory_id' => 'Kategori yang dipilih tidak mendukung fitur subkategori.'])->withInput();
             }
         }
         // ==========================================
 
-        $validated['slug'] = $validated['slug'] ?: \Illuminate\Support\Str::slug($validated['name']);
-        if ($request->hasFile('image')) {
-            if ($product->image) Storage::disk('public')->delete($product->image);
-            $validated['image'] = $request->file('image')->store('products', 'public');
+        $validated['slug'] = $this->uniqueSlug($validated['slug'] ?? null, $validated['name'], $product->id);
+        $oldImage = $product->image;
+        $newImage = null;
+        try {
+            if ($request->hasFile('image')) {
+                $newImage = $request->file('image')->store('products', 'public');
+                $validated['image'] = $newImage;
+            }
+
+            $product->update($validated);
+        } catch (\Throwable $e) {
+            if ($newImage) {
+                Storage::disk('public')->delete($newImage);
+            }
+            Log::error('Product Update Error: '.$e->getMessage());
+
+            return back()->withErrors(['system' => 'Gagal memperbarui produk.'])->withInput();
         }
 
-        $product->update($validated);
+        if ($newImage && $oldImage) {
+            Storage::disk('public')->delete($oldImage);
+        }
+
         return back()->with('success', 'Produk berhasil diperbarui.');
     }
 
     public function destroy(Product $product)
     {
-        if ($product->image) Storage::disk('public')->delete($product->image);
-        $product->delete(); // Cascade akan menghapus variants & bundle items
+        abort_if($product->variants()->whereHas('bundleComponents')->exists(), 403);
+        if ($this->hasPendingOrder($product)) {
+            return back()->withErrors(['delete' => 'Produk masih digunakan oleh pesanan yang menunggu pembayaran.']);
+        }
+        if ($product->variants()->whereHas('bundleAsComponent')->exists()) {
+            return back()->withErrors(['delete' => 'Produk masih digunakan sebagai komponen paket.']);
+        }
+
+        $image = $product->image;
+        $product->delete();
+        if ($image) {
+            Storage::disk('public')->delete($image);
+        }
+
         return back()->with('success', 'Produk berhasil dihapus.');
     }
 
     public function variants(Product $product)
     {
+        abort_if($product->variants()->whereHas('bundleComponents')->exists(), 403);
         // Ambil varian dengan pagination (15 per halaman)
         $variants = $product->variants()
             ->with(['bundleComponents.componentVariant'])
@@ -142,7 +193,7 @@ class ProductController extends Controller
         return view('admin.variant', compact('product', 'variants', 'availableComponents'));
     }
 
-        /**
+    /**
      * Menampilkan halaman khusus Daftar Paket Bundling
      */
     public function bundles(Request $request)
@@ -151,9 +202,6 @@ class ProductController extends Controller
             'category',
             'variants.bundleComponents.componentVariant.product',
         ])
-            ->whereHas('category', function ($query) {
-                $query->where('name', 'Bundling');
-            })
             ->whereHas('variants', function ($query) {
                 $query->whereHas('bundleComponents');
             });
@@ -162,7 +210,7 @@ class ProductController extends Controller
             $query->where(
                 'name',
                 'like',
-                '%' . $request->search . '%'
+                '%'.$request->search.'%'
             );
         }
 
@@ -189,7 +237,11 @@ class ProductController extends Controller
 
     private function getBundlingCategory()
     {
-        return Category::where('name', 'Bundling')->firstOrFail();
+        return Category::firstOrCreate(['slug' => 'bundling'], [
+            'name' => 'Bundling',
+            'description' => 'Paket bundling dari beberapa varian bahan.',
+            'has_subcategories' => false,
+        ]);
     }
 
     /**
@@ -197,17 +249,13 @@ class ProductController extends Controller
      */
     public function storeBundle(Request $request)
     {
-        // 1. SANITIZATION
-        $requestData = $request->all();
-        $cleanComponents = [];
-
         $requestData = $request->all();
 
         $cleanComponents = [];
 
         if (isset($requestData['components']) && is_array($requestData['components'])) {
             foreach ($requestData['components'] as $component) {
-                if (!empty($component['variant_id']) && !empty($component['quantity'])) {
+                if (! empty($component['variant_id']) && ! empty($component['quantity'])) {
                     $cleanComponents[] = [
                         'variant_id' => (int) $component['variant_id'],
                         'quantity' => (int) $component['quantity'],
@@ -275,35 +323,25 @@ class ProductController extends Controller
                 'min:1',
             ],
         ], [
-            'name.regex' =>
-                'Nama paket hanya boleh menggunakan huruf, spasi, tanda kurung ( ) dan tanda strip (-). Angka dan simbol lainnya tidak diperbolehkan.',
+            'name.regex' => 'Nama paket hanya boleh menggunakan huruf, spasi, tanda kurung ( ) dan tanda strip (-). Angka dan simbol lainnya tidak diperbolehkan.',
 
-            'name.unique' =>
-                'Nama sudah digunakan.',
+            'name.unique' => 'Nama sudah digunakan.',
 
-            'name.required' =>
-                'Nama paket wajib diisi.',
+            'name.required' => 'Nama paket wajib diisi.',
 
-            'bundle_sku.required' =>
-                'SKU paket wajib diisi.',
+            'bundle_sku.required' => 'SKU paket wajib diisi.',
 
-            'bundle_sku.regex' =>
-                'SKU hanya boleh huruf besar, angka, dan strip (-).',
+            'bundle_sku.regex' => 'SKU hanya boleh huruf besar, angka, dan strip (-).',
 
-            'bundle_sku.unique' =>
-                'SKU paket sudah digunakan.',
+            'bundle_sku.unique' => 'SKU paket sudah digunakan.',
 
-            'bundle_price.required' =>
-                'Harga paket wajib diisi.',
+            'bundle_price.required' => 'Harga paket wajib diisi.',
 
-            'bundle_price.min' =>
-                'Harga tidak boleh negatif.',
+            'bundle_price.min' => 'Harga tidak boleh negatif.',
 
-            'components.required' =>
-                'Paket wajib memiliki minimal 1 komponen.',
+            'components.required' => 'Paket wajib memiliki minimal 1 komponen.',
 
-            'components.min' =>
-                'Paket wajib memiliki minimal 1 komponen.',
+            'components.min' => 'Paket wajib memiliki minimal 1 komponen.',
         ]);
 
         // 3. STRICT BUSINESS LOGIC
@@ -326,8 +364,7 @@ class ProductController extends Controller
         if ($invalidComponents) {
             return back()
                 ->withErrors([
-                    'components' =>
-                        'Komponen bundling hanya boleh berasal dari kategori Bahan.',
+                    'components' => 'Komponen bundling hanya boleh berasal dari kategori Bahan.',
                 ])
                 ->withInput();
         }
@@ -342,8 +379,7 @@ class ProductController extends Controller
         if ($nestedBundle) {
             return back()
                 ->withErrors([
-                    'components' =>
-                        'Komponen tidak boleh berupa paket bundling lain.',
+                    'components' => 'Komponen tidak boleh berupa paket bundling lain.',
                 ])
                 ->withInput();
         }
@@ -351,13 +387,10 @@ class ProductController extends Controller
         $bundlingCategory = $this->getBundlingCategory();
 
         DB::beginTransaction();
-
+        $imagePath = null;
 
         try {
-            $slug = $validated['slug']
-            ?: Str::slug($validated['name']);
-
-            $imagePath = null;
+            $slug = $this->uniqueSlug($validated['slug'] ?? null, $validated['name']);
 
             if ($request->hasFile('image')) {
                 $imagePath = $request
@@ -388,14 +421,11 @@ class ProductController extends Controller
             $bundleData = [];
             foreach ($validated['components'] as $component) {
                 $bundleData[] = [
-                    'parent_variant_id' =>
-                        $variant->id,
+                    'parent_variant_id' => $variant->id,
 
-                    'component_variant_id' =>
-                        $component['variant_id'],
+                    'component_variant_id' => $component['variant_id'],
 
-                    'quantity' =>
-                        $component['quantity'],
+                    'quantity' => $component['quantity'],
 
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -405,21 +435,24 @@ class ProductController extends Controller
             ProductBundleItem::insert($bundleData);
 
             DB::commit();
-            return back()->with('success', 'Paket bundling "' . $product->name . '" berhasil dibuat.');
+
+            return back()->with('success', 'Paket bundling "'.$product->name.'" berhasil dibuat.');
 
         } catch (\Exception $e) {
 
             DB::rollBack();
+            if ($imagePath) {
+                Storage::disk('public')->delete($imagePath);
+            }
 
             Log::error(
-                'Bundle Store Error: ' .
+                'Bundle Store Error: '.
                 $e->getMessage()
             );
 
             return back()
                 ->withErrors([
-                    'system' =>
-                        'Terjadi kesalahan sistem saat membuat paket.',
+                    'system' => 'Terjadi kesalahan sistem saat membuat paket.',
                 ])
                 ->withInput();
         }
@@ -433,6 +466,9 @@ class ProductController extends Controller
         // Pastikan produk ini memang bundle
         $bundleVariant = $product->variants()->whereHas('bundleComponents')->first();
         abort_unless($bundleVariant, 403, 'Produk ini bukan paket bundling.');
+        if ($this->hasPendingOrder($product)) {
+            return back()->withErrors(['bundle' => 'Paket masih digunakan oleh pesanan yang menunggu pembayaran.']);
+        }
 
         // Sanitization & Validation (sama seperti store)
         $requestData = $request->all();
@@ -443,8 +479,8 @@ class ProductController extends Controller
         ) {
             foreach ($requestData['components'] as $component) {
                 if (
-                    !empty($component['variant_id']) &&
-                    !empty($component['quantity'])
+                    ! empty($component['variant_id']) &&
+                    ! empty($component['quantity'])
                 ) {
                     $cleanComponents[] = [
                         'variant_id' => (int) $component['variant_id'],
@@ -558,8 +594,7 @@ class ProductController extends Controller
         if ($componentIds->duplicates()->isNotEmpty()) {
             return back()
                 ->withErrors([
-                    'components' =>
-                        'Komponen tidak boleh diduplikasi.',
+                    'components' => 'Komponen tidak boleh diduplikasi.',
                 ])
                 ->withInput();
         }
@@ -576,8 +611,7 @@ class ProductController extends Controller
         if ($invalidComponents) {
             return back()
                 ->withErrors([
-                    'components' =>
-                        'Komponen bundling hanya boleh berasal dari kategori Bahan.',
+                    'components' => 'Komponen bundling hanya boleh berasal dari kategori Bahan.',
                 ])
                 ->withInput();
         }
@@ -592,45 +626,37 @@ class ProductController extends Controller
         if ($nestedBundle) {
             return back()
                 ->withErrors([
-                    'components' =>
-                        'Komponen tidak boleh berupa paket bundling lain.',
+                    'components' => 'Komponen tidak boleh berupa paket bundling lain.',
                 ])
                 ->withInput();
         }
 
-
         $bundlingCategory = $this->getBundlingCategory();
 
         DB::beginTransaction();
+        $oldImage = $product->image;
+        $newImage = null;
         try {
             $imagePath = $product->image;
 
             if ($request->hasFile('image')) {
-
-                if ($product->image) {
-                    Storage::disk('public')
-                        ->delete($product->image);
-                }
-
-                $imagePath = $request
+                $newImage = $request
                     ->file('image')
                     ->store('products', 'public');
+                $imagePath = $newImage;
             }
 
             $product->update([
                 'name' => $validated['name'],
 
-                'slug' => $validated['slug']
-                    ?: Str::slug($validated['name']),
+                'slug' => $this->uniqueSlug($validated['slug'] ?? null, $validated['name'], $product->id),
 
-                'description' =>
-                    $validated['description'] ?? null,
+                'description' => $validated['description'] ?? null,
 
                 'image' => $imagePath,
 
                 // Tetap Bundling
-                'category_id' =>
-                    $bundlingCategory->id,
+                'category_id' => $bundlingCategory->id,
 
                 'subcategory_id' => null,
             ]);
@@ -651,14 +677,11 @@ class ProductController extends Controller
             $bundleData = [];
             foreach ($validated['components'] as $component) {
                 $bundleData[] = [
-                    'parent_variant_id' =>
-                        $bundleVariant->id,
+                    'parent_variant_id' => $bundleVariant->id,
 
-                    'component_variant_id' =>
-                        $component['variant_id'],
+                    'component_variant_id' => $component['variant_id'],
 
-                    'quantity' =>
-                        $component['quantity'],
+                    'quantity' => $component['quantity'],
 
                     'created_at' => now(),
                     'updated_at' => now(),
@@ -667,21 +690,27 @@ class ProductController extends Controller
             ProductBundleItem::insert($bundleData);
 
             DB::commit();
+            if ($newImage && $oldImage) {
+                Storage::disk('public')->delete($oldImage);
+            }
+
             return back()->with('success', 'Paket bundling berhasil diperbarui.');
 
         } catch (\Exception $e) {
 
             DB::rollBack();
+            if ($newImage) {
+                Storage::disk('public')->delete($newImage);
+            }
 
             Log::error(
-                'Bundle Update Error: ' .
+                'Bundle Update Error: '.
                     $e->getMessage()
             );
 
             return back()
                 ->withErrors([
-                    'system' =>
-                        'Terjadi kesalahan sistem saat memperbarui paket.',
+                    'system' => 'Terjadi kesalahan sistem saat memperbarui paket.',
                 ])
                 ->withInput();
         }
@@ -694,16 +723,47 @@ class ProductController extends Controller
     {
         $bundleVariant = $product->variants()->whereHas('bundleComponents')->first();
         abort_unless($bundleVariant, 403, 'Produk ini bukan paket bundling.');
+        if ($this->hasPendingOrder($product)) {
+            return back()->withErrors(['delete' => 'Paket masih digunakan oleh pesanan yang menunggu pembayaran.']);
+        }
 
         DB::beginTransaction();
         try {
-            if ($product->image) Storage::disk('public')->delete($product->image);
+            $image = $product->image;
             $product->delete(); // Cascade hapus variant & bundle items
             DB::commit();
+            if ($image) {
+                Storage::disk('public')->delete($image);
+            }
+
             return back()->with('success', 'Paket bundling berhasil dihapus.');
         } catch (\Exception $e) {
             DB::rollBack();
+
             return back()->withErrors(['system' => 'Gagal menghapus paket.']);
         }
+    }
+
+    private function uniqueSlug(?string $input, string $name, ?int $exceptId = null): string
+    {
+        $base = $input ?: Str::slug($name);
+        $slug = $base;
+        $suffix = 2;
+
+        while (Product::where('slug', $slug)
+            ->when($exceptId, fn ($query) => $query->whereKeyNot($exceptId))
+            ->exists()) {
+            $tail = '-'.$suffix++;
+            $slug = substr($base, 0, 150 - strlen($tail)).$tail;
+        }
+
+        return $slug;
+    }
+
+    private function hasPendingOrder(Product $product): bool
+    {
+        return OrderItem::whereIn('product_variant_id', $product->variants()->select('id'))
+            ->whereHas('order', fn ($query) => $query->where('status', 'pending_payment'))
+            ->exists();
     }
 }

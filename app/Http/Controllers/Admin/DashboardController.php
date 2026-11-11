@@ -3,11 +3,10 @@
 namespace App\Http\Controllers\Admin;
 
 use App\Http\Controllers\Controller;
-use App\Models\Order;
 use App\Models\CustomOrder;
+use App\Models\Order;
 use App\Models\ProductVariant;
 use App\Models\User;
-use Illuminate\Support\Facades\DB;
 
 class DashboardController extends Controller
 {
@@ -22,7 +21,10 @@ class DashboardController extends Controller
             'pending_custom_orders' => CustomOrder::where('status', 'pending_review')->count(),
             'total_customers' => User::where('role', 'customer')->count(),
 
-            'low_stock_items' => ProductVariant::where('stock', '<', 5)->count(),
+            'low_stock_items' => ProductVariant::where('stock', '<', 5)
+                ->whereDoesntHave('bundleComponents')
+                ->whereHas('product.category', fn ($query) => $query->where('slug', '!=', 'batik'))
+                ->count(),
         ];
 
         $validStatuses = ['paid', 'processing', 'packing', 'shipped', 'completed'];

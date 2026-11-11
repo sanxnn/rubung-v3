@@ -22,9 +22,9 @@ class CategoryController extends Controller
 
         if ($request->filled('search')) {
             $query->where(function ($q) use ($request) {
-                $q->where('name', 'like', '%' . $request->search . '%')
-                    ->orWhere('description', 'like', '%' . $request->search . '%')
-                    ->orWhere('slug', 'like', '%' . $request->search . '%');
+                $q->where('name', 'like', '%'.$request->search.'%')
+                    ->orWhere('description', 'like', '%'.$request->search.'%')
+                    ->orWhere('slug', 'like', '%'.$request->search.'%');
             });
         }
 
@@ -50,9 +50,9 @@ class CategoryController extends Controller
                 'regex:/^[a-z0-9]+(?:-[a-z0-9]+)*$/',
             ],
             'description' => [
-                'nullable',
+                'required',
                 'string',
-                'max:500',
+                'max:255',
             ],
             'has_subcategories' => [
                 'nullable',
@@ -69,7 +69,7 @@ class CategoryController extends Controller
             'slug.max' => 'Slug tidak boleh lebih dari 100 karakter.',
 
             'description.string' => 'Deskripsi harus berupa teks.',
-            'description.max' => 'Deskripsi tidak boleh lebih dari 500 karakter.',
+            'description.max' => 'Deskripsi tidak boleh lebih dari 255 karakter.',
         ]);
 
         $slug = $this->processSlug(
@@ -108,9 +108,9 @@ class CategoryController extends Controller
                 Rule::unique('categories', 'slug')->ignore($category->id),
             ],
             'description' => [
-                'nullable',
+                'required',
                 'string',
-                'max:500',
+                'max:255',
             ],
             'has_subcategories' => [
                 'nullable',
@@ -128,8 +128,14 @@ class CategoryController extends Controller
             'slug.unique' => 'Slug ini sudah digunakan oleh kategori lain. Silakan gunakan yang berbeda.',
 
             'description.string' => 'Deskripsi harus berupa teks.',
-            'description.max' => 'Deskripsi tidak boleh lebih dari 500 karakter.',
+            'description.max' => 'Deskripsi tidak boleh lebih dari 255 karakter.',
         ]);
+
+        if (! $request->boolean('has_subcategories') && $category->subcategories()->exists()) {
+            return back()->withErrors([
+                'has_subcategories' => 'Hapus subkategori terlebih dahulu sebelum menonaktifkan fitur subkategori.',
+            ])->withInput();
+        }
 
         $slug = $this->processSlug(
             $validated['slug'] ?? null,
@@ -154,13 +160,13 @@ class CategoryController extends Controller
     {
         if ($category->subcategories()->exists()) {
             return back()->withErrors([
-                'delete' => 'Kategori tidak dapat dihapus karena masih memiliki subkategori. Hapus subkategori terlebih dahulu.'
+                'delete' => 'Kategori tidak dapat dihapus karena masih memiliki subkategori. Hapus subkategori terlebih dahulu.',
             ]);
         }
 
         if ($category->products()->exists()) {
             return back()->withErrors([
-                'delete' => 'Kategori tidak dapat dihapus karena masih memiliki produk yang terhubung.'
+                'delete' => 'Kategori tidak dapat dihapus karena masih memiliki produk yang terhubung.',
             ]);
         }
 
@@ -196,18 +202,17 @@ class CategoryController extends Controller
         ?string $inputSlug,
         string $name,
         string $model,
-        ?int $excludeId = null,
-        ?int $parentId = null
+        ?int $excludeId = null
     ): string {
         // Jika slug diisi, gunakan slug tersebut.
         // Jika kosong, generate dari nama.
-        $slug = !empty(trim($inputSlug))
+        $slug = ! empty(trim($inputSlug))
             ? Str::slug($inputSlug)
             : Str::slug($name);
 
         // Fallback jika hasil slug tidak sesuai format.
-        if (!preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slug)) {
-            $slug = 'item-' . uniqid();
+        if (! preg_match('/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $slug)) {
+            $slug = 'item-'.uniqid();
         }
 
         // Cek keunikan slug.
@@ -217,13 +222,15 @@ class CategoryController extends Controller
             $query->where('id', '!=', $excludeId);
         }
 
-        if ($parentId) {
-            $query->where('category_id', $parentId);
-        }
-
-        // Jika slug bentrok, tambahkan timestamp.
-        if ($query->exists()) {
-            $slug .= '-' . time();
+        $base = $slug;
+        $suffix = 2;
+        while ($query->exists()) {
+            $tail = '-'.$suffix++;
+            $slug = substr($base, 0, 100 - strlen($tail)).$tail;
+            $query = $model::where('slug', $slug);
+            if ($excludeId) {
+                $query->where('id', '!=', $excludeId);
+            }
         }
 
         return $slug;

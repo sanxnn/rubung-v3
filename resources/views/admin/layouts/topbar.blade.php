@@ -8,28 +8,27 @@
 
         <div>
             <p class="text-xs text-gray-400">
-                Monday, 21 September 2026
+                {{ now()->locale('id')->translatedFormat('l, d F Y') }}
             </p>
             <h2 class="font-semibold text-lg text-gray-800">
-                Dashboard
+                {{ match (true) {
+                    request()->routeIs('admin.orders.*') => 'Pesanan',
+                    request()->routeIs('admin.custom-orders.*') => 'Custom Order',
+                    request()->routeIs('admin.categories.*', 'admin.subcategories.*') => 'Kategori',
+                    request()->routeIs('admin.products.*', 'admin.variants.*') => 'Produk',
+                    request()->routeIs('admin.bundles.*') => 'Paket Bundling',
+                    request()->routeIs('admin.customers.*') => 'Pelanggan',
+                    request()->routeIs('admin.promo.*', 'admin.date.*') => 'Promosi',
+                    request()->routeIs('admin.voucher.*') => 'Voucher',
+                    request()->routeIs('admin.reports.*') => 'Laporan',
+                    request()->routeIs('admin.profile', 'admin.profile.*') => 'Profil',
+                    default => 'Dashboard',
+                } }}
             </h2>
         </div>
     </div>
 
     <div class="flex items-center gap-2 sm:gap-4">
-        {{-- Search --}}
-        <button
-            class="hidden sm:flex w-10 h-10 items-center justify-center rounded-xl text-gray-400 hover:bg-gray-50 hover:text-gray-700 transition">
-            <i class="fa-solid fa-magnifying-glass"></i>
-        </button>
-
-        {{-- Notification --}}
-        <button
-            class="relative w-10 h-10 flex items-center justify-center rounded-xl text-gray-400 hover:bg-gray-50 hover:text-gray-700 transition">
-            <i class="fa-regular fa-bell"></i>
-            <span class="absolute top-2 right-2 w-2 h-2 rounded-full bg-red-500 border-2 border-white"></span>
-        </button>
-
         {{-- Divider --}}
         <div class="hidden sm:block w-px h-7 bg-gray-100"></div>
 
@@ -39,11 +38,11 @@
                 class="flex items-center gap-2 hover:bg-gray-50 rounded-xl p-1.5 pr-3 transition group">
                 <div
                     class="w-9 h-9 rounded-full bg-[#F4C430] flex items-center justify-center text-[#5A4300] font-semibold text-xs shadow-sm group-hover:shadow-md transition-shadow">
-                    AR
+                    {{ strtoupper(mb_substr(auth()->user()->name, 0, 2)) }}
                 </div>
                 <div class="hidden md:block text-left">
                     <p class="text-xs font-semibold text-gray-700 group-hover:text-gray-900">
-                        Admin Rubung
+                        {{ auth()->user()->name }}
                     </p>
                     <p class="text-[10px] text-gray-400">
                         Administrator
@@ -58,8 +57,8 @@
                 class="hidden absolute right-0 mt-3 w-56 bg-white rounded-xl shadow-xl border border-gray-100 py-1 z-50 transform origin-top-right transition-all">
                 {{-- Header Dropdown --}}
                 <div class="px-4 py-3 border-b border-gray-100">
-                    <p class="text-sm font-semibold text-gray-800">Admin Rubung</p>
-                    <p class="text-xs text-gray-500">admin@rubungkuning.com</p>
+                    <p class="text-sm font-semibold text-gray-800">{{ auth()->user()->name }}</p>
+                    <p class="text-xs text-gray-500">{{ auth()->user()->email }}</p>
                 </div>
 
                 {{-- Menu Items --}}

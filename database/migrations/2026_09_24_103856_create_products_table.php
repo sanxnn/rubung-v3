@@ -35,7 +35,9 @@ return new class extends Migration
             // Indexes untuk performa query
             $table->index('category_id');
             $table->index('subcategory_id');
-            $table->fullText(['name', 'description']); // Untuk pencarian
+            if (Schema::getConnection()->getDriverName() !== 'sqlite') {
+                $table->fullText(['name', 'description']);
+            }
 
             // Composite index untuk filter kategori + subkategori
             $table->index(['category_id', 'subcategory_id'], 'category_subcategory_idx');
@@ -50,5 +52,3 @@ return new class extends Migration
         Schema::dropIfExists('products');
     }
 };
-
-

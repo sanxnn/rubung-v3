@@ -9,20 +9,17 @@ use App\Http\Controllers\Api\CustomOrderController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProductController;
-use Illuminate\Http\Request;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\Response;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
 
-    Route::post('/register', [AuthController::class, 'register']);
-    Route::post('/login', [AuthController::class, 'login']);
-    Route::post('/email/verify', [AuthController::class, 'verifyEmail']);
-    Route::post('/email/resend', [AuthController::class, 'resendVerificationOtp']);
-    Route::post('/password/forgot', [AuthController::class, 'forgotPassword']);
-    Route::post('/password/verify-otp', [AuthController::class, 'verifyPasswordResetOtp']);
-    Route::post('/password/reset', [AuthController::class, 'resetPassword']);
+    Route::post('/register', [AuthController::class, 'register'])->middleware('throttle:5,1');
+    Route::post('/login', [AuthController::class, 'login'])->middleware('throttle:10,1');
+    Route::post('/email/verify', [AuthController::class, 'verifyEmail'])->middleware('throttle:10,1');
+    Route::post('/email/resend', [AuthController::class, 'resendVerificationOtp'])->middleware('throttle:3,1');
+    Route::post('/password/forgot', [AuthController::class, 'forgotPassword'])->middleware('throttle:3,1');
+    Route::post('/password/verify-otp', [AuthController::class, 'verifyPasswordResetOtp'])->middleware('throttle:10,1');
+    Route::post('/password/reset', [AuthController::class, 'resetPassword'])->middleware('throttle:10,1');
 
     Route::middleware('auth:sanctum')->group(function () {
         Route::get('/me', [AuthController::class, 'me']);
@@ -34,28 +31,19 @@ Route::prefix('auth')->group(function () {
 });
 
 Route::get('/storage-image/{path}', function ($path) {
-        // Arahkan ke folder storage/app/public
-        $filePath = storage_path('app/public/' . $path);
+    $publicDirectory = realpath(storage_path('app/public'));
+    $filePath = realpath(storage_path('app/public/'.$path));
 
-        if (!File::exists($filePath)) {
-            return response()->json(['message' => 'File tidak ditemukan'], 404);
-        }
+    if (! $publicDirectory || ! $filePath ||
+        ! str_starts_with($filePath, $publicDirectory.DIRECTORY_SEPARATOR) ||
+        ! is_file($filePath)) {
+        return response()->json(['message' => 'File tidak ditemukan'], 404);
+    }
 
-        $file = File::get($filePath);
-        $type = File::mimeType($filePath);
-
-        $response = Response::make($file, 200);
-        $response->header("Content-Type", $type);
-
-        // ⚠️ HEADER INI WAJIB ADA AGAR FLUTTER WEB BISA MEMBACA GAMBAR
-        $response->header("Access-Control-Allow-Origin", "*");
-
-        return $response;
-    })->where('path', '.*');
+    return response()->file($filePath, ['Access-Control-Allow-Origin' => '*']);
+})->where('path', '.*');
 
 Route::middleware('auth:sanctum')->group(function () {
-
-
 
     Route::prefix('addresses')->group(function () {
         Route::get('/', [AddressController::class, 'index']);
@@ -95,8 +83,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
 });
 
-Route::post('/payments/midtrans/webhook',[PaymentController::class, 'notification']);
-
+Route::post('/payments/midtrans/webhook', [PaymentController::class, 'notification']);
 
 Route::prefix('products')->group(function () {
     Route::get('/', [ProductController::class, 'index']);

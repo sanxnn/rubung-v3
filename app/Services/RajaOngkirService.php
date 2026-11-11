@@ -11,19 +11,15 @@ class RajaOngkirService
     private string $baseUrl = 'https://rajaongkir.komerce.id/api/v1';
 
     /**
-     * Checkout selalu menggunakan berat 2 KG.
-     */
-    private int $weight = 2000;
-
-    /**
-     * Hitung ongkir J&T dari Sumbersari, Jember
-     * ke alamat customer.
+     * Hitung ongkir dari asal toko ke alamat pelanggan.
      */
     public function getCost(Address $address): array
     {
         $key = config('services.rajongkir.api_key');
+        $weight = (int) config('services.rajongkir.weight', 2000);
+        $courier = (string) config('services.rajongkir.courier', 'jnt');
 
-        if (!$key) {
+        if (! $key) {
             throw new Exception(
                 'RajaOngkir API key belum dikonfigurasi.'
             );
@@ -37,9 +33,9 @@ class RajaOngkirService
 
         $origin = $this->findOrigin($key);
 
-        if (!$origin) {
+        if (! $origin) {
             throw new Exception(
-                'Origin toko Sumbersari, Jember tidak ditemukan di RajaOngkir.'
+                'Origin toko tidak ditemukan di RajaOngkir.'
             );
         }
 
@@ -56,7 +52,7 @@ class RajaOngkirService
             $key
         );
 
-        if (!$destination) {
+        if (! $destination) {
             throw new Exception(
                 'Lokasi pengiriman customer tidak ditemukan di RajaOngkir.'
             );
@@ -74,19 +70,19 @@ class RajaOngkirService
             ])
             ->asForm()
             ->post(
-                $this->baseUrl . '/calculate/domestic-cost',
+                $this->baseUrl.'/calculate/domestic-cost',
                 [
                     'origin' => $origin['id'],
                     'destination' => $destination['id'],
-                    'weight' => $this->weight,
-                    'courier' => 'jnt',
+                    'weight' => $weight,
+                    'courier' => $courier,
                     'price' => 'lowest',
                 ]
             );
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             throw new Exception(
-                'Gagal menghubungi RajaOngkir: ' .
+                'Gagal menghubungi RajaOngkir: '.
                 $response->body()
             );
         }
@@ -97,7 +93,7 @@ class RajaOngkirService
 
         if (empty($costs)) {
             throw new Exception(
-                'Layanan J&T tidak tersedia untuk alamat tersebut.'
+                'Layanan pengiriman tidak tersedia untuk alamat tersebut.'
             );
         }
 
@@ -111,18 +107,18 @@ class RajaOngkirService
             ->sortBy('cost')
             ->first();
 
-        if (!$selected) {
+        if (! $selected) {
             throw new Exception(
-                'Ongkir J&T tidak ditemukan.'
+                'Ongkir tidak ditemukan.'
             );
         }
 
         return [
             'cost' => (int) $selected['cost'],
-            'courier' => 'jnt',
+            'courier' => $courier,
             'service' => $selected['service'] ?? 'REG',
             'etd' => $selected['etd'] ?? null,
-            'weight' => $this->weight,
+            'weight' => $weight,
 
             'origin_id' => $origin['id'],
             'origin_label' => $origin['label'] ?? null,
@@ -160,15 +156,12 @@ class RajaOngkirService
         |--------------------------------------------------------------------------
         */
 
-        $normalizedSearch = strtolower($search);
+        $searchTerms = array_filter(array_map('trim', explode(',', strtolower($search))));
 
         foreach ($result as $item) {
             $label = strtolower($item['label'] ?? '');
 
-            if (
-                str_contains($label, 'sumbersari') &&
-                str_contains($label, 'jember')
-            ) {
+            if (collect($searchTerms)->every(fn ($term) => str_contains($label, $term))) {
                 return $item;
             }
         }
@@ -208,7 +201,7 @@ class RajaOngkirService
                 $key
             );
 
-            if (!empty($result)) {
+            if (! empty($result)) {
                 /*
                  * Cari hasil yang kode posnya benar-benar sama.
                  */
@@ -233,11 +226,11 @@ class RajaOngkirService
 
         if ($district && $city) {
             $result = $this->searchDestination(
-                $district . ' ' . $city,
+                $district.' '.$city,
                 $key
             );
 
-            if (!empty($result)) {
+            if (! empty($result)) {
                 return $result[0];
             }
         }
@@ -254,7 +247,7 @@ class RajaOngkirService
                 $key
             );
 
-            if (!empty($result)) {
+            if (! empty($result)) {
                 return $result[0];
             }
         }
@@ -274,7 +267,7 @@ class RajaOngkirService
                 'key' => $key,
             ])
             ->get(
-                $this->baseUrl . '/destination/domestic-destination',
+                $this->baseUrl.'/destination/domestic-destination',
                 [
                     'search' => $search,
                     'limit' => 10,
@@ -282,7 +275,7 @@ class RajaOngkirService
                 ]
             );
 
-        if (!$response->successful()) {
+        if (! $response->successful()) {
             return [];
         }
 

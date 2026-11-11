@@ -669,28 +669,39 @@
                 {{-- Contact Form --}}
                 <div class="fade-up bg-cream rounded-2xl p-8 md:p-10 border border-gold/10">
                     <h3 class="font-serif text-2xl font-bold text-charcoal mb-6">Kirim Pesan</h3>
-                    <form action="#" method="POST" class="space-y-5">
+                    @if (session('contact_success'))
+                        <p class="text-sm text-green-700">{{ session('contact_success') }}</p>
+                    @endif
+                    @if ($errors->any())
+                        <ul class="text-sm text-red-700">
+                            @foreach ($errors->all() as $error)
+                                <li>{{ $error }}</li>
+                            @endforeach
+                        </ul>
+                    @endif
+                    <form action="{{ route('contact.send') }}" method="POST" class="space-y-5">
                         @csrf
+                        <input type="text" name="website" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true">
                         <div>
                             <label class="block text-xs font-medium text-slate tracking-wide uppercase mb-2">Nama
                                 Lengkap</label>
-                            <input type="text" placeholder="Masukkan nama Anda"
+                            <input type="text" name="name" value="{{ old('name') }}" required maxlength="100" placeholder="Masukkan nama Anda"
                                 class="w-full px-4 py-3 bg-ivory border border-gold/20 rounded-xl text-sm
                                           focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-all">
                         </div>
                         <div>
                             <label
                                 class="block text-xs font-medium text-slate tracking-wide uppercase mb-2">Email</label>
-                            <input type="email" placeholder="email@contoh.com"
+                            <input type="email" name="email" value="{{ old('email') }}" required maxlength="100" placeholder="email@contoh.com"
                                 class="w-full px-4 py-3 bg-ivory border border-gold/20 rounded-xl text-sm
                                           focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-all">
                         </div>
                         <div>
                             <label
                                 class="block text-xs font-medium text-slate tracking-wide uppercase mb-2">Pesan</label>
-                            <textarea rows="4" placeholder="Ceritakan kebutuhan Anda..."
+                            <textarea rows="4" name="message" required minlength="10" maxlength="5000" placeholder="Ceritakan kebutuhan Anda..."
                                 class="w-full px-4 py-3 bg-ivory border border-gold/20 rounded-xl text-sm resize-none
-                                             focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-all"></textarea>
+                                             focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-all">{{ old('message') }}</textarea>
                         </div>
                         <button type="submit"
                             class="w-full py-3 bg-gold text-ivory font-medium rounded-xl
@@ -726,23 +737,6 @@
                         Menghidupkan warisan Nusantara melalui keanggunan kontemporer.
                         Setiap helai kain adalah karya seni yang bercerita.
                     </p>
-                    <div class="flex gap-3">
-                        <a href="#"
-                            class="w-9 h-9 rounded-full border border-ivory/20 flex items-center justify-center
-                                           hover:border-gold hover:text-gold transition-colors">
-                            <i data-lucide="instagram" class="w-4 h-4"></i>
-                        </a>
-                        <a href="#"
-                            class="w-9 h-9 rounded-full border border-ivory/20 flex items-center justify-center
-                                           hover:border-gold hover:text-gold transition-colors">
-                            <i data-lucide="facebook" class="w-4 h-4"></i>
-                        </a>
-                        <a href="#"
-                            class="w-9 h-9 rounded-full border border-ivory/20 flex items-center justify-center
-                                           hover:border-gold hover:text-gold transition-colors">
-                            <i data-lucide="linkedin" class="w-4 h-4"></i>
-                        </a>
-                    </div>
                 </div>
 
                 {{-- Quick Links --}}
@@ -756,14 +750,9 @@
                     </ul>
                 </div>
 
-                {{-- Legal --}}
                 <div>
-                    <h4 class="font-semibold text-ivory text-sm tracking-wide uppercase mb-4">Legal</h4>
-                    <ul class="space-y-3 text-sm">
-                        <li><a href="#" class="hover:text-gold transition-colors">Kebijakan Privasi</a></li>
-                        <li><a href="#" class="hover:text-gold transition-colors">Syarat & Ketentuan</a></li>
-                        <li><a href="#" class="hover:text-gold transition-colors">FAQ</a></li>
-                    </ul>
+                    <h4 class="font-semibold text-ivory text-sm tracking-wide uppercase mb-4">Hubungi Kami</h4>
+                    <a href="#contact" class="text-sm hover:text-gold transition-colors">Kirim pesan melalui formulir kontak</a>
                 </div>
             </div>
 
