@@ -5,11 +5,15 @@ namespace App\Http\Controllers\Api;
 use App\Http\Controllers\Controller;
 use App\Http\Resources\AddressResource;
 use App\Models\Address;
+use App\Services\WilayahService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Validation\Rule;
 
 class AddressController extends Controller
 {
+    public function __construct(private readonly WilayahService $wilayah) {}
+
     public function index(Request $request)
     {
         $addresses = $request->user()
@@ -26,17 +30,7 @@ class AddressController extends Controller
 
     public function store(Request $request)
     {
-        $validated = $request->validate([
-            'label' => ['required', 'string', 'max:50'],
-            'recipient_name' => ['required', 'string', 'max:100'],
-            'phone' => ['required', 'string', 'max:20'],
-            'province' => ['required', 'string', 'max:100'],
-            'city' => ['required', 'string', 'max:100'],
-            'district' => ['nullable', 'string', 'max:100'],
-            'postal_code' => ['required', 'digits:5'],
-            'detail' => ['required', 'string'],
-            'is_primary' => ['nullable', 'boolean'],
-        ]);
+        $validated = $this->validateAddress($request);
 
         $user = $request->user();
 
@@ -46,7 +40,7 @@ class AddressController extends Controller
          * Kalau customer belum punya alamat,
          * alamat pertama otomatis menjadi alamat utama.
          */
-        if (!$user->addresses()->exists()) {
+        if (! $user->addresses()->exists()) {
             $isPrimary = true;
         }
 
@@ -67,8 +61,13 @@ class AddressController extends Controller
                 'recipient_name' => $validated['recipient_name'],
                 'phone' => $validated['phone'],
                 'province' => $validated['province'],
+                'province_code' => $validated['province_code'],
                 'city' => $validated['city'],
+                'city_code' => $validated['city_code'],
                 'district' => $validated['district'] ?? null,
+                'district_code' => $validated['district_code'],
+                'village' => $validated['village'],
+                'village_code' => $validated['village_code'],
                 'postal_code' => $validated['postal_code'],
                 'detail' => $validated['detail'],
                 'is_primary' => $isPrimary,
@@ -95,17 +94,7 @@ class AddressController extends Controller
     {
         $this->authorizeAddress($request, $address);
 
-        $validated = $request->validate([
-            'label' => ['required', 'string', 'max:50'],
-            'recipient_name' => ['required', 'string', 'max:100'],
-            'phone' => ['required', 'string', 'max:20'],
-            'province' => ['required', 'string', 'max:100'],
-            'city' => ['required', 'string', 'max:100'],
-            'district' => ['nullable', 'string', 'max:100'],
-            'postal_code' => ['required', 'digits:5'],
-            'detail' => ['required', 'string'],
-            'is_primary' => ['nullable', 'boolean'],
-        ]);
+        $validated = $this->validateAddress($request);
 
         $isPrimary = $validated['is_primary'] ?? $address->is_primary;
 
@@ -125,8 +114,13 @@ class AddressController extends Controller
                 'recipient_name' => $validated['recipient_name'],
                 'phone' => $validated['phone'],
                 'province' => $validated['province'],
+                'province_code' => $validated['province_code'],
                 'city' => $validated['city'],
+                'city_code' => $validated['city_code'],
                 'district' => $validated['district'] ?? null,
+                'district_code' => $validated['district_code'],
+                'village' => $validated['village'],
+                'village_code' => $validated['village_code'],
                 'postal_code' => $validated['postal_code'],
                 'detail' => $validated['detail'],
                 'is_primary' => $isPrimary,
@@ -198,5 +192,40 @@ class AddressController extends Controller
             $address->user_id === $request->user()->id,
             404
         );
+    }
+
+    private function validateAddress(Request $request): array
+    {
+        $usingCodes = $request->hasAny(['province_code', 'city_code', 'district_code', 'village_code']);
+        $requiredCode = Rule::requiredIf($usingCodes);
+
+        $validated = $request->validate([
+            'label' => ['required', 'string', 'max:50'],
+            'recipient_name' => ['required', 'string', 'max:100'],
+            'phone' => ['required', 'string', 'max:20'],
+            'province' => [Rule::requiredIf(! $usingCodes), 'nullable', 'string', 'max:100'],
+            'city' => [Rule::requiredIf(! $usingCodes), 'nullable', 'string', 'max:100'],
+            'district' => ['nullable', 'string', 'max:100'],
+            'province_code' => [$requiredCode, 'regex:/^[0-9]{2}$/'],
+            'city_code' => [$requiredCode, 'regex:/^[0-9]{2}\.[0-9]{2}$/'],
+            'district_code' => [$requiredCode, 'regex:/^[0-9]{2}\.[0-9]{2}\.[0-9]{2}$/'],
+            'village_code' => [$requiredCode, 'regex:/^[0-9]{2}\.[0-9]{2}\.[0-9]{2}\.[0-9]{4}$/'],
+            'postal_code' => ['required', 'digits:5'],
+            'detail' => ['required', 'string'],
+            'is_primary' => ['nullable', 'boolean'],
+        ]);
+
+        if ($usingCodes) {
+            $names = $this->wilayah->resolve($validated);
+            $validated = array_merge($validated, $names);
+        } else {
+            $validated['province_code'] = null;
+            $validated['city_code'] = null;
+            $validated['district_code'] = null;
+            $validated['village_code'] = null;
+            $validated['village'] = null;
+        }
+
+        return $validated;
     }
 }

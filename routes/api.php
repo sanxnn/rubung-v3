@@ -9,6 +9,7 @@ use App\Http\Controllers\Api\CustomOrderController;
 use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProductController;
+use App\Http\Controllers\Api\RegionController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -42,6 +43,13 @@ Route::get('/storage-image/{path}', function ($path) {
 
     return response()->file($filePath, ['Access-Control-Allow-Origin' => '*']);
 })->where('path', '.*');
+
+Route::prefix('regions')->group(function () {
+    Route::get('/provinces', [RegionController::class, 'provinces']);
+    Route::get('/regencies/{provinceCode}', [RegionController::class, 'regencies'])->where('provinceCode', '[0-9]{2}');
+    Route::get('/districts/{cityCode}', [RegionController::class, 'districts'])->where('cityCode', '[0-9]{2}\.[0-9]{2}');
+    Route::get('/villages/{districtCode}', [RegionController::class, 'villages'])->where('districtCode', '[0-9]{2}\.[0-9]{2}\.[0-9]{2}');
+});
 
 Route::middleware('auth:sanctum')->group(function () {
 

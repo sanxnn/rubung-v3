@@ -15,8 +15,13 @@ class Address extends Model
         'recipient_name',
         'phone',
         'province',
+        'province_code',
         'city',
+        'city_code',
         'district',
+        'district_code',
+        'village',
+        'village_code',
         'postal_code',
         'detail',
         'is_primary',
@@ -44,7 +49,8 @@ class Address extends Model
     {
         $parts = array_filter([
             $this->detail,
-            $this->district ? 'Kec. ' . $this->district : null,
+            $this->village,
+            $this->district ? 'Kec. '.$this->district : null,
             $this->city,
             $this->province,
             $this->postal_code,

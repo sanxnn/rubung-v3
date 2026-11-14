@@ -70,8 +70,12 @@ Error aturan bisnis biasanya hanya memuat `message`, kadang disertai `available_
 | `GET /auth/me` | Privat | Profil pelanggan. |
 | `PUT /auth/profile` | Privat | `name`, `email`, `phone?`, `gender`, `birth_date`. |
 | `POST /auth/logout` | Privat | Cabut token saat ini. |
+| `GET /regions/provinces` | Publik | Daftar provinsi dari wilayah.id. |
+| `GET /regions/regencies/{provinceCode}` | Publik | Kabupaten/kota dalam provinsi. |
+| `GET /regions/districts/{cityCode}` | Publik | Kecamatan dalam kabupaten/kota. |
+| `GET /regions/villages/{districtCode}` | Publik | Desa/kelurahan dalam kecamatan. |
 | `GET /addresses` | Privat | Daftar alamat. |
-| `POST /addresses` | Privat | Buat alamat; field di bagian Alamat. |
+| `POST /addresses` | Privat | Buat alamat dengan kode wilayah atau nama lama; field di bagian Alamat. |
 | `GET /addresses/{id}` | Privat | Detail alamat milik pelanggan. |
 | `PUT /addresses/{id}` | Privat | Ubah alamat; field sama dengan pembuatan. |
 | `PATCH /addresses/{id}/primary` | Privat | Jadikan alamat utama; tanpa body. |
@@ -292,7 +296,28 @@ Pesan berbeda jika email tidak berubah. Saat email berubah, tampilkan layar veri
 
 ## Alamat
 
-`POST /addresses` dan `PUT /addresses/{id}` memakai field wajib yang sama. `district` dan `is_primary` opsional; alamat pertama otomatis menjadi utama.
+Untuk form alamat dinamis, panggil berurutan `GET /regions/provinces`, `GET /regions/regencies/{provinceCode}`, `GET /regions/districts/{cityCode}`, dan `GET /regions/villages/{districtCode}`. Setiap respons berisi `data: [{"code":"...","name":"..."}]`. Kode bertitik harus dikirim utuh, misalnya `31.74.09`. Backend mengambil data dari [wilayah.id](https://wilayah.id/), menyimpannya dalam cache satu hari, dan mengembalikan `503` saat layanan wilayah tidak tersedia.
+
+`POST /addresses` dan `PUT /addresses/{id}` menerima empat kode wilayah berikut sebagai satu paket. Nama `province`, `city`, `district`, dan `village` diambil dari wilayah.id oleh backend; kode yang tidak ada atau tidak sesuai wilayah induknya ditolak dengan `422`. `postal_code` tetap wajib diisi manual dengan lima digit karena endpoint wilayah.id tidak menyediakan kode pos. `is_primary` opsional; alamat pertama otomatis menjadi utama.
+
+```json
+{
+  "label": "Rumah",
+  "recipient_name": "Siti Aminah",
+  "phone": "081234567890",
+  "province_code": "31",
+  "city_code": "31.74",
+  "district_code": "31.74.09",
+  "village_code": "31.74.09.1002",
+  "postal_code": "12640",
+  "detail": "Jl. Mawar No. 10",
+  "is_primary": true
+}
+```
+
+Payload lama yang mengirim nama `province`, `city`, dan `district` tetap diterima untuk kompatibilitas. Kode wilayah pada alamat lama bernilai `null`; bila alamat dengan kode diperbarui memakai payload nama lama, kode wilayahnya dikosongkan.
+
+Contoh payload lama:
 
 ```json
 {
@@ -318,8 +343,13 @@ Pesan berbeda jika email tidak berubah. Saat email berubah, tampilkan layar veri
     "recipient_name": "Siti Aminah",
     "phone": "081234567890",
     "province": "Jawa Timur",
+    "province_code": null,
     "city": "Jember",
+    "city_code": null,
     "district": "Sumbersari",
+    "district_code": null,
+    "village": null,
+    "village_code": null,
     "postal_code": "68121",
     "detail": "Jl. Mawar No. 10",
     "full_address": "Jl. Mawar No. 10, Kec. Sumbersari, Jember, Jawa Timur, 68121",
