@@ -77,6 +77,7 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::get('/', [CustomOrderController::class, 'index']);
         Route::post('/', [CustomOrderController::class, 'store']);
         Route::get('/{customOrder}', [CustomOrderController::class, 'show']);
+        Route::post('/{customOrder}/attachments', [CustomOrderController::class, 'addAttachments']);
         Route::post('/{customOrder}/approve', [CustomOrderController::class, 'approve']);
         Route::post('/{customOrder}/cancel', [CustomOrderController::class, 'cancel']);
     });

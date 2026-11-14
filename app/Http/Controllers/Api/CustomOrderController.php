@@ -11,7 +11,9 @@ use App\Models\Order;
 use App\Services\RajaOngkirService;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
+use Throwable;
 
 class CustomOrderController extends Controller
 {
@@ -63,20 +65,33 @@ class CustomOrderController extends Controller
                 'string',
                 'min:10',
             ],
+            'attachments' => ['sometimes', 'array', 'max:5'],
+            'attachments.*' => ['required', 'image', 'mimes:jpeg,png,webp', 'max:2048'],
         ]);
 
-        $customOrder = DB::transaction(function () use ($request, $validated) {
-            return CustomOrder::create([
-                'user_id' => $request->user()->id,
-                'reference_number' => $this->generateReferenceNumber(),
-                'description' => $validated['description'],
-                'estimated_price' => null,
-                'estimated_time' => null,
-                'status' => 'pending_review',
-                'admin_notes' => null,
-                'order_id' => null,
-            ]);
-        });
+        $storedPaths = [];
+
+        try {
+            $customOrder = DB::transaction(function () use ($request, $validated, &$storedPaths) {
+                $customOrder = CustomOrder::create([
+                    'user_id' => $request->user()->id,
+                    'reference_number' => $this->generateReferenceNumber(),
+                    'description' => $validated['description'],
+                    'estimated_price' => null,
+                    'estimated_time' => null,
+                    'status' => 'pending_review',
+                    'admin_notes' => null,
+                    'order_id' => null,
+                ]);
+
+                $this->saveAttachments($customOrder, $validated['attachments'] ?? [], $request->user()->id, $storedPaths);
+
+                return $customOrder;
+            });
+        } catch (Throwable $error) {
+            Storage::disk('public')->delete($storedPaths);
+            throw $error;
+        }
 
         $customOrder->load([
             'attachments',
@@ -86,6 +101,60 @@ class CustomOrderController extends Controller
         return (new CustomOrderResource($customOrder))
             ->response()
             ->setStatusCode(201);
+    }
+
+    public function addAttachments(Request $request, CustomOrder $customOrder)
+    {
+        if ($customOrder->user_id !== $request->user()->id) {
+            abort(404);
+        }
+
+        $validated = $request->validate([
+            'attachments' => ['required', 'array', 'min:1', 'max:5'],
+            'attachments.*' => ['required', 'image', 'mimes:jpeg,png,webp', 'max:2048'],
+        ]);
+
+        $storedPaths = [];
+
+        try {
+            DB::transaction(function () use ($customOrder, $validated, $request, &$storedPaths) {
+                $customOrder = CustomOrder::query()->lockForUpdate()->findOrFail($customOrder->id);
+
+                if ($customOrder->status !== 'pending_review') {
+                    abort(422, 'Lampiran hanya dapat ditambahkan saat custom order menunggu tinjauan.');
+                }
+
+                if ($customOrder->attachments()->count() + count($validated['attachments']) > 5) {
+                    abort(422, 'Maksimal 5 lampiran untuk satu custom order.');
+                }
+
+                $this->saveAttachments($customOrder, $validated['attachments'], $request->user()->id, $storedPaths);
+            });
+        } catch (Throwable $error) {
+            Storage::disk('public')->delete($storedPaths);
+            throw $error;
+        }
+
+        return (new CustomOrderResource($customOrder->fresh(['attachments', 'order'])))
+            ->response()
+            ->setStatusCode(201);
+    }
+
+    private function saveAttachments(CustomOrder $customOrder, array $files, int $userId, array &$storedPaths): void
+    {
+        foreach ($files as $file) {
+            $path = $file->store('custom-orders/'.$customOrder->id, 'public');
+
+            if ($path === false) {
+                throw new \RuntimeException('Gagal menyimpan lampiran custom order.');
+            }
+
+            $storedPaths[] = $path;
+            $customOrder->attachments()->create([
+                'file_path' => $path,
+                'uploaded_by' => $userId,
+            ]);
+        }
     }
 
     /**
@@ -100,7 +169,7 @@ class CustomOrderController extends Controller
             abort(404);
         }
 
-        if (!in_array($customOrder->status, [
+        if (! in_array($customOrder->status, [
             'pending_review',
             'quoted',
         ], true)) {
@@ -170,7 +239,7 @@ class CustomOrderController extends Controller
         */
 
         if (
-            !$customOrder->estimated_price ||
+            ! $customOrder->estimated_price ||
             $customOrder->estimated_price <= 0
         ) {
             return response()->json([
@@ -216,7 +285,7 @@ class CustomOrderController extends Controller
             ->where('user_id', $user->id)
             ->first();
 
-        if (!$address) {
+        if (! $address) {
             return response()->json([
                 'message' => 'Alamat tidak ditemukan.',
             ], 404);
@@ -267,7 +336,7 @@ class CustomOrderController extends Controller
                 */
 
                 if (
-                    !$customOrder->estimated_price ||
+                    ! $customOrder->estimated_price ||
                     $customOrder->estimated_price <= 0
                 ) {
                     throw new \Exception(
@@ -297,7 +366,7 @@ class CustomOrderController extends Controller
                 |
                 */
 
-                $rajaOngkirService = new RajaOngkirService();
+                $rajaOngkirService = new RajaOngkirService;
 
                 $shipping = $rajaOngkirService->getCost($address);
 
@@ -372,23 +441,17 @@ class CustomOrderController extends Controller
                     |--------------------------------------------------------------------------
                     */
 
-                    'snapshot_recipient_name' =>
-                        $address->recipient_name,
+                    'snapshot_recipient_name' => $address->recipient_name,
 
-                    'snapshot_phone' =>
-                        $address->phone,
+                    'snapshot_phone' => $address->phone,
 
-                    'snapshot_province' =>
-                        $address->province,
+                    'snapshot_province' => $address->province,
 
-                    'snapshot_city' =>
-                        $address->city,
+                    'snapshot_city' => $address->city,
 
-                    'snapshot_postal_code' =>
-                        $address->postal_code,
+                    'snapshot_postal_code' => $address->postal_code,
 
-                    'snapshot_detail' =>
-                        $address->detail,
+                    'snapshot_detail' => $address->detail,
 
                     /*
                     |--------------------------------------------------------------------------
@@ -396,8 +459,7 @@ class CustomOrderController extends Controller
                     |--------------------------------------------------------------------------
                     */
 
-                    'notes' =>
-                        $validated['notes'] ?? null,
+                    'notes' => $validated['notes'] ?? null,
                 ]);
 
                 /*
@@ -414,8 +476,7 @@ class CustomOrderController extends Controller
 
                     'product_name' => 'Custom Order',
 
-                    'variant_name' =>
-                        $customOrder->reference_number,
+                    'variant_name' => $customOrder->reference_number,
 
                     'quantity' => 1,
 
@@ -464,11 +525,9 @@ class CustomOrderController extends Controller
             */
 
             return response()->json([
-                'message' =>
-                    'Custom Order berhasil disetujui. Silakan lakukan pembayaran penuh.',
+                'message' => 'Custom Order berhasil disetujui. Silakan lakukan pembayaran penuh.',
 
-                'data' =>
-                    new OrderResource($order),
+                'data' => new OrderResource($order),
             ], 201);
 
         } catch (\Exception $e) {
@@ -488,9 +547,9 @@ class CustomOrderController extends Controller
     {
         do {
             $number =
-                'CO-' .
-                now()->format('YmdHis') .
-                '-' .
+                'CO-'.
+                now()->format('YmdHis').
+                '-'.
                 strtoupper(Str::random(5));
 
         } while (
@@ -513,9 +572,9 @@ class CustomOrderController extends Controller
     {
         do {
             $number =
-                'BRK-' .
-                now()->format('YmdHis') .
-                '-' .
+                'BRK-'.
+                now()->format('YmdHis').
+                '-'.
                 strtoupper(Str::random(5));
 
         } while (

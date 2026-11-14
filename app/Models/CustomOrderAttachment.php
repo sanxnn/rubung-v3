@@ -9,6 +9,8 @@ class CustomOrderAttachment extends Model
 {
     use HasFactory;
 
+    const UPDATED_AT = null;
+
     protected $fillable = [
         'custom_order_id',
         'file_path',
