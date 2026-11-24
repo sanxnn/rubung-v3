@@ -225,6 +225,48 @@ class RefundFlowTest extends TestCase
         $this->assertSame('midtrans', $refund->fresh()->refund_method);
     }
 
+    public function test_only_owner_can_cancel_pending_refund_and_resubmit(): void
+    {
+        Storage::fake('local');
+        $order = $this->paidOrder();
+        $refund = $this->submitRefund($order);
+        $url = '/api/refunds/'.$refund->id.'/cancel';
+
+        $this->actingAs(User::factory()->create(), 'sanctum')->postJson($url)->assertNotFound();
+        $this->actingAs($order->user, 'sanctum')->postJson($url)
+            ->assertOk()->assertJsonPath('data.status', 'cancelled');
+        $this->postJson($url)->assertOk()->assertJsonPath('data.status', 'cancelled');
+
+        $replacement = $this->postJson('/api/orders/'.$order->id.'/refund', [
+            'reason' => 'Pengajuan ulang dengan bukti kerusakan yang baru.',
+            'evidence' => UploadedFile::fake()->image('bukti-baru.jpg'),
+        ])->assertCreated()->json('data.id');
+
+        RefundRequest::findOrFail($replacement)->update(['status' => 'approved']);
+        $this->postJson('/api/refunds/'.$replacement.'/cancel')->assertUnprocessable();
+    }
+
+    public function test_only_owner_can_complete_paid_shipped_order_once(): void
+    {
+        $order = $this->paidOrder();
+        $url = '/api/orders/'.$order->id.'/complete';
+
+        $this->actingAs($order->user, 'sanctum');
+        $order->update(['status' => 'pending_payment']);
+        $order->payment()->update(['payment_status' => 'pending']);
+        $this->postJson($url)->assertUnprocessable();
+
+        $order->update(['status' => 'shipped']);
+        $this->postJson($url)->assertUnprocessable();
+        $order->payment()->update(['payment_status' => 'success']);
+
+        $this->actingAs(User::factory()->create(), 'sanctum')->postJson($url)->assertNotFound();
+        $this->actingAs($order->user, 'sanctum')->postJson($url)
+            ->assertOk()->assertJsonPath('data.status', 'completed');
+        $this->postJson($url)->assertOk()->assertJsonPath('data.status', 'completed');
+        $this->assertSame(1, $order->statusHistories()->where('new_status', 'completed')->count());
+    }
+
     private function paidOrder(string $type = 'bank_transfer'): Order
     {
         $order = Order::factory()->create(['status' => 'paid', 'final_amount' => 150000]);

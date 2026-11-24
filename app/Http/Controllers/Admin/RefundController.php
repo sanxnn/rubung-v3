@@ -89,23 +89,24 @@ class RefundController extends Controller
 
     public function switchToManual(RefundRequest $refundRequest, MidtransRefundService $midtrans)
     {
-        abort_unless($refundRequest->status === 'approved'
-            && $refundRequest->refund_method === 'midtrans', 422);
-
-        try {
-            $midtrans->assertNoRefundRecorded($refundRequest->load('order'));
-        } catch (Throwable $error) {
-            return redirect()->route('admin.refunds.show', $refundRequest)
-                ->with('error', $error->getMessage());
-        }
-
-        DB::transaction(function () use ($refundRequest) {
+        $error = DB::transaction(function () use ($refundRequest, $midtrans) {
             $refund = RefundRequest::lockForUpdate()->findOrFail($refundRequest->id);
-            if ($refund->status !== 'approved' || $refund->refund_method !== 'midtrans') {
-                throw ValidationException::withMessages(['status' => 'Status refund sudah berubah.']);
+            abort_unless($refund->status === 'approved' && $refund->refund_method === 'midtrans', 422);
+
+            try {
+                $midtrans->assertNoRefundRecorded($refund->load('order'));
+            } catch (Throwable $error) {
+                return $error->getMessage();
             }
+
             $refund->update(['refund_method' => 'manual']);
+
+            return null;
         });
+
+        if ($error !== null) {
+            return redirect()->route('admin.refunds.show', $refundRequest)->with('error', $error);
+        }
 
         return redirect()->route('admin.refunds.show', $refundRequest)
             ->with('success', 'Pengembalian dana dialihkan ke proses manual.');
@@ -113,49 +114,41 @@ class RefundController extends Controller
 
     private function processMidtrans(RefundRequest $refundRequest, MidtransRefundService $midtrans)
     {
-        try {
-            $result = $midtrans->process($refundRequest->fresh(['order.payment']));
-        } catch (MidtransRefundUncertainException $error) {
-            DB::transaction(function () use ($refundRequest) {
-                $refund = RefundRequest::lockForUpdate()->findOrFail($refundRequest->id);
-                if ($refund->status !== 'completed') {
-                    $refund->update(['status' => 'processing']);
-                }
-            });
-
-            return redirect()->route('admin.refunds.show', $refundRequest)
-                ->with('error', $error->getMessage());
-        } catch (RuntimeException $error) {
-            return redirect()->route('admin.refunds.show', $refundRequest)
-                ->with('error', $error->getMessage());
-        } catch (Throwable $error) {
-            DB::transaction(function () use ($refundRequest) {
-                $refund = RefundRequest::lockForUpdate()->findOrFail($refundRequest->id);
-                if ($refund->status !== 'completed') {
-                    $refund->update(['status' => 'processing']);
-                }
-            });
-
-            report($error);
-
-            return redirect()->route('admin.refunds.show', $refundRequest)
-                ->with('error', 'Status refund Midtrans belum pasti. Periksa ulang sebelum tindakan manual.');
-        }
-
-        DB::transaction(function () use ($refundRequest, $result) {
+        $feedback = DB::transaction(function () use ($refundRequest, $midtrans) {
             $refund = RefundRequest::lockForUpdate()->findOrFail($refundRequest->id);
-            if ($refund->status !== 'completed') {
-                $refund->update([
-                    'status' => $result,
-                    'completed_at' => $result === 'completed' ? now() : null,
-                ]);
+            if ($refund->refund_method !== 'midtrans'
+                || ! in_array($refund->status, ['approved', 'processing'], true)) {
+                return ['error', 'Status atau metode refund sudah berubah.'];
             }
+
+            // Serialize the provider request with retry, manual fallback, and the webhook update.
+            try {
+                $result = $midtrans->process($refund->load('order.payment'));
+            } catch (MidtransRefundUncertainException $error) {
+                $refund->update(['status' => 'processing']);
+
+                return ['error', $error->getMessage()];
+            } catch (RuntimeException $error) {
+                return ['error', $error->getMessage()];
+            } catch (Throwable $error) {
+                $refund->update(['status' => 'processing']);
+                report($error);
+
+                return ['error', 'Status refund Midtrans belum pasti. Periksa ulang sebelum tindakan manual.'];
+            }
+
+            $refund->update([
+                'status' => $result,
+                'completed_at' => $result === 'completed' ? now() : null,
+            ]);
+
+            return ['success', $result === 'completed'
+                ? 'Refund telah dikonfirmasi Midtrans.'
+                : 'Refund diterima Midtrans dan menunggu konfirmasi penyedia pembayaran.'];
         });
 
         return redirect()->route('admin.refunds.show', $refundRequest)
-            ->with('success', $result === 'completed'
-                ? 'Refund telah dikonfirmasi Midtrans.'
-                : 'Refund diterima Midtrans dan menunggu konfirmasi penyedia pembayaran.');
+            ->with($feedback[0], $feedback[1]);
     }
 
     public function reject(Request $request, RefundRequest $refundRequest)

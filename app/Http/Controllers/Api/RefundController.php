@@ -54,7 +54,7 @@ class RefundController extends Controller
                     throw ValidationException::withMessages(['order' => 'Pesanan belum memenuhi syarat refund.']);
                 }
 
-                if ($order->refundRequests()->where('status', '!=', 'rejected')->exists()) {
+                if ($order->refundRequests()->whereNotIn('status', ['rejected', 'cancelled'])->exists()) {
                     throw ValidationException::withMessages(['order' => 'Pesanan sudah memiliki pengajuan refund aktif atau selesai.']);
                 }
 
@@ -74,6 +74,28 @@ class RefundController extends Controller
 
         return (new RefundRequestResource($refund->load('order:id,order_number')))
             ->response()->setStatusCode(201);
+    }
+
+    public function cancel(Request $request, RefundRequest $refundRequest)
+    {
+        abort_unless($refundRequest->user_id === $request->user()->id, 404);
+
+        $refund = DB::transaction(function () use ($refundRequest) {
+            $refund = RefundRequest::lockForUpdate()->findOrFail($refundRequest->id);
+            if (! in_array($refund->status, ['pending', 'cancelled'], true)) {
+                throw ValidationException::withMessages([
+                    'status' => 'Hanya pengajuan yang menunggu tinjauan yang dapat dibatalkan.',
+                ]);
+            }
+
+            if ($refund->status === 'pending') {
+                $refund->update(['status' => 'cancelled']);
+            }
+
+            return $refund;
+        });
+
+        return new RefundRequestResource($refund->load('order:id,order_number'));
     }
 
     public function evidence(Request $request, RefundRequest $refundRequest)

@@ -64,6 +64,7 @@ Route::middleware('auth:sanctum')->group(function () {
 
     Route::get('/refunds', [RefundController::class, 'index']);
     Route::get('/refunds/{refundRequest}', [RefundController::class, 'show']);
+    Route::post('/refunds/{refundRequest}/cancel', [RefundController::class, 'cancel']);
     Route::get('/refunds/{refundRequest}/evidence', [RefundController::class, 'evidence'])->name('api.refunds.evidence');
 
     Route::prefix('payments')->group(function () {
