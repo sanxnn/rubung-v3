@@ -10,7 +10,7 @@
     <form method="GET" class="mb-5 flex gap-3">
         <select name="status" class="rounded-xl border border-gray-200 px-3 py-2 text-sm">
             <option value="">Semua status</option>
-            @foreach (['pending' => 'Menunggu', 'approved' => 'Disetujui', 'processing' => 'Diproses Midtrans', 'completed' => 'Selesai', 'rejected' => 'Ditolak'] as $value => $label)
+            @foreach (['pending' => 'Menunggu', 'approved' => 'Disetujui', 'processing' => 'Diproses Midtrans', 'completed' => 'Selesai', 'rejected' => 'Ditolak', 'cancelled' => 'Dibatalkan'] as $value => $label)
                 <option value="{{ $value }}" @selected(request('status') === $value)>{{ $label }}</option>
             @endforeach
         </select>
