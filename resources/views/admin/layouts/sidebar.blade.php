@@ -48,6 +48,13 @@
             </a>
 
             {{-- Custom Order (Custom PO) --}}
+            <a href="{{ route('admin.refunds.index') }}"
+                class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-sm {{ request()->routeIs('admin.refunds.*') ? 'bg-[#FFF8D8] text-[#A47B00]' : 'text-gray-500 hover:bg-gray-50' }}">
+                <i class="fa-solid fa-rotate-left w-5 text-center"></i><span>Refund</span>
+                @php($refundPendingCount = \App\Models\RefundRequest::where('status', 'pending')->count())
+                @if ($refundPendingCount > 0)<span class="ml-auto rounded-full bg-red-50 px-2 text-xs text-red-600">{{ $refundPendingCount }}</span>@endif
+            </a>
+
             <a href="{{ route('admin.custom-orders.index') }}"
                 class="flex items-center gap-3 px-3 py-2.5 rounded-xl text-gray-500 hover:bg-gray-50 hover:text-gray-900 transition text-sm
                 {{ request()->routeIs('admin.custom-orders.index') ? 'bg-[#FFF8D8] text-[#A47B00]' : '' }}">

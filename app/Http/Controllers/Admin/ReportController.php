@@ -5,6 +5,7 @@ namespace App\Http\Controllers\Admin;
 use App\Exports\ReportExport;
 use App\Http\Controllers\Controller;
 use App\Models\Order;
+use App\Models\RefundRequest;
 use Illuminate\Http\Request;
 use Maatwebsite\Excel\Facades\Excel;
 
@@ -16,7 +17,8 @@ class ReportController extends Controller
             ->with([
                 'user',
                 'items',
-            ]);
+            ])
+            ->withSum(['refundRequests as refunded_amount' => fn ($q) => $q->where('status', 'completed')], 'amount');
 
         // Filter tanggal mulai
         if ($request->filled('start_date')) {
@@ -56,9 +58,14 @@ class ReportController extends Controller
 
         $paidStatuses = ['paid', 'processing', 'packing', 'shipped', 'completed'];
 
-        $totalRevenue = (clone $summaryQuery)
+        $grossRevenue = (clone $summaryQuery)
             ->whereIn('status', $paidStatuses)
             ->sum('final_amount');
+        $totalRefunded = RefundRequest::where('status', 'completed')
+            ->whereIn('order_id', (clone $summaryQuery)
+                ->whereIn('status', $paidStatuses)->select('id'))
+            ->sum('amount');
+        $totalRevenue = $grossRevenue - $totalRefunded;
 
         $totalDiscount = (clone $summaryQuery)
             ->whereIn('status', $paidStatuses)
@@ -124,6 +131,7 @@ class ReportController extends Controller
 
             'totalOrders' => $totalOrders,
             'totalRevenue' => $totalRevenue,
+            'totalRefunded' => $totalRefunded,
             'totalDiscount' => $totalDiscount,
             'totalShipping' => $totalShipping,
 

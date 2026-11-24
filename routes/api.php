@@ -10,6 +10,7 @@ use App\Http\Controllers\Api\OrderController;
 use App\Http\Controllers\Api\PaymentController;
 use App\Http\Controllers\Api\ProductController;
 use App\Http\Controllers\Api\RegionController;
+use App\Http\Controllers\Api\RefundController;
 use Illuminate\Support\Facades\Route;
 
 Route::prefix('auth')->group(function () {
@@ -29,26 +30,6 @@ Route::prefix('auth')->group(function () {
 
     });
 
-});
-
-Route::get('/storage-image/{path}', function ($path) {
-    $publicDirectory = realpath(storage_path('app/public'));
-    $filePath = realpath(storage_path('app/public/'.$path));
-
-    if (! $publicDirectory || ! $filePath ||
-        ! str_starts_with($filePath, $publicDirectory.DIRECTORY_SEPARATOR) ||
-        ! is_file($filePath)) {
-        return response()->json(['message' => 'File tidak ditemukan'], 404);
-    }
-
-    return response()->file($filePath, ['Access-Control-Allow-Origin' => '*']);
-})->where('path', '.*');
-
-Route::prefix('regions')->group(function () {
-    Route::get('/provinces', [RegionController::class, 'provinces']);
-    Route::get('/regencies/{provinceCode}', [RegionController::class, 'regencies'])->where('provinceCode', '[0-9]{2}');
-    Route::get('/districts/{cityCode}', [RegionController::class, 'districts'])->where('cityCode', '[0-9]{2}\.[0-9]{2}');
-    Route::get('/villages/{districtCode}', [RegionController::class, 'villages'])->where('districtCode', '[0-9]{2}\.[0-9]{2}\.[0-9]{2}');
 });
 
 Route::middleware('auth:sanctum')->group(function () {
@@ -75,7 +56,15 @@ Route::middleware('auth:sanctum')->group(function () {
         Route::post('/', [OrderController::class, 'store']);
         Route::get('/{order}', [OrderController::class, 'show']);
         Route::post('/{order}/cancel', [OrderController::class, 'cancel']);
+        Route::post('/{order}/refund', [RefundController::class, 'store']);
+        Route::post('/{order}/complete', [OrderController::class, 'completeOrder']);
     });
+
+    Route::post('/vouchers/validate', [OrderController::class, 'validateVoucher']);
+
+    Route::get('/refunds', [RefundController::class, 'index']);
+    Route::get('/refunds/{refundRequest}', [RefundController::class, 'show']);
+    Route::get('/refunds/{refundRequest}/evidence', [RefundController::class, 'evidence'])->name('api.refunds.evidence');
 
     Route::prefix('payments')->group(function () {
         Route::post('/{order}/snap-token', [PaymentController::class, 'create']);
@@ -92,7 +81,6 @@ Route::middleware('auth:sanctum')->group(function () {
 
 });
 
-Route::post('/payments/midtrans/webhook', [PaymentController::class, 'notification']);
 
 Route::prefix('products')->group(function () {
     Route::get('/', [ProductController::class, 'index']);
@@ -107,4 +95,26 @@ Route::prefix('categories')->group(function () {
 Route::prefix('bundles')->group(function () {
     Route::get('/', [BundleController::class, 'index']);
     Route::get('/{product}', [BundleController::class, 'show']);
+});
+
+Route::post('/payments/midtrans/webhook', [PaymentController::class, 'notification']);
+
+Route::get('/storage-image/{path}', function ($path) {
+    $publicDirectory = realpath(storage_path('app/public'));
+    $filePath = realpath(storage_path('app/public/'.$path));
+
+    if (! $publicDirectory || ! $filePath ||
+        ! str_starts_with($filePath, $publicDirectory.DIRECTORY_SEPARATOR) ||
+        ! is_file($filePath)) {
+        return response()->json(['message' => 'File tidak ditemukan'], 404);
+    }
+
+    return response()->file($filePath, ['Access-Control-Allow-Origin' => '*']);
+})->where('path', '.*');
+
+Route::prefix('regions')->group(function () {
+    Route::get('/provinces', [RegionController::class, 'provinces']);
+    Route::get('/regencies/{provinceCode}', [RegionController::class, 'regencies'])->where('provinceCode', '[0-9]{2}');
+    Route::get('/districts/{cityCode}', [RegionController::class, 'districts'])->where('cityCode', '[0-9]{2}\.[0-9]{2}');
+    Route::get('/villages/{districtCode}', [RegionController::class, 'villages'])->where('districtCode', '[0-9]{2}\.[0-9]{2}\.[0-9]{2}');
 });

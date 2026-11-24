@@ -6,6 +6,7 @@ use App\Http\Controllers\Controller;
 use App\Models\CustomOrder;
 use App\Models\Order;
 use App\Models\ProductVariant;
+use App\Models\RefundRequest;
 use App\Models\User;
 
 class DashboardController extends Controller
@@ -28,7 +29,10 @@ class DashboardController extends Controller
         ];
 
         $validStatuses = ['paid', 'processing', 'packing', 'shipped', 'completed'];
-        $totalRevenue = Order::whereIn('status', $validStatuses)->sum('final_amount');
+        $totalRevenue = Order::whereIn('status', $validStatuses)->sum('final_amount')
+            - RefundRequest::where('status', 'completed')
+                ->whereHas('order', fn ($query) => $query->whereIn('status', $validStatuses))
+                ->sum('amount');
 
         $chartMonths = [];
         $chartRevenues = [];
@@ -37,10 +41,17 @@ class DashboardController extends Controller
             $date = now()->subMonths($i);
             $chartMonths[] = $date->locale('id')->isoFormat('MMM');
 
-            $chartRevenues[] = Order::whereIn('status', $validStatuses)
+            $gross = Order::whereIn('status', $validStatuses)
                 ->whereYear('created_at', $date->year)
                 ->whereMonth('created_at', $date->month)
                 ->sum('final_amount');
+            $refunded = RefundRequest::where('status', 'completed')
+                ->whereHas('order', fn ($query) => $query
+                    ->whereIn('status', $validStatuses)
+                    ->whereYear('created_at', $date->year)
+                    ->whereMonth('created_at', $date->month))
+                ->sum('amount');
+            $chartRevenues[] = $gross - $refunded;
         }
 
         $recent_orders = Order::with('user')->latest()->take(5)->get();

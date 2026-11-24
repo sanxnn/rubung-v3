@@ -121,6 +121,12 @@
 
                 </p>
 
+                @if ($order->refundRequests->isNotEmpty())
+                    <a href="{{ route('admin.refunds.show', $order->refundRequests->first()) }}" class="mt-2 inline-block text-sm font-semibold text-amber-700 hover:underline">
+                        Lihat pengajuan refund →
+                    </a>
+                @endif
+
             </div>
 
 

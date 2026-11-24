@@ -90,6 +90,8 @@ Error aturan bisnis biasanya hanya memuat `message`, kadang disertai `available_
 | `GET /orders/{id}` | Privat | Detail dan status pembayaran terbaru. |
 | `POST /orders/{id}/cancel` | Privat | Batalkan pesanan `pending_payment`; tanpa body. |
 | `POST /payments/{orderId}/snap-token` | Privat | Buat/ambil token pembayaran; tanpa body. |
+| `POST /vouchers/validate` | Privat | Validasi voucher: body `{code, subtotal}`. |
+| `POST /orders/{id}/complete` | Privat | Selesaikan pesanan pending_payment → processing. |
 | `GET /custom-orders` | Privat | Riwayat custom order, query `page`. |
 | `POST /custom-orders` | Privat | `description` minimal 10 karakter; `attachments[]` gambar opsional. |
 | `GET /custom-orders/{id}` | Privat | Detail custom order. |

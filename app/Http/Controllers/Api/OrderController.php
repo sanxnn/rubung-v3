@@ -36,6 +36,7 @@ class OrderController extends Controller
                 'datePromo',
                 'voucher',
                 'customOrder',
+                'refundRequests',
             ])
             ->latest()
             ->paginate(10);
@@ -63,6 +64,7 @@ class OrderController extends Controller
             'voucher',
             'customOrder',
             'statusHistories',
+            'refundRequests',
         ]);
 
         return new OrderResource(
@@ -1292,5 +1294,86 @@ class OrderController extends Controller
                 'used_count'
             );
         }
+    }
+
+    public function validateVoucher(Request $request)
+    {
+        $validated = $request->validate([
+            'code' => ['required', 'string', 'max:50'],
+            'subtotal' => ['required', 'integer', 'min:0'],
+        ]);
+
+        $voucher = Voucher::query()
+            ->where('code', strtoupper(trim($validated['code'])))
+            ->first();
+
+        if (! $voucher) {
+            return response()->json([
+                'message' => 'Voucher tidak ditemukan.',
+                'data' => null,
+            ], 404);
+        }
+
+        if (! $voucher->isValid()) {
+            return response()->json([
+                'message' => 'Voucher sudah tidak aktif atau kuotanya habis.',
+                'data' => null,
+            ], 422);
+        }
+
+        if ($validated['subtotal'] < $voucher->min_purchase) {
+            return response()->json([
+                'message' => 'Minimal pembelian untuk voucher adalah Rp ' . number_format($voucher->min_purchase, 0, ',', '.'),
+                'data' => null,
+            ], 422);
+        }
+
+        $discount = $voucher->calculateDiscount($validated['subtotal']);
+
+        return response()->json([
+            'message' => 'Voucher valid.',
+            'data' => [
+                'code' => $voucher->code,
+                'discount_type' => $voucher->discount_type,
+                'discount_value' => $voucher->discount_value,
+                'max_discount' => $voucher->max_discount,
+                'min_purchase' => $voucher->min_purchase,
+                'usage_limit' => $voucher->usage_limit,
+                'used_count' => $voucher->used_count,
+                'is_active' => $voucher->is_active,
+                'start_date' => $voucher->start_date,
+                'end_date' => $voucher->end_date,
+                'discount' => $discount,
+                'final_amount' => max(0, $validated['subtotal'] - $discount),
+            ],
+        ]);
+    }
+
+    public function completeOrder(Request $request, Order $order)
+    {
+        if ($order->user_id !== $request->user()->id) {
+            abort(404);
+        }
+
+        if ($order->status !== 'pending_payment') {
+            return response()->json([
+                'message' => 'Pesanan tidak dapat diselesaikan pada status ini.',
+            ], 422);
+        }
+
+        $order->update([
+            'status' => 'processing',
+        ]);
+
+        return response()->json([
+            'message' => 'Pesanan berhasil diselesaikan.',
+            'data' => new OrderResource($order->load([
+                'items',
+                'payment',
+                'datePromo',
+                'voucher',
+                'customOrder',
+            ])),
+        ]);
     }
 }

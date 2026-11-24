@@ -20,6 +20,16 @@ class OrderResource extends JsonResource
             'status' =>
                 $this->status,
 
+            'refund' => $this->whenLoaded('refundRequests', function () {
+                $refund = $this->refundRequests->first();
+
+                return $refund ? [
+                    'id' => $refund->id,
+                    'status' => $refund->status,
+                    'amount' => $refund->amount,
+                ] : null;
+            }),
+
             'is_custom_order' =>
                 $this->isCustomOrder(),
 

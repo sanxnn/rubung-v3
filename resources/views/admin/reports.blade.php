@@ -227,7 +227,7 @@
 
                 <div>
                     <p class="text-sm font-medium text-gray-500">
-                        Total Omzet
+                        Omzet Bersih
                     </p>
 
                     <p class="mt-2 text-2xl font-bold text-gray-900">
@@ -235,7 +235,7 @@
                     </p>
 
                     <p class="mt-1 text-xs text-gray-400">
-                        Tidak termasuk pesanan dibatalkan
+                        Setelah refund Rp {{ number_format($totalRefunded, 0, ',', '.') }}
                     </p>
                 </div>
 
@@ -640,6 +640,10 @@
                                 <span class="text-sm font-bold text-gray-900">
                                     Rp {{ number_format($order->final_amount ?? 0, 0, ',', '.') }}
                                 </span>
+                                @if ($order->refunded_amount)
+                                    <div class="text-xs text-red-600">Refund - Rp {{ number_format($order->refunded_amount, 0, ',', '.') }}</div>
+                                    <div class="text-xs font-semibold text-green-700">Bersih Rp {{ number_format($order->final_amount - $order->refunded_amount, 0, ',', '.') }}</div>
+                                @endif
 
                             </td>
 

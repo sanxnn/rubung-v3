@@ -13,6 +13,7 @@
             <h2 class="font-semibold text-lg text-gray-800">
                 {{ match (true) {
                     request()->routeIs('admin.orders.*') => 'Pesanan',
+                    request()->routeIs('admin.refunds.*') => 'Refund',
                     request()->routeIs('admin.custom-orders.*') => 'Custom Order',
                     request()->routeIs('admin.categories.*', 'admin.subcategories.*') => 'Kategori',
                     request()->routeIs('admin.products.*', 'admin.variants.*') => 'Produk',
