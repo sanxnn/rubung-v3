@@ -14,20 +14,10 @@ use App\Http\Controllers\Admin\SubcategoryController;
 use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContactController;
-use App\Models\Product;
 use Illuminate\Support\Facades\Route;
 
 Route::get('/', function () {
-    $products = Product::query()
-        ->whereHas('variants')
-        ->with('category:id,name')
-        ->withMin('variants', 'price')
-        ->orderByRaw("CASE WHEN image IS NULL OR image = '' THEN 1 ELSE 0 END")
-        ->latest('id')
-        ->limit(3)
-        ->get();
-
-    return view('company-profile', ['products' => $products]);
+    return view('company-profile');
 });
 Route::post('/contact', [ContactController::class, 'send'])->middleware('throttle:3,1')->name('contact.send');
 
