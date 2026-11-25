@@ -9,3 +9,8 @@ Alamat penerima mengikuti `CONTACT_EMAIL`. Konfigurasi `MAIL_*` menentukan pengi
 Beranda menampilkan hingga tiga produk kategori Batik, diurutkan menurut jumlah unit pada pesanan dengan pembayaran sukses. Pesanan batal dan pesanan dengan refund selesai tidak ikut dihitung. Produk tanpa penjualan dapat mengisi kartu tersisa tanpa label terjual. Halaman `/katalog` memuat semua kategori dengan pencarian nama, filter kategori, dan pagination.
 
 Atur `STOREFRONT_GOOGLE_PLAY_URL` dan `STOREFRONT_APP_STORE_URL` dengan URL listing resmi untuk mengaktifkan badge unduh. Jika kosong, badge menampilkan status tautan belum tersedia. `STOREFRONT_EMAIL` menampilkan alamat email publik secara opsional. Penerima formulir tetap diatur secara terpisah melalui `CONTACT_EMAIL`.
+
+
+## Tema dan bahasa
+
+Company profile dan katalog berbagi pilihan tema. Secara default keduanya mengikuti tema perangkat. Tombol mode gelap menyimpan pilihan di browser. Pilihan bahasa ID/EN disimpan pada sesi dan berlaku untuk teks antarmuka serta pesan formulir kontak. Nama, deskripsi, dan kategori produk menggunakan data yang dimasukkan di katalog. Halaman login, admin, dan API memakai pengaturan masing-masing.

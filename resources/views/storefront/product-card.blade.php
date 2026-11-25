@@ -14,10 +14,10 @@
         @endif
         <div class="product-card-meta">
             @if ($product->variants_min_price !== null)
-                <strong>Mulai Rp{{ number_format($product->variants_min_price, 0, ',', '.') }}</strong>
+                <strong>{{ __('storefront.price', ['price' => number_format($product->variants_min_price, 0, ',', '.')]) }}</strong>
             @endif
             @if (($showSales ?? false) && $product->units_sold > 0)
-                <span class="sales-badge">{{ number_format($product->units_sold, 0, ',', '.') }} terjual</span>
+                <span class="sales-badge">{{ __('storefront.sold', ['count' => $product->units_sold]) }}</span>
             @endif
         </div>
     </div>
