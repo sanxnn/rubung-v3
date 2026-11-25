@@ -19,7 +19,7 @@ Pengajuan kedua ditolak selama ada refund aktif atau selesai. Setelah penolakan 
 
 Menu **Refund** menampilkan daftar, filter status, detail, dan bukti. Admin dapat menolak dengan alasan, menyetujui jalur manual atau Midtrans, mencatat referensi transfer manual, dan memeriksa/ mengulang status Midtrans. Status yang dipakai: `pending`, `approved`, `processing`, `completed`, `rejected`, `cancelled`.
 
-Jalur manual baru selesai setelah admin mencatat referensi transfer. Jalur Midtrans memakai `refund_key` tetap agar permintaan ulang tidak menciptakan refund baru. Respons sukses API berarti permintaan diterima; status `completed` baru dicatat saat notifikasi bertanda `bank_confirmed_at` diterima atau pemeriksaan status Midtrans menunjukkan konfirmasi tersebut. Jika respons pengiriman tidak pasti, status tetap `processing` dan pengalihan manual diblokir.
+Jalur manual baru selesai setelah admin mencatat referensi transfer. Jalur Midtrans memakai `refund_key` tetap agar permintaan ulang tidak menciptakan refund baru. Respons sukses API berarti permintaan diterima; status `completed` baru dicatat setelah API status Midtrans mengonfirmasi `bank_confirmed_at` untuk kunci dan nominal refund yang sesuai. Webhook refund memicu pemeriksaan tersebut. Jika respons pengiriman tidak pasti, status tetap `processing` dan pengalihan manual diblokir.
 
 Refund Midtrans hanya dipilih untuk metode yang didukung API dan transaksi berstatus `settlement`. Kemampuan refund juga harus aktif di akun Midtrans. Untuk metode lain, pilih jalur manual. Pesanan, pembayaran, stok, dan pemakaian voucher tetap menyimpan riwayat aslinya; omzet bersih pada dashboard dan laporan mengurangi refund yang telah `completed`.
 

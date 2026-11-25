@@ -120,10 +120,19 @@ class RefundFlowTest extends TestCase
         $admin = User::factory()->admin()->create();
         $key = 'BRK-REF-'.$refund->id;
 
+        $notification = $this->notification($order, $key);
+        $unconfirmed = $notification;
+        $unconfirmed['refunds'][0]['bank_confirmed_at'] = null;
+        $wrongAmount = $notification;
+        $wrongAmount['refunds'][0]['refund_amount'] = '1000.00';
+
         Http::fake([
-            '*api.sandbox.midtrans.com/v2/*/status' => Http::response([
-                'status_code' => '200', 'transaction_status' => 'settlement',
-            ]),
+            '*api.sandbox.midtrans.com/v2/*/status' => Http::sequence()
+                ->push(['status_code' => '200', 'transaction_status' => 'settlement'])
+                ->push($unconfirmed)
+                ->push($wrongAmount)
+                ->push([], 503)
+                ->push($notification),
             '*api.sandbox.midtrans.com/v2/*/refund' => Http::response([
                 'status_code' => '200', 'transaction_status' => 'refund', 'refund_key' => $key,
             ]),
@@ -138,11 +147,15 @@ class RefundFlowTest extends TestCase
             && $request['refund_key'] === $key
             && $request['amount'] === $order->final_amount);
 
-        $notification = $this->notification($order, $key, false);
         $this->postJson('/api/payments/midtrans/webhook', $notification)->assertOk();
         $this->assertSame('processing', $refund->fresh()->status);
 
-        $notification['refunds'][0]['bank_confirmed_at'] = '2026-11-18 12:00:00';
+        $this->postJson('/api/payments/midtrans/webhook', $notification)->assertOk();
+        $this->assertSame('processing', $refund->fresh()->status);
+
+        $this->postJson('/api/payments/midtrans/webhook', $notification)->assertServiceUnavailable();
+        $this->assertSame('processing', $refund->fresh()->status);
+
         $invalid = $notification;
         $invalid['signature_key'] = str_repeat('0', 128);
         $this->postJson('/api/payments/midtrans/webhook', $invalid)->assertOk();
@@ -291,7 +304,7 @@ class RefundFlowTest extends TestCase
         return RefundRequest::firstOrFail();
     }
 
-    private function notification(Order $order, string $key, bool $confirmed): array
+    private function notification(Order $order, string $key): array
     {
         $amount = number_format($order->final_amount, 2, '.', '');
 
@@ -304,7 +317,7 @@ class RefundFlowTest extends TestCase
             'refunds' => [[
                 'refund_key' => $key,
                 'refund_amount' => $amount,
-                'bank_confirmed_at' => $confirmed ? '2026-11-18 12:00:00' : null,
+                'bank_confirmed_at' => '2026-11-18 12:00:00',
             ]],
         ];
     }

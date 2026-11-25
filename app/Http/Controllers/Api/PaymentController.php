@@ -9,11 +9,14 @@ use App\Models\ProductBundleItem;
 use App\Models\ProductVariant;
 use App\Models\RefundRequest;
 use App\Models\Voucher;
+use App\Services\MidtransRefundService;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Midtrans\Config;
 use Midtrans\Snap;
+use RuntimeException;
 
 class PaymentController extends Controller
 {
@@ -502,28 +505,30 @@ class PaymentController extends Controller
         }
 
         if ($transactionStatus === 'refund') {
-            $refunds = $payload['refunds'] ?? [];
-            foreach ($refunds as $entry) {
-                if (! is_array($entry) || empty($entry['refund_key'])) {
-                    continue;
+            $refund = RefundRequest::where('order_id', $order->id)
+                ->where('refund_method', 'midtrans')
+                ->whereIn('status', ['approved', 'processing'])
+                ->whereNotNull('refund_key')
+                ->first();
+
+            if ($refund) {
+                try {
+                    $status = app(MidtransRefundService::class)->checkConfirmation($refund->setRelation('order', $order));
+                } catch (ConnectionException|RuntimeException) {
+                    Log::warning('Konfirmasi refund Midtrans gagal.', ['order_id' => $order->id]);
+
+                    return response()->json(['message' => 'Konfirmasi refund belum tersedia.'], 503);
                 }
 
-                DB::transaction(function () use ($order, $entry) {
-                    $refund = RefundRequest::where('order_id', $order->id)
-                        ->where('refund_key', $entry['refund_key'])
-                        ->lockForUpdate()->first();
-                    if (! $refund || $refund->refund_method !== 'midtrans'
-                        || ! in_array($refund->status, ['approved', 'processing'], true)
-                        || (int) round((float) ($entry['refund_amount'] ?? 0)) !== $refund->amount) {
-                        return;
-                    }
-
-                    $confirmed = ! empty($entry['bank_confirmed_at']);
-                    $refund->update([
-                        'status' => $confirmed ? 'completed' : 'processing',
-                        'completed_at' => $confirmed ? now() : null,
-                    ]);
-                });
+                if ($status !== null) {
+                    RefundRequest::whereKey($refund->id)
+                        ->where('refund_method', 'midtrans')
+                        ->whereIn('status', ['approved', 'processing'])
+                        ->update([
+                            'status' => $status,
+                            'completed_at' => $status === 'completed' ? now() : null,
+                        ]);
+                }
             }
 
             return response()->json(['message' => 'Notifikasi refund diterima.'], 200);
