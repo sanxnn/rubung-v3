@@ -64,3 +64,14 @@ Checkout mencatat pesanan dan pemakaian stok serta voucher dalam transaksi datab
 | Email | Konfigurasi `MAIL_*` untuk OTP dan pesan kontak. `CONTACT_EMAIL` menentukan penerima pesan kontak. |
 
 Lihat [README proyek](../README.md#menjalankan-lokal) untuk pemasangan dan [panduan refund](refund.md) untuk pengujian Midtrans di sandbox.
+
+
+## Pengujian database
+
+`php artisan test` memakai SQLite dalam memori secara default. Untuk memeriksa perilaku agregasi laporan dan transaksi, siapkan database MySQL kosong khusus tes dan akun dengan akses hanya ke database itu. Suite menggunakan `RefreshDatabase`, yang dapat menghapus tabel pada database tes. Jalankan dengan strict mode serta `ONLY_FULL_GROUP_BY` aktif.
+
+```bash
+DB_CONNECTION=mysql DB_HOST=127.0.0.1 DB_PORT=3306 DB_DATABASE=rubung_test \
+DB_USERNAME=rubung_test DB_PASSWORD="$RUBUNG_TEST_DB_PASSWORD" DB_URL= \
+php artisan test
+```
