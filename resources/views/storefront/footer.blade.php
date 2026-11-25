@@ -12,12 +12,12 @@
         </div>
         <nav aria-label="{{ __('storefront.footer_nav') }}">
             <strong>{{ __('storefront.explore') }}</strong>
-            <a href="{{ route('company.home') }}#home">{{ __('storefront.home') }}</a>
-            <a href="{{ route('company.home') }}#catalog">{{ __('storefront.featured') }}</a>
+            <a href="{{ $homeSection }}#home">{{ __('storefront.home') }}</a>
+            <a href="{{ $homeSection }}#catalog">{{ __('storefront.featured') }}</a>
             <a href="{{ route('company.catalog') }}">{{ __('storefront.all_products') }}</a>
-            <a href="{{ route('company.home') }}#store-info">{{ __('storefront.about') }}</a>
-            <a href="{{ route('company.home') }}#download-app">{{ __('storefront.app') }}</a>
-            <a href="{{ route('company.home') }}#contact">{{ __('storefront.contact') }}</a>
+            <a href="{{ $homeSection }}#store-info">{{ __('storefront.about') }}</a>
+            <a href="{{ $homeSection }}#download-app">{{ __('storefront.app') }}</a>
+            <a href="{{ $homeSection }}#contact">{{ __('storefront.contact') }}</a>
         </nav>
         <div>
             <strong>{{ __('storefront.customer_app') }}</strong>
