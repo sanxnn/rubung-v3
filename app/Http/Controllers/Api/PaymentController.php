@@ -194,13 +194,13 @@ class PaymentController extends Controller
         */
 
         if (
-            $order->discount_voucher > 0
+            $order->applied_voucher_discount > 0
         ) {
             $itemDetails[] = [
                 'id' => 'discount_voucher',
 
                 'price' => -$order
-                    ->discount_voucher,
+                    ->applied_voucher_discount,
 
                 'quantity' => 1,
 
@@ -299,26 +299,7 @@ class PaymentController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $payment = DB::transaction(function () use ($order, $snapToken) {
-            $lockedOrder = Order::query()->lockForUpdate()->findOrFail($order->id);
-            if ($lockedOrder->status !== 'pending_payment') {
-                return null;
-            }
-
-            $existing = Payment::where('order_id', $lockedOrder->id)->first();
-            if ($existing?->payment_status === 'pending' && $existing->snap_token) {
-                return $existing;
-            }
-
-            return Payment::updateOrCreate(['order_id' => $lockedOrder->id], [
-                'midtrans_transaction_id' => null,
-                'snap_token' => $snapToken,
-                'payment_type' => 'pending',
-                'payment_status' => 'pending',
-                'amount' => $lockedOrder->final_amount,
-                'paid_at' => null,
-            ]);
-        });
+        $payment = Payment::saveSnapTokenForPendingOrder($order, $snapToken);
 
         if (! $payment) {
             return response()->json(['message' => 'Pesanan tidak lagi menunggu pembayaran.'], 422);

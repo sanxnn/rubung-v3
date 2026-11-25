@@ -31,7 +31,7 @@ class CartController extends Controller
         $user = $request->user();
 
         $variant = ProductVariant::with([
-            'product',
+            'product.category',
             'bundleComponents.componentVariant',
         ])->findOrFail($validated['product_variant_id']);
 
@@ -41,22 +41,12 @@ class CartController extends Controller
             ? $variant->available_bundle_stock
             : $variant->stock;
 
-        if ($availableStock > 0 && $validated['quantity'] > $availableStock) {
+        if (! $variant->isPreOrder() && $validated['quantity'] > $availableStock) {
             return response()->json([
                 'message' => 'Jumlah produk melebihi stok yang tersedia.',
                 'available_stock' => $availableStock,
             ], 422);
         }
-
-        /*
-         * Untuk sementara, stok 0 tidak langsung diblokir.
-         *
-         * Ini penting karena struktur database saat ini belum
-         * memberikan penanda yang jelas untuk produk Batik yang
-         * menggunakan sistem PO dan tidak memakai stock.
-         *
-         * Validasi stok final akan dilakukan lagi saat checkout.
-         */
 
         $cart = Cart::firstOrCreate([
             'user_id' => $user->id,
@@ -69,7 +59,7 @@ class CartController extends Controller
         if ($cartItem) {
             $newQuantity = $cartItem->quantity + $validated['quantity'];
 
-            if ($availableStock > 0 && $newQuantity > $availableStock) {
+            if (! $variant->isPreOrder() && $newQuantity > $availableStock) {
                 return response()->json([
                     'message' => 'Jumlah produk di keranjang melebihi stok yang tersedia.',
                     'available_stock' => $availableStock,
@@ -108,7 +98,7 @@ class CartController extends Controller
 
         $item = $cart->items()
             ->with([
-                'productVariant.product',
+                'productVariant.product.category',
                 'productVariant.bundleComponents.componentVariant',
             ])
             ->where('id', $cartItem)
@@ -128,7 +118,7 @@ class CartController extends Controller
             ? $variant->available_bundle_stock
             : $variant->stock;
 
-        if ($availableStock > 0 && $validated['quantity'] > $availableStock) {
+        if (! $variant->isPreOrder() && $validated['quantity'] > $availableStock) {
             return response()->json([
                 'message' => 'Jumlah produk melebihi stok yang tersedia.',
                 'available_stock' => $availableStock,

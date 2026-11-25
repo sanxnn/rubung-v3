@@ -131,23 +131,6 @@ class OrderController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $cart = Cart::query()
-            ->where(
-                'user_id',
-                $user->id
-            )
-            ->with('items')
-            ->first();
-
-        if (
-            ! $cart ||
-            $cart->items->isEmpty()
-        ) {
-            return response()->json([
-                'message' => 'Keranjang kosong.',
-            ], 422);
-        }
-
         try {
             /*
             |--------------------------------------------------------------------------
@@ -156,123 +139,58 @@ class OrderController extends Controller
             */
 
             $order = DB::transaction(
-                function () use (
-                    $validated,
-                    $user,
-                    $address,
-                    $cart
-                ) {
+                function () use ($validated, $user, $address) {
+                    $cart = Cart::where('user_id', $user->id)->lockForUpdate()->first();
+                    $cartItems = $cart?->items()->lockForUpdate()->get();
+                    if (! $cartItems || $cartItems->isEmpty()) {
+                        throw new \RuntimeException('Keranjang kosong.');
+                    }
+
+                    $variantIds = $cartItems->pluck('product_variant_id');
+                    $componentIds = ProductBundleItem::whereIn('parent_variant_id', $variantIds)
+                        ->pluck('component_variant_id');
+                    $variants = ProductVariant::with(['product.category', 'bundleComponents'])
+                        ->whereIn('id', $variantIds->merge($componentIds)->unique())
+                        ->orderBy('id')
+                        ->lockForUpdate()
+                        ->get()
+                        ->keyBy('id');
+
                     $subtotal = 0;
-
                     $checkoutItems = [];
+                    $stockRequired = [];
 
-                    /*
-                    |--------------------------------------------------------------------------
-                    | VALIDATE CART + LOCK STOCK
-                    |--------------------------------------------------------------------------
-                    */
-
-                    foreach (
-                        $cart->items as $cartItem
-                    ) {
-                        $variant =
-                            ProductVariant::query()
-                                ->with([
-                                    'product',
-                                    'bundleComponents',
-                                ])
-                                ->lockForUpdate()
-                                ->find(
-                                    $cartItem
-                                        ->product_variant_id
-                                );
-
+                    foreach ($cartItems as $cartItem) {
+                        $variant = $variants->get($cartItem->product_variant_id);
                         if (! $variant) {
-                            throw new \Exception(
-                                'Produk pada keranjang sudah tidak tersedia.'
-                            );
+                            throw new \RuntimeException('Produk pada keranjang sudah tidak tersedia.');
                         }
 
-                        $isBundle =
-                            $variant
-                                ->bundleComponents
-                                ->isNotEmpty();
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | BUNDLE STOCK
-                        |--------------------------------------------------------------------------
-                        */
+                        $isBundle = $variant->bundleComponents->isNotEmpty();
+                        $stockQuantity = $variant->isPreOrder() ? 0 : $cartItem->quantity;
 
                         if ($isBundle) {
-                            $availableStock =
-                                $this->getBundleStock(
-                                    $variant
-                                );
-
-                            if (
-                                $cartItem->quantity >
-                                $availableStock
-                            ) {
-                                throw new \Exception(
-                                    "Stok bundle {$variant->product->name} tidak mencukupi."
-                                );
+                            foreach ($variant->bundleComponents as $component) {
+                                $id = $component->component_variant_id;
+                                $stockRequired[$id] = ($stockRequired[$id] ?? 0) + $component->quantity * $stockQuantity;
                             }
+                        } elseif ($stockQuantity > 0) {
+                            $stockRequired[$variant->id] = ($stockRequired[$variant->id] ?? 0) + $stockQuantity;
                         }
 
-                        /*
-                        |--------------------------------------------------------------------------
-                        | PRODUK BIASA STOCK
-                        |--------------------------------------------------------------------------
-                        */
-
-                        if (
-                            ! $isBundle &&
-                            $variant->stock > 0
-                        ) {
-                            if (
-                                $cartItem->quantity >
-                                $variant->stock
-                            ) {
-                                throw new \Exception(
-                                    "Stok {$variant->product->name} - {$variant->name} tidak mencukupi."
-                                );
-                            }
-                        }
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | SUBTOTAL
-                        |--------------------------------------------------------------------------
-                        */
-
-                        $itemSubtotal =
-                            $variant->price *
-                            $cartItem->quantity;
-
-                        $subtotal +=
-                            $itemSubtotal;
-
-                        /*
-                        |--------------------------------------------------------------------------
-                        | CHECKOUT ITEM
-                        |--------------------------------------------------------------------------
-                        */
-
+                        $subtotal += $variant->price * $cartItem->quantity;
                         $checkoutItems[] = [
                             'cart_item' => $cartItem,
-
                             'variant' => $variant,
-
-                            'is_bundle' => $isBundle,
-
-                            'stock_quantity' => (
-                                $isBundle ||
-                                $variant->stock > 0
-                            )
-                                    ? $cartItem->quantity
-                                    : 0,
+                            'stock_quantity' => $stockQuantity,
                         ];
+                    }
+
+                    foreach ($stockRequired as $id => $quantity) {
+                        $variant = $variants->get($id);
+                        if (! $variant || $variant->stock < $quantity) {
+                            throw new \RuntimeException('Stok produk atau komponen bundle tidak mencukupi.');
+                        }
                     }
 
                     /*
@@ -390,12 +308,12 @@ class OrderController extends Controller
                     |--------------------------------------------------------------------------
                     */
 
-                    $totalDiscount =
-                        min(
-                            $discountDateCantik +
-                            $discountVoucher,
-                            $subtotal
-                        );
+                    $discountVoucher = min($discountVoucher, max(0, $subtotal - $discountDateCantik));
+                    if ($discountVoucher === 0) {
+                        $voucher = null;
+                    }
+
+                    $totalDiscount = $discountDateCantik + $discountVoucher;
 
                     /*
                     |--------------------------------------------------------------------------
@@ -515,11 +433,6 @@ class OrderController extends Controller
                                 'variant'
                             ];
 
-                        $isBundle =
-                            $checkoutItem[
-                                'is_bundle'
-                            ];
-
                         $stockQuantity =
                             $checkoutItem[
                                 'stock_quantity'
@@ -549,30 +462,10 @@ class OrderController extends Controller
                                     $cartItem
                                         ->quantity,
                             ]);
+                    }
 
-                        /*
-                        |--------------------------------------------------------------------------
-                        | DECREASE STOCK
-                        |--------------------------------------------------------------------------
-                        */
-
-                        if ($isBundle) {
-                            $this
-                                ->decreaseBundleStock(
-                                    $variant,
-                                    $cartItem
-                                        ->quantity
-                                );
-                        } elseif (
-                            $stockQuantity > 0
-                        ) {
-                            $variant
-                                ->decrement(
-                                    'stock',
-                                    $cartItem
-                                        ->quantity
-                                );
-                        }
+                    foreach ($stockRequired as $id => $quantity) {
+                        $variants->get($id)->decrement('stock', $quantity);
                     }
 
                     /*
@@ -619,13 +512,12 @@ class OrderController extends Controller
             ]);
 
             try {
-                $snapToken = $this->createMidtransPayment($order);
+                $this->createMidtransPayment($order);
             } catch (\Throwable $paymentError) {
                 Log::error('Gagal membuat token pembayaran pesanan.', [
                     'order_id' => $order->id,
                     'error' => $paymentError->getMessage(),
                 ]);
-                $snapToken = null;
             }
 
             /*
@@ -634,17 +526,17 @@ class OrderController extends Controller
             |--------------------------------------------------------------------------
             */
 
-            $order->load([
-                'items',
-                'payment',
-                'datePromo',
-                'voucher',
-            ]);
+            $order->refresh();
+            $snapToken = $order->status === 'pending_payment' && $order->payment?->isPending()
+                ? $order->payment->snap_token
+                : null;
 
             return response()->json([
                 'message' => $snapToken
                     ? 'Pesanan berhasil dibuat.'
-                    : 'Pesanan berhasil dibuat. Silakan ulangi pembuatan pembayaran.',
+                    : ($order->status === 'pending_payment'
+                        ? 'Pesanan berhasil dibuat. Silakan ulangi pembuatan pembayaran.'
+                        : 'Pesanan berhasil dibuat. Muat ulang status pesanan.'),
 
                 'data' => [
                     'order' => new OrderResource(
@@ -652,7 +544,7 @@ class OrderController extends Controller
                     ),
 
                     'payment' => [
-                        'payment_status' => 'pending',
+                        'payment_status' => $order->payment?->payment_status ?? 'pending',
 
                         'amount' => $order
                             ->final_amount,
@@ -677,7 +569,7 @@ class OrderController extends Controller
 
     private function createMidtransPayment(
         Order $order
-    ): string {
+    ): void {
         $serverKey =
             config('midtrans.server_key');
 
@@ -765,13 +657,13 @@ class OrderController extends Controller
 
         if (
             $order
-                ->discount_voucher > 0
+                ->applied_voucher_discount > 0
         ) {
             $itemDetails[] = [
                 'id' => 'discount_voucher',
 
                 'price' => -$order
-                    ->discount_voucher,
+                    ->applied_voucher_discount,
 
                 'quantity' => 1,
 
@@ -870,26 +762,7 @@ class OrderController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        Payment::updateOrCreate(
-            [
-                'order_id' => $order->id,
-            ],
-            [
-                'midtrans_transaction_id' => null,
-
-                'snap_token' => $snapToken,
-
-                'payment_type' => 'pending',
-
-                'payment_status' => 'pending',
-
-                'amount' => $order->final_amount,
-
-                'paid_at' => null,
-            ]
-        );
-
-        return $snapToken;
+        Payment::saveSnapTokenForPendingOrder($order, $snapToken);
     }
 
     /*
@@ -923,12 +796,18 @@ class OrderController extends Controller
             return response()->json(['message' => 'Pesanan sudah dibayar.'], 422);
         }
 
-        if ($payment?->snap_token && $payment->payment_status === 'pending') {
+        $requiresMidtransCancellation = $payment?->isPending()
+            && ($payment->snap_token || $payment->midtrans_transaction_id);
+
+        if ($requiresMidtransCancellation) {
             try {
                 Config::$serverKey = config('midtrans.server_key');
                 Config::$isProduction = config('midtrans.is_production');
-                MidtransTransaction::cancel($order->order_number);
-            } catch (\Throwable $e) {
+                $statusCode = MidtransTransaction::cancel($order->order_number);
+                if ((string) $statusCode !== '200') {
+                    throw new \RuntimeException('Midtrans tidak mengonfirmasi pembatalan.');
+                }
+            } catch (\Throwable) {
                 return response()->json([
                     'message' => 'Pembatalan pembayaran belum terkonfirmasi. Silakan coba lagi.',
                 ], 409);
@@ -936,60 +815,40 @@ class OrderController extends Controller
         }
 
         try {
-            DB::transaction(
-                function () use ($order) {
-                    $order =
-                        Order::query()
-                            ->lockForUpdate()
-                            ->findOrFail(
-                                $order->id
-                            );
-
-                    if (
-                        $order->status !==
-                        'pending_payment'
-                    ) {
-                        throw new \Exception(
-                            'Pesanan sudah tidak dapat dibatalkan.'
-                        );
-                    }
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | RESTORE STOCK
-                    |--------------------------------------------------------------------------
-                    */
-
-                    $restored =
-                        $this
-                            ->restoreOrderStock(
-                                $order
-                            );
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | RESTORE VOUCHER
-                    |--------------------------------------------------------------------------
-                    */
-
-                    if ($restored) {
-                        $this
-                            ->restoreVoucherUsage(
-                                $order
-                            );
-                    }
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | CANCEL
-                    |--------------------------------------------------------------------------
-                    */
-
-                    $order->update([
-                        'status' => 'cancelled',
-                    ]);
+            $cancelled = DB::transaction(function () use ($order, $requiresMidtransCancellation) {
+                $order = Order::lockForUpdate()->findOrFail($order->id);
+                if ($order->status === 'cancelled') {
+                    return true;
                 }
-            );
+
+                $payment = $order->payment()->first();
+                if ($order->status !== 'pending_payment' || $payment?->isSuccess()) {
+                    throw new \RuntimeException('Pesanan sudah tidak dapat dibatalkan.');
+                }
+
+                if (! $requiresMidtransCancellation && $payment?->isPending()
+                    && ($payment->snap_token || $payment->midtrans_transaction_id)) {
+                    return false;
+                }
+
+                $restored = $this->restoreOrderStock($order);
+                if ($restored) {
+                    $this->restoreVoucherUsage($order);
+                }
+
+                if ($payment?->isPending()) {
+                    $payment->update(['payment_status' => 'failed']);
+                }
+                $order->update(['status' => 'cancelled']);
+
+                return true;
+            });
+
+            if (! $cancelled) {
+                return response()->json([
+                    'message' => 'Pembayaran baru tercatat. Silakan ulangi pembatalan.',
+                ], 409);
+            }
 
             $order->refresh();
 
@@ -1040,119 +899,6 @@ class OrderController extends Controller
         );
 
         return $number;
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | GET BUNDLE STOCK
-    |--------------------------------------------------------------------------
-    */
-
-    private function getBundleStock(
-        ProductVariant $parentVariant
-    ): int {
-        $components =
-            ProductBundleItem::query()
-                ->where(
-                    'parent_variant_id',
-                    $parentVariant->id
-                )
-                ->get();
-
-        if (
-            $components->isEmpty()
-        ) {
-            return 0;
-        }
-
-        $stocks = [];
-
-        foreach (
-            $components as $component
-        ) {
-            $componentVariant =
-                ProductVariant::query()
-                    ->lockForUpdate()
-                    ->find(
-                        $component
-                            ->component_variant_id
-                    );
-
-            if (! $componentVariant) {
-                return 0;
-            }
-
-            if (
-                $component->quantity <= 0
-            ) {
-                return 0;
-            }
-
-            $stocks[] =
-                intdiv(
-                    $componentVariant
-                        ->stock,
-                    $component
-                        ->quantity
-                );
-        }
-
-        return min($stocks);
-    }
-
-    /*
-    |--------------------------------------------------------------------------
-    | DECREASE BUNDLE STOCK
-    |--------------------------------------------------------------------------
-    */
-
-    private function decreaseBundleStock(
-        ProductVariant $parentVariant,
-        int $quantity
-    ): void {
-        $components =
-            ProductBundleItem::query()
-                ->where(
-                    'parent_variant_id',
-                    $parentVariant->id
-                )
-                ->get();
-
-        foreach (
-            $components as $component
-        ) {
-            $componentVariant =
-                ProductVariant::query()
-                    ->lockForUpdate()
-                    ->find(
-                        $component
-                            ->component_variant_id
-                    );
-
-            if (! $componentVariant) {
-                throw new \Exception(
-                    'Komponen bundle tidak ditemukan.'
-                );
-            }
-
-            $decrease =
-                $component->quantity *
-                $quantity;
-
-            if (
-                $componentVariant->stock <
-                $decrease
-            ) {
-                throw new \Exception(
-                    "Stok komponen {$componentVariant->name} tidak mencukupi."
-                );
-            }
-
-            $componentVariant->decrement(
-                'stock',
-                $decrease
-            );
-        }
     }
 
     /*
@@ -1401,6 +1147,7 @@ class OrderController extends Controller
                 'datePromo',
                 'voucher',
                 'customOrder',
+                'refundRequests',
             ])),
         ]);
     }

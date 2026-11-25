@@ -60,6 +60,35 @@ class AdminPagesTest extends TestCase
         $this->get(route('admin.dashboard'))->assertViewHas('stats', fn ($stats) => $stats['low_stock_items'] === 0);
     }
 
+    public function test_admin_labels_only_batik_zero_stock_as_preorder(): void
+    {
+        $batik = Category::factory()->batik()->create();
+        $bahan = Category::factory()->bahan()->create();
+        $preOrder = Product::create(['category_id' => $batik->id, 'name' => 'Batik Pesanan', 'slug' => 'batik-pesanan']);
+        $withoutVariants = Product::create(['category_id' => $batik->id, 'name' => 'Batik Baru', 'slug' => 'batik-baru']);
+        $regular = Product::create(['category_id' => $bahan->id, 'name' => 'Bahan Habis', 'slug' => 'bahan-habis']);
+        ProductVariant::factory()->create(['product_id' => $preOrder->id, 'stock' => 0]);
+        ProductVariant::factory()->create(['product_id' => $preOrder->id, 'stock' => 7]);
+        ProductVariant::factory()->create(['product_id' => $regular->id, 'stock' => 0]);
+
+        $this->actingAs(User::factory()->admin()->create());
+        $badge = '/title="Pre-order"[^>]*>\s*PO\s*<\/span>/';
+
+        $products = $this->get(route('admin.products.index', ['search' => $preOrder->name]))->assertOk();
+        $this->assertMatchesRegularExpression($badge, $products->getContent());
+
+        foreach ([$withoutVariants, $regular] as $product) {
+            $this->get(route('admin.products.index', ['search' => $product->name]))
+                ->assertOk()->assertDontSee('title="Pre-order"', false);
+        }
+
+        $variants = $this->get(route('admin.variants.index', $preOrder))->assertOk();
+        $this->assertSame(1, preg_match_all($badge, $variants->getContent()));
+        $this->assertMatchesRegularExpression('/text-green-700[^>]*>\s*7\s*<\/span>/', $variants->getContent());
+        $this->get(route('admin.variants.index', $regular))
+            ->assertOk()->assertDontSee('title="Pre-order"', false);
+    }
+
     public function test_landing_contact_form_validates_and_sends_message(): void
     {
         Mail::fake();

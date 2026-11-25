@@ -16,6 +16,13 @@ class ProductVariant extends Model
 
     public function getIsBundleAttribute(): bool { return $this->bundleComponents()->exists(); }
 
+    public function isPreOrder(): bool
+    {
+        return (int) $this->stock === 0
+            && $this->bundleComponents->isEmpty()
+            && $this->product?->category?->slug === 'batik';
+    }
+
     public function getAvailableBundleStockAttribute()
     {
         if (!$this->bundleComponents()->exists()) {

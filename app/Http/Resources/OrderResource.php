@@ -49,7 +49,7 @@ class OrderResource extends JsonResource
 
                 'discount_voucher' =>
                     $this
-                        ->discount_voucher,
+                        ->applied_voucher_discount,
 
                 'total_discount' =>
                     $this

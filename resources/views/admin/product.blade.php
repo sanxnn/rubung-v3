@@ -95,10 +95,14 @@
                                     </span>
                                 </td>
                                 <td class="px-6 py-4 text-center">
-                                    @php $lowStock = $product->lowest_stock; @endphp
+                                    @php
+                                        $lowStock = $product->lowest_stock;
+                                        $isPreOrder = $lowStock === 0 && $product->category?->slug === 'batik' && $product->variants->isNotEmpty();
+                                    @endphp
                                     <span
-                                        class="inline-flex items-center justify-center rounded-lg {{ $lowStock < 5 ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700' }} px-3 py-1.5 text-sm font-semibold">
-                                        {{ $lowStock }}
+                                        @if ($isPreOrder) title="Pre-order" @endif
+                                        class="inline-flex items-center justify-center rounded-lg {{ $isPreOrder ? 'bg-amber-50 text-amber-700' : ($lowStock < 5 ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700') }} px-3 py-1.5 text-sm font-semibold">
+                                        {{ $isPreOrder ? 'PO' : $lowStock }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4">

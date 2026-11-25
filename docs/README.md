@@ -2,6 +2,7 @@
 
 - [Referensi API](api-reference.md) memuat endpoint, autentikasi, body request, contoh respons, dan status HTTP.
 - [Arsitektur backend](backend-architecture.md) memuat stack, versi, struktur aplikasi, database, penyimpanan, dan integrasi.
+- [Catatan perbaikan checkout dan pembayaran](checkout-consistency-fixes.md) merangkum kasus audit, keputusan, dan verifikasi.
 - [README proyek](../README.md) memuat langkah instalasi dan pengujian lokal.
 
 ## Panduan fitur

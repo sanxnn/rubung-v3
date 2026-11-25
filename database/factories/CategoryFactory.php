@@ -15,7 +15,7 @@ class CategoryFactory extends Factory
         return [
             'name' => fake()->randomElement(['Batik', 'Bahan', 'Olahan Limbah']),
             'slug' => Str::slug(fake()->randomElement(['batik', 'bahan', 'olahan-limbah'])),
-            'description' => fake()->paragraph(),
+            'description' => fake()->realText(200),
             'has_subcategories' => fake()->boolean(),
         ];
     }

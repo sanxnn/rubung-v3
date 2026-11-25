@@ -90,7 +90,7 @@ Error aturan bisnis biasanya hanya memuat `message`, kadang disertai `available_
 | `GET /orders/{id}` | Privat | Detail dan status pembayaran terbaru. |
 | `POST /orders/{id}/cancel` | Privat | Batalkan pesanan `pending_payment`; tanpa body. |
 | `POST /payments/{orderId}/snap-token` | Privat | Buat/ambil token pembayaran; tanpa body. |
-| `POST /vouchers/validate` | Privat | Pratinjau voucher pada keranjang pelanggan: body `{code}`. Gunakan `data.subtotal_after_voucher` untuk subtotal setelah voucher. |
+| `POST /vouchers/validate` | Privat | Pratinjau voucher pada keranjang pelanggan: body `{code}`. Gunakan `data.subtotal_after_voucher` untuk subtotal setelah voucher. Saat checkout, voucher memakai sisa subtotal setelah promo tanggal. |
 | `POST /orders/{id}/complete` | Privat | Konfirmasi penerimaan pesanan yang sudah dibayar: `shipped → completed`; tanpa body. |
 | `POST /orders/{id}/refund` | Privat | Ajukan refund penuh dengan `reason` dan `evidence` (multipart). |
 | `GET /refunds` | Privat | Daftar pengajuan milik pelanggan. |
@@ -407,7 +407,7 @@ Tambahkan varian produk **atau varian bundling** memakai `POST /cart/items`:
 }
 ```
 
-Jumlah tambah minimal 1; menambah varian yang sama menambah jumlah lama, sedangkan `PUT` menetapkan jumlah akhir. Respons stok berlebih: `{"message":"Jumlah produk melebihi stok yang tersedia.","available_stock":5}` dengan status `422`. Stok 0 saat ini dapat mewakili produk pre-order; keputusan akhir dilakukan saat checkout. Total keranjang belum termasuk diskon dan ongkir.
+Jumlah tambah minimal 1; menambah varian yang sama menambah jumlah lama, sedangkan `PUT` menetapkan jumlah akhir. Respons stok berlebih: `{"message":"Jumlah produk melebihi stok yang tersedia.","available_stock":5}` dengan status `422`. Stok nol hanya dapat dipesan untuk varian reguler kategori Batik melalui alur pre-order. Produk reguler kategori lain dengan stok nol dan bundling tanpa stok komponen ditolak. Checkout memeriksa ulang stok. Total keranjang belum termasuk diskon dan ongkir.
 
 ## Checkout, pembayaran, dan riwayat
 
@@ -483,7 +483,7 @@ Objek order pada response riwayat tetap mempunyai field lain seperti `promo`, `s
 { "message": "Pesanan berhasil dibatalkan.", "data": { "id": 25, "order_number": "BRK-20261111080000-ABCDE", "status": "cancelled", "is_custom_order": false, "pricing": { "subtotal": 500000, "discount_date_cantik": 0, "discount_voucher": 50000, "total_discount": 50000, "shipping_cost": 20000, "final_amount": 470000 } } }
 ```
 
-`data` pada contoh pembatalan disingkat; server mengirim `OrderResource` lengkap. Order yang sudah dibayar tidak bisa dibatalkan melalui endpoint ini. Pelanggan dapat mengajukan refund penuh melalui API. Lihat [alur refund pelanggan](#refund-pelanggan). Saat ini `shipping.weight` pada `OrderResource` selalu `2000`, walaupun berat untuk perhitungan ongkir dapat diubah melalui konfigurasi; jangan gunakan field itu sebagai bukti berat aktual bila konfigurasi diubah.
+`data` pada contoh pembatalan disingkat; server mengirim `OrderResource` lengkap. Order yang sudah dibayar tidak bisa dibatalkan melalui endpoint ini. Pembayaran pending dengan token Snap atau ID transaksi Midtrans harus dikonfirmasi batal oleh Midtrans sebelum stok dan kuota dilepas. Jika pembatalan belum terkonfirmasi, API mengembalikan `409` dan pelanggan dapat mencoba lagi. Pelanggan dapat mengajukan refund penuh melalui API. Lihat [alur refund pelanggan](#refund-pelanggan). Saat ini `shipping.weight` pada `OrderResource` selalu `2000`, walaupun berat untuk perhitungan ongkir dapat diubah melalui konfigurasi; jangan gunakan field itu sebagai bukti berat aktual bila konfigurasi diubah.
 
 ### Pratinjau voucher
 
@@ -501,11 +501,11 @@ Setelah pembayaran berhasil, admin memproses pesanan melalui `paid → processin
 
 Kirim `POST /orders/{id}/complete` dengan Bearer token dan **body kosong**. Respons `200` berisi `message` dan `data.status: "completed"`. Mengulang aksi pada pesanan yang telah selesai dan pembayarannya berhasil tetap sukses tanpa menambah riwayat baru. Pesanan milik akun lain menghasilkan `404`, dan status yang tidak memenuhi syarat menghasilkan `422`.
 
-Muat ulang `GET /orders/{id}` setelah sukses untuk memperoleh detail termasuk ringkasan refund. Respons aksi complete tidak memuat ringkasan itu. Admin juga bisa menyelesaikan pesanan yang sudah dikirim. Riwayat mencatat siapa yang mengubah status, sehingga `completed` sendiri tidak membuktikan konfirmasi dari pelanggan. Refund `pending` tidak menghalangi penyelesaian pesanan pada implementasi saat ini.
+Respons aksi complete menyertakan ringkasan refund terbaru pada `data.refund`. Muat ulang `GET /orders/{id}` jika klien memerlukan detail terbaru. Admin juga bisa menyelesaikan pesanan yang sudah dikirim. Riwayat mencatat siapa yang mengubah status, sehingga `completed` sendiri tidak membuktikan konfirmasi dari pelanggan. Refund `pending` tidak menghalangi penyelesaian pesanan pada implementasi saat ini.
 
 ## Refund pelanggan
 
-Untuk pembayaran berstatus `success`, pemilik pesanan dapat mengajukan refund penuh saat pesanan berstatus `paid`, `processing`, `packing`, `shipped`, atau `completed`. Nominal diambil dari pembayaran oleh server. Pelanggan dapat mengajukan ulang setelah `rejected` atau `cancelled`. Selama masih ada pengajuan aktif atau selesai, server menolak pengajuan baru.
+Untuk pembayaran berstatus `success`, pemilik pesanan dapat mengajukan refund penuh saat pesanan berstatus `paid`, `processing`, `packing`, `shipped`, `completed`, atau `cancelled` jika pembayaran terkonfirmasi setelah pembatalan. Pengajuan pada pesanan batal mengikuti review admin dan tidak mengubah status pesanan. Nominal diambil dari pembayaran oleh server. Pelanggan dapat mengajukan ulang setelah `rejected` atau `cancelled`. Selama masih ada pengajuan aktif atau selesai, server menolak pengajuan baru.
 
 | Endpoint privat | Body atau query | Hasil sukses |
 | --- | --- | --- |
@@ -539,7 +539,7 @@ Admin membuka `/dashboard/refunds`, memeriksa bukti, lalu menyetujui atau menola
 | `/retry` | Tanpa field bisnis | Cek atau ulangi refund Midtrans dari `approved` atau `processing` |
 | `/manual` | Tanpa field bisnis | Ubah jalur Midtrans yang masih `approved` setelah pemeriksaan status provider |
 
-Jalur manual berjalan dari `pending → approved → completed`. Jalur Midtrans memerlukan metode yang didukung dan transaksi `settlement`. Permintaan yang diterima provider masuk `processing`. Backend menetapkan `completed` setelah API status Midtrans menunjukkan konfirmasi bank untuk kunci dan nominal yang sesuai. Status hasil pengiriman yang belum pasti tetap `processing` dan memblokir pengalihan ke manual. Rekonsiliasi berjalan melalui webhook atau retry admin. Refund selesai mengurangi omzet bersih pada dashboard dan laporan. Riwayat pesanan, pembayaran, stok, dan pemakaian voucher tetap tercatat. [Detail operasional dan pengujian refund](refund.md)
+Jalur manual berjalan dari `pending → approved → completed`. Jalur Midtrans memerlukan metode yang didukung dan transaksi `settlement`. Permintaan yang diterima provider masuk `processing`. Backend menetapkan `completed` setelah API status Midtrans menunjukkan konfirmasi bank untuk kunci dan nominal yang sesuai. Status hasil pengiriman yang belum pasti tetap `processing` dan memblokir pengalihan ke manual. Rekonsiliasi berjalan melalui webhook atau retry admin. Refund selesai mengurangi omzet bersih untuk pesanan yang masuk perhitungan penjualan. Pesanan berstatus `cancelled` tetap di luar omzet penjualan. Riwayat pesanan, pembayaran, stok, dan pemakaian voucher tetap tercatat. [Detail operasional dan pengujian refund](refund.md)
 
 ## Custom order
 

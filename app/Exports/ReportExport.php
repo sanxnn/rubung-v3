@@ -111,7 +111,7 @@ class ReportExport implements
             (int) ($order->discount_date_cantik ?? 0);
 
         $discountVoucher =
-            (int) ($order->discount_voucher ?? 0);
+            $order->applied_voucher_discount;
 
         $totalDiscount =
             $discountDatePromo +
