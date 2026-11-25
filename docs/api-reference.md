@@ -417,7 +417,7 @@ Jumlah tambah minimal 1; menambah varian yang sama menambah jumlah lama, sedangk
 { "address_id": 3, "voucher_code": "HEMAT10", "notes": "Tolong bungkus rapi" }
 ```
 
-`voucher_code` dan `notes` opsional. Voucher dan promo tanggal diterapkan saat checkout, kemudian stok dicek/dicadangkan, ongkir RajaOngkir dihitung, dan Midtrans dicoba. Contoh response `201`:
+`voucher_code` dan `notes` opsional. Backend memuat ulang keranjang dan memeriksa total kebutuhan stok per varian, termasuk komponen yang dipakai bundling. Promo tanggal diterapkan lebih dulu. Voucher dibatasi ke sisa subtotal dan hanya memakai kuota jika memberi potongan. Backend menghitung ongkir, menyimpan pesanan serta cadangan stok, lalu mencoba membuat token Midtrans. Contoh response `201`:
 
 ```json
 {
@@ -452,7 +452,7 @@ Jumlah tambah minimal 1; menambah varian yang sama menambah jumlah lama, sedangk
 }
 ```
 
-`data.payment.snap_token` bisa `null` jika pembuatan pembayaran gagal setelah order tersimpan. Simpan `order.id` dan panggil `POST /payments/25/snap-token` tanpa body untuk mencoba lagi. Response saat token baru berhasil dibuat:
+Simpan `data.order.id` dari respons checkout. Buka Snap hanya jika `data.order.status` adalah `pending_payment` dan `data.payment.snap_token` tersedia. Jika token kosong dan pesanan masih `pending_payment`, panggil `POST /payments/{orderId}/snap-token` tanpa body untuk mencoba lagi. Token juga dapat kosong ketika webhook sudah mengubah status sebelum checkout selesai. Jika pembayaran telah terkonfirmasi, baca `data.payment.payment_status: "success"` dan muat ulang detail. Response saat token baru berhasil dibuat:
 
 ```json
 {
@@ -477,13 +477,21 @@ Jika token pending sudah ada, endpoint yang sama mengembalikan `{"message":"Pemb
 
 Objek order pada response riwayat tetap mempunyai field lain seperti `promo`, `shipping`, `address`, `notes`, `custom_order`, `created_at`, dan `updated_at`; contoh ringkas di atas menonjolkan field untuk daftar. Status order yang digunakan: `pending_payment` → `paid` → `processing` → `packing` → `shipped` → `completed`; `cancelled` untuk pembatalan/gagal/expired. Status payment: `pending`, `success`, `failed`, atau `expire`.
 
-`POST /orders/25/cancel` hanya untuk `pending_payment` dan tanpa body. Jika transaksi Midtrans pending, backend mencoba membatalkannya dahulu. Contoh sukses:
+`POST /orders/25/cancel` hanya untuk pesanan `pending_payment` dan tanpa body. Contoh sukses:
 
 ```json
 { "message": "Pesanan berhasil dibatalkan.", "data": { "id": 25, "order_number": "BRK-20261111080000-ABCDE", "status": "cancelled", "is_custom_order": false, "pricing": { "subtotal": 500000, "discount_date_cantik": 0, "discount_voucher": 50000, "total_discount": 50000, "shipping_cost": 20000, "final_amount": 470000 } } }
 ```
 
-`data` pada contoh pembatalan disingkat; server mengirim `OrderResource` lengkap. Order yang sudah dibayar tidak bisa dibatalkan melalui endpoint ini. Pembayaran pending dengan token Snap atau ID transaksi Midtrans harus dikonfirmasi batal oleh Midtrans sebelum stok dan kuota dilepas. Jika pembatalan belum terkonfirmasi, API mengembalikan `409` dan pelanggan dapat mencoba lagi. Pelanggan dapat mengajukan refund penuh melalui API. Lihat [alur refund pelanggan](#refund-pelanggan). Saat ini `shipping.weight` pada `OrderResource` selalu `2000`, walaupun berat untuk perhitungan ongkir dapat diubah melalui konfigurasi; jangan gunakan field itu sebagai bukti berat aktual bila konfigurasi diubah.
+`data` pada contoh pembatalan adalah `OrderResource` yang disingkat. Penanganan respons:
+
+| Status | Arti dan tindakan klien |
+| --- | --- |
+| `200` | Pesanan `cancelled`. Jika ada pembayaran lokal yang masih `pending`, statusnya menjadi `failed`. Cadangan stok dan kuota yang terkait dilepas satu kali. |
+| `409` | Midtrans belum mengonfirmasi pembatalan, atau pembayaran baru tercatat selama permintaan berlangsung. Muat ulang detail sebelum mencoba lagi. Stok dan kuota tidak dilepas oleh aksi ini. |
+| `422` | Pesanan dibayar atau status pesanan tidak lagi memenuhi syarat. Perbarui detail dan tampilkan pesan server. Lihat [alur refund pelanggan](#refund-pelanggan) untuk pembayaran yang sukses. |
+
+Jika pembayaran `pending` mempunyai token Snap **atau** ID transaksi Midtrans, backend harus mendapat konfirmasi pembatalan Midtrans terlebih dahulu. Field `shipping.weight` bernilai tetap `2000`. Berat yang dipakai untuk menghitung ongkir mengikuti konfigurasi server.
 
 ### Pratinjau voucher
 

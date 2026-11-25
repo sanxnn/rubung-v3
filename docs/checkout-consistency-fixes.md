@@ -1,6 +1,6 @@
 # Perbaikan konsistensi checkout dan pembayaran
 
-Perbaikan ini berangkat dari audit backend pada `main` commit `c45d6a2`.
+Perbaikan ini berangkat dari audit backend pada commit `c45d6a2` dan masuk ke `main` melalui [PR #13](https://github.com/sanxnn/rubung-v3/pull/13).
 
 | Kasus | Penyelesaian dan alasan |
 | --- | --- |
@@ -11,14 +11,14 @@ Perbaikan ini berangkat dari audit backend pada `main` commit `c45d6a2`.
 
 ## Verifikasi
 
-Tes regresi mencakup penolakan stok gabungan yang tidak cukup, checkout saat stok tepat cukup, percobaan checkout ulang pada keranjang kosong, potongan efektif pada Snap awal dan retry pesanan lama, ringkasan laporan, serta refund untuk pesanan batal dengan pembayaran sukses. Snap dan ongkir disimulasikan. Pengujian ini belum mencakup checkout serentak dari dua koneksi atau transaksi Midtrans sandbox langsung.
+Tes regresi mencakup penolakan stok gabungan yang tidak cukup, checkout saat stok tepat cukup, percobaan checkout ulang pada keranjang kosong, potongan efektif pada Snap awal dan retry pesanan lama, ringkasan laporan, serta refund untuk pesanan batal dengan pembayaran sukses. Suite pada revisi promosi lulus 45 tes dengan 387 asersi di SQLite dan MySQL 8.4 dengan strict mode dan `ONLY_FULL_GROUP_BY`. Snap dan ongkir disimulasikan. Pengujian ini belum mencakup checkout serentak dari dua koneksi atau transaksi Midtrans sandbox langsung.
 
 ## Tindak lanjut operasional
 
 Rekonsiliasi terjadwal perlu aturan untuk transaksi yang belum terkonfirmasi, pemulihan stok, serta pemantauan scheduler. Penanda pre-order per varian bisa dipertimbangkan jika varian Batik nantinya memerlukan status habis yang berbeda dari PO.
 
-
 ## Tindak lanjut audit dev
 
 - **Respons Snap terlambat.** Pembuatan token pertama dan retry memakai penguncian pesanan yang sama seperti webhook. Token baru hanya disimpan jika pesanan masih menunggu pembayaran. Jika pembayaran sudah sukses, checkout mengembalikan status terbaru dan mempertahankan ID serta waktu pembayaran. Tes menyimulasikan settlement saat request Snap masih berjalan.
 - **Stok nol dan PO.** Keranjang dan checkout memakai syarat PO yang sama. Varian reguler kategori Batik dengan stok nol boleh dipesan tanpa cadangan stok. Varian reguler kategori lain membutuhkan stok, sedangkan bundling tetap membutuhkan stok komponen. Ini menyamakan perilaku API dengan arti badge PO di panel admin.
+- **Pembatalan Midtrans tanpa token Snap.** ID transaksi juga dianggap bukti pembayaran pending. API meminta konfirmasi pembatalan sebelum melepas stok dan kuota, serta memeriksa ulang status pembayaran dalam transaksi lokal. Tes mencakup respons `409` dan pelepasan cadangan satu kali setelah konfirmasi.

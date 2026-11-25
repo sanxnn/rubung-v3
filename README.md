@@ -1,6 +1,6 @@
 # Batik Rubung Kuning
 
-Backend toko batik berbasis Laravel 12. API pelanggan menyediakan katalog, keranjang, alamat, pesanan biasa dan custom, OTP email, serta pembayaran Midtrans. Panel web admin mengelola katalog, promo, pesanan, pelanggan, dan laporan. Ongkir dihitung melalui RajaOngkir.
+Backend toko batik berbasis Laravel 12. API pelanggan menyediakan katalog, keranjang, alamat, pesanan biasa dan custom, OTP email, pembayaran Midtrans, serta pengajuan refund. Panel web admin mengelola katalog, promo, pesanan, pelanggan, refund, dan laporan. Ongkir dihitung melalui RajaOngkir.
 
 Baca [kontrak API dan alur sistem](docs/api-reference.md) untuk endpoint, contoh body request, dan proses admin. Lihat [indeks dokumentasi](docs/README.md) untuk arsitektur dan panduan setiap fitur.
 
@@ -33,7 +33,7 @@ Baca [kontrak API dan alur sistem](docs/api-reference.md) untuk endpoint, contoh
 
 Webhook Midtrans: `POST /api/payments/midtrans/webhook`. Atur URL publik endpoint ini di dashboard Midtrans. Proyek memverifikasi signature dan nominal sebelum menerima notifikasi. Gunakan kunci dan mode sandbox untuk pengembangan.
 
-Admin mengubah status pesanan sesuai urutan pembayaran dan pengiriman. Pembatalan pesanan menunggu pembayaran dilakukan melalui alur pelanggan yang mengonfirmasi pembatalan Midtrans. Untuk pesanan yang sudah dibayar, pelanggan dapat mengajukan refund melalui alur terpisah. Refund tercatat pada pengajuan dan tidak mengubah status pesanan menjadi dibatalkan.
+Admin mengubah status pesanan sesuai urutan pembayaran dan pengiriman. Pembatalan pesanan menunggu pembayaran memerlukan konfirmasi Midtrans jika token Snap atau ID transaksi sudah tercatat. Untuk pesanan yang sudah dibayar, pelanggan dapat mengajukan refund melalui alur terpisah. Refund tercatat pada pengajuan dan tidak mengubah status pesanan menjadi dibatalkan.
 
 ## Pengujian
 
@@ -42,6 +42,6 @@ php artisan test
 npm run build
 ```
 
-Tes otomatis memakai SQLite dalam memori. MySQL tetap database aplikasi sesuai `.env.example`; migrasi mengabaikan indeks full-text produk hanya saat memakai SQLite untuk tes.
+Tes otomatis memakai SQLite dalam memori secara default. Untuk verifikasi perubahan checkout dan laporan, jalankan juga suite di MySQL dengan strict mode dan `ONLY_FULL_GROUP_BY`. Gunakan database MySQL khusus tes karena suite dapat membuat ulang tabel. Lihat [cara menjalankan tes MySQL](docs/backend-architecture.md#pengujian-database).
 
 Jangan jalankan `migrate:fresh` pada database berisi data penting. Untuk produksi, jalankan migrasi biasa setelah pencadangan database dan atur `APP_ENV=production`, `APP_DEBUG=false`, SMTP, serta kunci layanan yang sesuai.
