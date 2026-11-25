@@ -1,117 +1,66 @@
 # Arsitektur backend Batik Rubung Kuning
 
-Backend Laravel 12 menyediakan API pelanggan dan panel web admin. Lihat [kontrak API dan alur sistem](../roadmap.md) untuk integrasi, serta [README](../README.md) untuk konfigurasi dan pengujian lokal.
+Aplikasi Laravel menyediakan API JSON untuk pelanggan, panel web admin, dan halaman profil perusahaan. Aplikasi Flutter ada di repositori [batik_app](https://github.com/sanxnn/batik_app) dan menggunakan [referensi API](api-reference.md) ini sebagai kontrak integrasi.
 
-## Struktur Database
+## Teknologi dan versi
 
-### Tabel Utama
+| Komponen | Versi atau persyaratan | Kegunaan |
+| --- | --- | --- |
+| PHP | `^8.2` pada manifest, minimal 8.4.1 untuk lockfile saat ini | Runtime backend. Paket Symfony yang terkunci mensyaratkan PHP 8.4.1 atau lebih baru. |
+| Laravel | 12.69.2 | Routing, validasi, Eloquent, Blade, sesi, mail, dan penyimpanan |
+| Laravel Sanctum | 4.3.3 | Token Bearer API pelanggan |
+| MySQL | MySQL 8+ direkomendasikan; README juga mencantumkan MariaDB dengan dukungan full-text | Database aplikasi |
+| SQLite | Dalam memori pada suite tes | Database pengujian, dengan indeks full-text MySQL dilewati |
+| Midtrans PHP SDK | 2.6.2 | Pembayaran Snap dan operasi transaksi |
+| Laravel Excel | 4.0.3 | Ekspor laporan penjualan |
+| PHPUnit | 11.5.56 | Tes unit dan fitur |
+| Vite dan Tailwind CSS | Vite `^7.0.7`, Tailwind CSS `^4.0.0` | Build aset dan styling halaman Blade |
 
-| Tabel | Keterangan |
-|---|---|
-| `users` | Akun pelanggan & admin (role: admin/customer). Field: name, email, phone, gender, birth_date, password, role. |
-| `addresses` | Alamat pelanggan. Field: user_id, recipient_name, phone, province, city, district, village, postal_code, detail, is_primary. Digunakan kode wilayah (province_code, city_code, district_code, village_code) atau nama. |
-| `categories` | Kategori produk. Field: name, slug, description, has_subcategories. Relasi ke products. |
-| `subcategories` | Subkategori produk. Field: name, slug, category_id (cascade). |
-| `products` | Produk. Field: category_id (wajib), subcategory_id (opsional untuk batik), name, slug, description, image. |
-| `product_variants` | Varian produk (size/package). Field: product_id, name, sku, price, stock. Relasi ke product. |
-| `product_bundle_items` | Item komponen paket. Field: parent_variant_id, component_variant_id, quantity (unique constraint). |
-| `carts` | Keranjang belanja. Field: user_id (unique, cascade). |
-| `cart_items` | Item keranjang. Field: cart_id, product_variant_id, quantity. Unique constraint per cart+variant. |
-| `vouchers` | Voucher diskon. Field: code, discount_type (percentage/fixed), discount_value, min_purchase, max_discount, usage_limit, used_count, start_date, end_date, is_active. |
-| `date_promos` | Promo berdasarkan tanggal. Field: name, discount_type, discount_value, start_datetime, end_datetime, is_active. |
-| `orders` | Pesanan. Field: user_id, address_id, order_number (unique), subtotal, discount_date_cantik, date_promo_id, discount_voucher, voucher_id, shipping_cost, final_amount, status (pending_payment/paid/processing/packing/shipped/completed/cancelled), shipping_courier, resi_number, snapshot_* fields, notes, stock_reserved_at, stock_released_at. |
-| `order_items` | Item pesanan. Field: order_id, product_variant_id (nullable untuk custom order), product_name, variant_name, quantity, unit_price, subtotal. |
-| `order_status_histories` | Riwayat status pesanan. Field: order_id, old_status, new_status, changed_by (user), notes, created_at. |
-| `custom_orders` | Permintaan produk custom. Field: user_id, reference_number (unique), description, estimated_price, estimated_time, status (pending_review/quoted/approved/rejected/cancelled), admin_notes, order_id (jika sudah jadi order). |
-| `custom_order_attachments` | Lampiran custom order. Field: custom_order_id, file_path, uploaded_by, created_at. |
-| `payments` | Riwayat pembayaran Midtrans. Field: order_id (unique), midtrans_transaction_id, payment_type, payment_status (pending/success/failed/expire), amount, paid_at, snap_token. |
-| `refund_requests` | Pengajuan refund. Field: order_id, user_id, reviewed_by (nullable), reason, evidence_path, amount, status (pending/approved/processing/completed/rejected/cancelled), refund_method (midtrans/manual), refund_key, manual_reference, admin_notes, reviewed_at, completed_at. |
-| `email_otps` | OTP verifikasi. Field: user_id, email, otp_hash, purpose (email_verification/password_reset), attempts, expires_at, used_at. |
+Versi paket PHP di atas diambil dari [composer.lock](../composer.lock). Rentang paket frontend mengikuti [package.json](../package.json). Nilai ini menggambarkan konfigurasi repositori, sedangkan versi runtime di deployment mengikuti server yang digunakan.
 
-### Relasi Utama
+## Struktur aplikasi
 
-- User → many Addresses → one primary
-- User → many Orders → one Payment
-- User → many CustomOrders
-- Category → many Products → many Variants
-- Order → many OrderItems → one ProductVariant
-- Order → many RefundRequests (pengajuan ulang dimungkinkan setelah ditolak atau dibatalkan)
-- CustomOrder → one Order (jika disetujui)
-- RefundRequest → one Order → one Payment
+| Lokasi | Tanggung jawab |
+| --- | --- |
+| [routes/api.php](../routes/api.php) | Katalog publik, akun pelanggan, rute privat Sanctum, dan webhook Midtrans |
+| [routes/web.php](../routes/web.php) | Halaman profil, form kontak, autentikasi admin, dan operasi dashboard |
+| [app/Http/Controllers](../app/Http/Controllers) | Validasi, otorisasi, dan koordinasi proses API maupun web |
+| [app/Http/Resources](../app/Http/Resources) | Bentuk JSON untuk alamat, keranjang, pesanan, custom order, dan refund |
+| [app/Models](../app/Models) dan [database/migrations](../database/migrations) | Relasi, aturan data, tabel, indeks, dan foreign key |
+| [app/Services](../app/Services) dan [app/Exports](../app/Exports) | Integrasi layanan eksternal dan ekspor penjualan |
+| [resources/views](../resources/views) | Blade untuk panel admin dan halaman publik |
+| [tests](../tests) | Pengujian unit dan fitur |
 
-## Model dan relasi
+Klien Flutter memakai Bearer token. Panel admin memakai sesi web dengan middleware autentikasi dan role, serta CSRF pada form. API yang mengakses pesanan, alamat, atau pengajuan pelanggan memeriksa kepemilikan data pada alur terkait.
 
-### User
+## Database dan relasi
 
-- `isAdmin()` → role === 'admin'
-- `isCustomer()` → role === 'customer'
-- `addresses()` → hasMany Address
-- `primaryAddress()` → hasOne Address (is_primary)
-- `cart()` → hasOne Cart
-- `orders()` → hasMany Order
-- `customOrders()` → hasMany CustomOrder
+Konfigurasi aplikasi menggunakan `DB_CONNECTION=mysql` pada [contoh environment](../.env.example). Migrasi adalah sumber skema. Contoh environment memakai database untuk sesi, cache, dan antrean.
 
-### Category
+| Domain | Tabel utama dan relasi |
+| --- | --- |
+| Akun | `users` menyimpan pelanggan dan admin. `email_otps` menyimpan OTP verifikasi dan reset. `personal_access_tokens` menyimpan token Sanctum. |
+| Alamat | `addresses` terkait ke pengguna; menyimpan penerima, alamat utama, nama dan kode wilayah, serta kode pos. |
+| Produk | `categories` memiliki `subcategories` dan `products`. Produk memiliki `product_variants`. `product_bundle_items` menghubungkan varian paket dengan varian komponen. |
+| Keranjang | `carts` memiliki satu baris per pengguna. `cart_items` unik untuk pasangan keranjang dan varian. |
+| Promosi | `date_promos` menyimpan periode promo tanggal. `vouchers` menyimpan kode, aturan diskon, periode, dan pemakaian kuota. |
+| Pesanan | `orders` menyimpan status, rincian total, salinan alamat, resi, dan pencatatan stok. `order_items` menyimpan rincian barang. `order_status_histories` mencatat status dan pelaku. |
+| Pembayaran | `payments` terkait satu-ke-satu dengan pesanan, menyimpan status, nominal, metode, identitas transaksi, dan token Snap. |
+| Custom order | `custom_orders` menyimpan permintaan dan penawaran. Setelah disetujui, pengajuan terhubung ke pesanan. Gambar terkait disimpan melalui `custom_order_attachments`. |
+| Refund | `refund_requests` menyimpan pengajuan, bukti, nominal, metode, status, dan admin peninjau. Satu pesanan dapat memiliki riwayat beberapa pengajuan. Pengajuan aktif atau selesai membatasi pengajuan baru. |
+| Infrastruktur | Migrasi bawaan menyediakan tabel sesi, cache, antrean, dan catatan job. |
 
-- `subcategories()` → hasMany Subcategory
-- `products()` → hasMany Product
+Checkout mencatat pesanan dan pemakaian stok serta voucher dalam transaksi database. Aksi pesanan dan refund yang bersaing memakai penguncian baris pada bagian terkait untuk menjaga konsistensi transisi. Refund selesai tercatat terpisah dari pembayaran dan digunakan untuk mengurangi omzet bersih.
 
-### Product
+## Penyimpanan dan integrasi
 
-- `category()` → BelongsTo Category
-- `subcategory()` → BelongsTo Subcategory
-- `variants()` → hasMany ProductVariant
-- `getLowestStockAttribute()` → min stock dari varian
+| Layanan | Penggunaan dan konfigurasi |
+| --- | --- |
+| Disk publik | Gambar produk dan lampiran custom order. `storage:link` menyediakan jalur publik Laravel. |
+| Disk lokal privat | Bukti refund berada di `storage/app/private` dan disajikan lewat rute berautentikasi. |
+| Midtrans | Snap, webhook pembayaran, dan refund. Konfigurasi `MIDTRANS_*` menentukan kunci dan mode sandbox atau produksi. |
+| RajaOngkir | Pencarian lokasi dan ongkir. Konfigurasi `RAJAONGKIR_*` menentukan kunci, asal toko, kurir, dan berat. |
+| wilayah.id | Daftar dan validasi hierarki kode wilayah. Backend menyimpan hasil di cache. |
+| Email | Konfigurasi `MAIL_*` untuk OTP dan pesan kontak. `CONTACT_EMAIL` menentukan penerima pesan kontak. |
 
-### ProductVariant
-
-- `product()` → BelongsTo Product
-- `bundleComponents()` → hasMany ProductBundleItem (parent_variant_id)
-- `bundleAsComponent()` → hasMany ProductBundleItem (component_variant_id)
-- `getIsBundleAttribute()` → apakah punya komponen bundle
-- `getAvailableBundleStockAttribute()` → stok tersedia dari semua komponen
-
-### Order
-
-- `user()` → BelongsTo User
-- `address()` → BelongsTo Address
-- `datePromo()` → BelongsTo DatePromo
-- `voucher()` → BelongsTo Voucher
-- `items()` → hasMany OrderItem
-- `statusHistories()` → hasMany OrderStatusHistory
-- `payment()` → hasOne Payment
-- `refundRequests()` → hasMany RefundRequest
-- `customOrder()` → hasOne CustomOrder
-- `isCustomOrder()` → apakah punya custom order
-
-### RefundRequest
-
-- `order()` → BelongsTo Order
-- `user()` → BelongsTo User
-- `reviewer()` → BelongsTo User (reviewed_by)
-
-### CustomOrder
-
-- `user()` → BelongsTo User
-- `order()` → BelongsTo Order
-- `attachments()` → hasMany CustomOrderAttachment
-- `isPending()`, `isQuoted()`, `isApproved()`, `isRejected()`, `isCancelled()`
-
----
-
-## Layanan eksternal
-
-### WilayahService
-
-- `list(string $level, ?string $parentCode)` → ambil data wilayah dari wilayah.id API (provinces/regencies/districts/villages)
-- `resolve(array $codes)` → resolve kode wilayah ke nama (province, city, district, village). Butuh province_code, city_code, district_code, village_code.
-
-### RajaOngkirService
-
-- `getCost(Address $address)` → hitung ongkir dari origin toko ke alamat customer menggunakan RajaOngkir API.
-- `findOrigin(string $key)` → cari origin toko (konfig: services.rajongkir.origin_search, default: "Sumbersari,Jember")
-- `findDestination(?string $postalCode, ?string $district, ?string $city, string $key)` → cari destination customer (prioritas: postal_code → district+city → city)
-
-### MidtransRefundService
-
-- Digunakan untuk memproses refund, memeriksa konfirmasi dari API status Midtrans, dan memeriksa kelayakan sebelum pengalihan ke jalur manual.
+Lihat [README proyek](../README.md#menjalankan-lokal) untuk pemasangan dan [panduan refund](refund.md) untuk pengujian Midtrans di sandbox.

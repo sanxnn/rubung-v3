@@ -2,13 +2,13 @@
 
 Backend toko batik berbasis Laravel 12. API pelanggan menyediakan katalog, keranjang, alamat, pesanan biasa dan custom, OTP email, serta pembayaran Midtrans. Panel web admin mengelola katalog, promo, pesanan, pelanggan, dan laporan. Ongkir dihitung melalui RajaOngkir.
 
-Baca [kontrak API dan alur sistem](roadmap.md) untuk endpoint, contoh body request, dan proses admin. Lihat juga [arsitektur backend](docs/backend-architecture.md) dan [operasional refund](docs/refund.md).
+Baca [kontrak API dan alur sistem](docs/api-reference.md) untuk endpoint, contoh body request, dan proses admin. Lihat [indeks dokumentasi](docs/README.md) untuk arsitektur dan panduan setiap fitur.
 
 ## Kebutuhan
 
-- PHP 8.2+ dengan ekstensi MySQL
+- PHP 8.4.1+ untuk dependensi yang terkunci, dengan ekstensi MySQL
 - MySQL 8+ atau MariaDB yang mendukung indeks full-text
-- Composer dan Node.js
+- Composer dan Node.js yang kompatibel dengan Vite 7 (20.19+ pada seri 20, atau 22.12+)
 - Akun Midtrans dan RajaOngkir untuk menguji pembayaran dan ongkir nyata
 
 ## Menjalankan lokal

@@ -1,6 +1,13 @@
 # Operasional refund
 
-Gunakan [kontrak refund pelanggan](../roadmap.md#refund-pelanggan) dan [alur panel admin](../roadmap.md#refund-pada-panel-admin) untuk endpoint, field, dan transisi status.
+Gunakan [kontrak refund pelanggan](api-reference.md#refund-pelanggan) dan [alur panel admin](api-reference.md#refund-pada-panel-admin) untuk endpoint, field, dan transisi status.
+
+## Alur pelanggan dan admin
+
+1. Pelanggan memilih pesanan yang memenuhi syarat, lalu mengirim alasan dan satu foto bukti. Backend membuat pengajuan `pending` berdasarkan nominal pembayaran.
+2. Admin memeriksa bukti dan memilih penolakan, refund manual, atau refund Midtrans. Pelanggan dapat membatalkan pengajuan selama masih `pending`.
+3. Pada jalur manual, admin mencatat referensi setelah melakukan transfer. Pada jalur Midtrans, backend menunggu konfirmasi dari API status sebelum mencatat `completed`.
+4. Pelanggan melihat keputusan di detail pengajuan. Refund `completed` mengurangi omzet bersih di [laporan penjualan](sales-reports.md).
 
 ## Konfigurasi Midtrans
 
