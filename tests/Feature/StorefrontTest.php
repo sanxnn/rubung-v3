@@ -2,6 +2,7 @@
 
 namespace Tests\Feature;
 
+use App\Mail\ContactMessage;
 use App\Models\Category;
 use App\Models\Order;
 use App\Models\Payment;
@@ -9,6 +10,7 @@ use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\RefundRequest;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
 
 class StorefrontTest extends TestCase
@@ -48,6 +50,40 @@ class StorefrontTest extends TestCase
         $this->get('/katalog')->assertOk()->assertSee('Batik Kenanga')->assertSee('Bahan Katun');
         $this->get('/katalog?category=bahan&q=Katun')->assertOk()
             ->assertSee('Bahan Katun')->assertDontSee('Batik Mawar');
+    }
+
+    public function test_storefront_language_persists_between_pages_and_translates_contact_feedback(): void
+    {
+        $originalLocale = app()->getLocale();
+        Mail::fake();
+        config(['services.contact.email' => 'contact@example.test']);
+
+        $this->get('/?lang=en')->assertOk()
+            ->assertSee('lang="en"', false)
+            ->assertSee('e.g. Siti Aminah')
+            ->assertSee('Tell us what you need or include your order number.')
+            ->assertSee('aria-label="Dark mode"', false);
+        $this->get('/katalog?q=Ikat')->assertOk()
+            ->assertSee('Product Catalog')->assertSee('No products found.')
+            ->assertSee('q=Ikat&amp;lang=id', false);
+
+        $this->from('/?lang=en')->post('/contact', [])->assertSessionHasErrors([
+            'name' => 'Enter your full name.',
+            'message' => 'Enter a message between 10 and 5,000 characters.',
+        ]);
+
+        $this->from('/?lang=en')->post('/contact', [
+            'name' => 'Siti Aminah',
+            'email' => 'siti@example.test',
+            'message' => 'I would like to ask about custom orders.',
+        ])->assertRedirect('/?lang=en')
+            ->assertSessionHas('contact_success', 'Your message has been sent.');
+
+        Mail::assertSent(ContactMessage::class);
+        $this->get('/?lang=id')->assertOk()
+            ->assertSee('lang="id"', false)->assertSee('Contoh: Siti Aminah');
+        $this->get('/katalog')->assertOk()->assertSee('Katalog Produk');
+        $this->assertSame($originalLocale, app()->getLocale());
     }
 
     private function variant(Category $category, string $name): ProductVariant

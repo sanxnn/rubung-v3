@@ -16,11 +16,21 @@ class ContactController extends Controller
             'email' => ['required', 'email', 'max:100'],
             'message' => ['required', 'string', 'min:10', 'max:5000'],
             'website' => ['prohibited'],
+        ], [
+            'name.required' => __('storefront.validation_name'),
+            'name.string' => __('storefront.validation_name'),
+            'name.max' => __('storefront.validation_length'),
+            'email.required' => __('storefront.validation_email'),
+            'email.string' => __('storefront.validation_email'),
+            'email.email' => __('storefront.validation_email'),
+            'email.max' => __('storefront.validation_length'),
+            'message.*' => __('storefront.validation_message'),
+            'website.prohibited' => __('storefront.validation_request'),
         ]);
 
         $recipient = config('services.contact.email');
         if (! $recipient) {
-            return back()->withErrors(['contact' => 'Formulir kontak belum tersedia.'])->withInput();
+            return back()->withErrors(['contact' => __('storefront.contact_unavailable')])->withInput();
         }
 
         try {
@@ -28,9 +38,9 @@ class ContactController extends Controller
         } catch (\Throwable $e) {
             Log::error('Gagal mengirim pesan kontak.', ['error' => $e->getMessage()]);
 
-            return back()->withErrors(['contact' => 'Pesan belum terkirim. Silakan coba lagi.'])->withInput();
+            return back()->withErrors(['contact' => __('storefront.contact_failed')])->withInput();
         }
 
-        return back()->with('contact_success', 'Pesan berhasil dikirim.');
+        return back()->with('contact_success', __('storefront.contact_success'));
     }
 }
