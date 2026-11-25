@@ -4,6 +4,7 @@ namespace App\Services;
 
 use App\Models\RefundRequest;
 use Illuminate\Http\Client\ConnectionException;
+use Illuminate\Http\Client\Response;
 use Illuminate\Support\Facades\Http;
 use RuntimeException;
 
@@ -55,15 +56,9 @@ class MidtransRefundService
 
         $transactionStatus = $status->json('transaction_status');
         if ($transactionStatus === 'refund') {
-            $refunds = $status->json('refunds', []);
-            foreach ($refunds as $entry) {
-                if (($entry['refund_key'] ?? null) === $refund->refund_key) {
-                    return empty($entry['bank_confirmed_at']) ? 'processing' : 'completed';
-                }
-            }
-
-            if ($status->json('refund_key') === $refund->refund_key) {
-                return empty($status->json('bank_confirmed_at')) ? 'processing' : 'completed';
+            $confirmed = $this->confirmedStatus($status, $refund);
+            if ($confirmed !== null) {
+                return $confirmed;
             }
 
             throw new RuntimeException('Transaksi sudah direfund di Midtrans; periksa transaksi secara manual.');
@@ -103,5 +98,43 @@ class MidtransRefundService
         }
 
         return 'processing';
+    }
+
+    public function checkConfirmation(RefundRequest $refund): ?string
+    {
+        $serverKey = config('midtrans.server_key');
+        if (! $serverKey) {
+            throw new RuntimeException('Kunci server Midtrans belum tersedia.');
+        }
+
+        $baseUrl = config('midtrans.is_production')
+            ? 'https://api.midtrans.com' : 'https://api.sandbox.midtrans.com';
+        $orderId = rawurlencode($refund->order->order_number);
+        $status = Http::withBasicAuth($serverKey, '')->acceptJson()->timeout(15)
+            ->get($baseUrl.'/v2/'.$orderId.'/status');
+
+        if (! $status->successful() || $status->json('status_code') !== '200') {
+            throw new RuntimeException('Status transaksi Midtrans tidak dapat diverifikasi.');
+        }
+
+        return $this->confirmedStatus($status, $refund);
+    }
+
+    private function confirmedStatus(Response $status, RefundRequest $refund): ?string
+    {
+        if ($status->json('transaction_status') !== 'refund') {
+            return null;
+        }
+
+        $entries = $status->json('refunds');
+        foreach (is_array($entries) ? $entries : [$status->json()] as $entry) {
+            if (is_array($entry) && ($entry['refund_key'] ?? null) === $refund->refund_key
+                && is_numeric($entry['refund_amount'] ?? null)
+                && (float) $entry['refund_amount'] === (float) $refund->amount) {
+                return empty($entry['bank_confirmed_at']) ? 'processing' : 'completed';
+            }
+        }
+
+        return null;
     }
 }
