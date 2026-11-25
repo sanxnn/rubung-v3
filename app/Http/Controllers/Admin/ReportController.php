@@ -13,12 +13,7 @@ class ReportController extends Controller
 {
     public function index(Request $request)
     {
-        $query = Order::query()
-            ->with([
-                'user',
-                'items',
-            ])
-            ->withSum(['refundRequests as refunded_amount' => fn ($q) => $q->where('status', 'completed')], 'amount');
+        $query = Order::query();
 
         // Filter tanggal mulai
         if ($request->filled('start_date')) {
@@ -52,32 +47,25 @@ class ReportController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        $summaryQuery = clone $query;
-
-        $totalOrders = (clone $summaryQuery)->count();
+        $totalOrders = (clone $query)->count();
 
         $paidStatuses = ['paid', 'processing', 'packing', 'shipped', 'completed'];
+        $paidOrders = (clone $query)->whereIn('status', $paidStatuses);
 
-        $grossRevenue = (clone $summaryQuery)
-            ->whereIn('status', $paidStatuses)
-            ->sum('final_amount');
+        $grossRevenue = (clone $paidOrders)->sum('final_amount');
         $totalRefunded = RefundRequest::where('status', 'completed')
-            ->whereIn('order_id', (clone $summaryQuery)
-                ->whereIn('status', $paidStatuses)->select('id'))
+            ->whereIn('order_id', (clone $paidOrders)->select('orders.id'))
             ->sum('amount');
         $totalRevenue = $grossRevenue - $totalRefunded;
 
-        $totalDiscount = (clone $summaryQuery)
-            ->whereIn('status', $paidStatuses)
+        $totalDiscount = (clone $paidOrders)
             ->selectRaw(
                 'COALESCE(SUM(discount_date_cantik), 0) +
                  COALESCE(SUM(discount_voucher), 0) as total'
             )
             ->value('total') ?? 0;
 
-        $totalShipping = (clone $summaryQuery)
-            ->whereIn('status', $paidStatuses)
-            ->sum('shipping_cost');
+        $totalShipping = (clone $paidOrders)->sum('shipping_cost');
 
         /*
         |--------------------------------------------------------------------------
@@ -122,6 +110,8 @@ class ReportController extends Controller
         */
 
         $orders = $query
+            ->with(['user', 'items'])
+            ->withSum(['refundRequests as refunded_amount' => fn ($q) => $q->where('status', 'completed')], 'amount')
             ->latest('created_at')
             ->paginate(15)
             ->withQueryString();

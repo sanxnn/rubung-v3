@@ -50,16 +50,41 @@ class CommerceFlowTest extends TestCase
         $this->assertEquals($paidAt, $order->payment()->firstOrFail()->paid_at);
     }
 
-    public function test_report_revenue_excludes_unpaid_orders(): void
+    public function test_report_totals_exclude_unpaid_orders_and_respect_date_filters(): void
     {
         $admin = User::factory()->admin()->create();
-        Order::factory()->create(['status' => 'pending_payment', 'final_amount' => 100000]);
-        Order::factory()->create(['status' => 'paid', 'final_amount' => 250000]);
+        Order::factory()->create([
+            'status' => 'pending_payment',
+            'final_amount' => 100000,
+            'discount_voucher' => 20000,
+            'shipping_cost' => 15000,
+        ]);
+        Order::factory()->create([
+            'status' => 'paid',
+            'final_amount' => 250000,
+            'discount_date_cantik' => 10000,
+            'discount_voucher' => 5000,
+            'shipping_cost' => 20000,
+        ]);
+        Order::factory()->create([
+            'status' => 'paid',
+            'final_amount' => 300000,
+            'discount_voucher' => 40000,
+            'shipping_cost' => 25000,
+            'created_at' => now()->subDay(),
+        ]);
 
         $this->actingAs($admin)
-            ->get(route('admin.reports.index'))
+            ->get(route('admin.reports.index', ['start_date' => today()->toDateString()]))
             ->assertOk()
-            ->assertViewHas('totalRevenue', 250000);
+            ->assertViewHas('totalOrders', 2)
+            ->assertViewHas('totalRevenue', 250000)
+            ->assertViewHas('totalDiscount', fn ($total) => (int) $total === 15000)
+            ->assertViewHas('totalShipping', 20000);
+
+        $this->get(route('admin.reports.index', ['status' => 'pending_payment']))
+            ->assertOk()
+            ->assertViewHas('totalDiscount', fn ($total) => (int) $total === 0);
     }
 
     public function test_webhook_with_invalid_signature_does_not_change_order(): void
