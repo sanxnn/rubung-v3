@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'back_to_top' => 'Back to top',
     'meta' => 'Discover Batik Rubung Kuning in Jember, browse our batik collections, and contact our team about your order.',
     'skip' => 'Skip to main content',
     'primary_nav' => 'Main navigation',

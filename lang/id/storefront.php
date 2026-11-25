@@ -1,6 +1,7 @@
 <?php
 
 return [
+    'back_to_top' => 'Kembali ke atas',
     'meta' => 'Kenali Batik Rubung Kuning di Jember, jelajahi koleksi batik, dan hubungi tim untuk pesanan Anda.',
     'skip' => 'Lewati ke konten utama',
     'primary_nav' => 'Navigasi utama',
