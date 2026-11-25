@@ -49,7 +49,7 @@ class RefundController extends Controller
                 $order = Order::lockForUpdate()->findOrFail($order->id);
                 $payment = $order->payment;
 
-                if (! in_array($order->status, ['paid', 'processing', 'packing', 'shipped', 'completed'], true)
+                if (! in_array($order->status, ['paid', 'processing', 'packing', 'shipped', 'completed', 'cancelled'], true)
                     || $payment?->payment_status !== 'success') {
                     throw ValidationException::withMessages(['order' => 'Pesanan belum memenuhi syarat refund.']);
                 }

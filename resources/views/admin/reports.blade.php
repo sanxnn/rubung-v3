@@ -475,10 +475,7 @@
 
                         @php
 
-                            $discount =
-                                (int) ($order->discount_date_cantik ?? 0)
-                                +
-                                (int) ($order->discount_voucher ?? 0);
+                            $discount = $order->total_discount;
 
                             $statusLabel = match ($order->status) {
 

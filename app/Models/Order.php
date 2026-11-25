@@ -134,10 +134,18 @@ class Order extends Model
         return $this->customOrder !== null;
     }
 
+    public function getAppliedVoucherDiscountAttribute(): int
+    {
+        return min(
+            (int) $this->discount_voucher,
+            max(0, $this->subtotal - $this->discount_date_cantik)
+        );
+    }
+
     public function getTotalDiscountAttribute(): int
     {
         return
             $this->discount_date_cantik +
-            $this->discount_voucher;
+            $this->applied_voucher_discount;
     }
 }
