@@ -14,11 +14,11 @@ use App\Http\Controllers\Admin\SubcategoryController;
 use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\AuthController;
 use App\Http\Controllers\ContactController;
+use App\Http\Controllers\StorefrontController;
 use Illuminate\Support\Facades\Route;
 
-Route::get('/', function () {
-    return view('company-profile');
-});
+Route::get('/', [StorefrontController::class, 'home'])->name('company.home');
+Route::get('/katalog', [StorefrontController::class, 'catalog'])->name('company.catalog');
 Route::post('/contact', [ContactController::class, 'send'])->middleware('throttle:3,1')->name('contact.send');
 
 Route::middleware('guest')->group(function () {

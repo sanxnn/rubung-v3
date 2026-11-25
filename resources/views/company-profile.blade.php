@@ -1,41 +1,8 @@
-<!DOCTYPE html>
-<html lang="id">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1">
-    <meta name="description" content="Kenali Batik Rubung Kuning di Jember, jelajahi koleksi batik, dan hubungi tim untuk pesanan Anda.">
-    <title>Batik Rubung Kuning | Galeri Batik Jember</title>
-    <link rel="stylesheet" href="{{ asset('css/company-profile.css') }}">
-    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.7.2/css/all.min.css">
-</head>
-<body>
-    <a class="skip-link" href="#main">Lewati ke konten utama</a>
-    <header class="site-header">
-        <div class="shell header-inner">
-            <a class="brand" href="{{ url('/') }}">
-                <span class="brand-icon"><i class="fa-solid fa-leaf" aria-hidden="true"></i></span>
-                <span>Batik Rubung Kuning</span>
-            </a>
-            <nav class="desktop-nav" aria-label="Navigasi utama">
-                <a href="#catalog">Koleksi</a>
-                <a href="#store-info">Tentang Kami</a>
-                <a href="#download-app">Aplikasi</a>
-            </nav>
-            <a class="button button-primary header-contact" href="#contact">Hubungi Toko</a>
-            <details class="mobile-nav">
-                <summary>Menu</summary>
-                <nav aria-label="Navigasi seluler">
-                    <a href="#catalog">Koleksi</a>
-                    <a href="#store-info">Tentang Kami</a>
-                    <a href="#download-app">Aplikasi</a>
-                    <a href="#contact">Hubungi Toko</a>
-                </nav>
-            </details>
-        </div>
-    </header>
+@extends('storefront.layout')
 
-    <main id="main">
-        <section class="hero shell" aria-labelledby="hero-title">
+@section('content')
+        <section id="home" class="hero-section" aria-labelledby="hero-title">
+          <div class="hero shell">
             <div class="hero-copy">
                 <p class="location"><i class="fa-solid fa-location-dot" aria-hidden="true"></i> Jember, Indonesia</p>
                 <h1 id="hero-title">Batik dari Jember, <span>untuk setiap kesempatan.</span></h1>
@@ -50,38 +17,35 @@
                     alt="Ilustrasi kain batik biru indigo dan canting" width="1200" height="900" fetchpriority="high">
                 <figcaption>Ilustrasi kain batik dan canting</figcaption>
             </figure>
+          </div>
         </section>
 
         <section id="catalog" class="section section-soft" aria-labelledby="catalog-title">
             <div class="shell">
-                <div class="section-heading">
-                    <h2 id="catalog-title">Koleksi Batik</h2>
-                    <p>Temukan pilihan berdasarkan teknik, kebutuhan, dan cara Anda memakai batik.</p>
+                <div class="section-heading section-heading-row">
+                    <div>
+                        <h2 id="catalog-title">{{ $featured->first()?->units_sold > 0 ? 'Batik Terlaris' : 'Pilihan Batik' }}</h2>
+                        <p>Produk dengan penjualan tertinggi ditampilkan lebih dulu.</p>
+                    </div>
+                    <a class="button button-secondary" href="{{ route('company.catalog') }}">Lihat Produk Selengkapnya</a>
                 </div>
-                <div class="collection-grid">
-                    <article class="collection-card">
-                        <span class="feature-icon"><i class="fa-solid fa-pen-nib" aria-hidden="true"></i></span>
-                        <h3>Batik Tulis</h3>
-                        <p>Kain dengan motif yang digambar menggunakan canting. Tanyakan pilihan motif dan ukuran kepada tim kami.</p>
-                    </article>
-                    <article class="collection-card">
-                        <span class="feature-icon"><i class="fa-solid fa-stamp" aria-hidden="true"></i></span>
-                        <h3>Batik Cap</h3>
-                        <p>Pilihan kain bermotif berulang untuk koleksi pribadi, seragam, dan kebutuhan kelompok.</p>
-                    </article>
-                    <article class="collection-card">
-                        <span class="feature-icon"><i class="fa-solid fa-shirt" aria-hidden="true"></i></span>
-                        <h3>Busana &amp; Aksesori</h3>
-                        <p>Pilihan siap pakai dan pelengkap berbahan batik untuk berbagai kesempatan.</p>
-                    </article>
-                </div>
+                @if ($featured->isEmpty())
+                    <p class="empty-state">Koleksi Batik belum tersedia.</p>
+                @else
+                    <div class="collection-grid">
+                        @foreach ($featured as $product)
+                            @include('storefront.product-card', ['showSales' => true])
+                        @endforeach
+                    </div>
+                @endif
             </div>
         </section>
 
         <section id="store-info" class="section shell split" aria-labelledby="store-title">
             <div class="section-heading">
                 <h2 id="store-title">Tentang Rubung Kuning</h2>
-                <p>Batik Rubung Kuning menyediakan koleksi batik untuk pelanggan perorangan dan kebutuhan kelompok. Tim kami dapat membantu memilih motif, bahan, dan ukuran sebelum Anda memesan.</p>
+                <p>Batik Rubung Kuning menyediakan koleksi batik untuk pelanggan perorangan dan kebutuhan kelompok. Dari pilihan kain hingga pesanan kelompok, Anda dapat mendiskusikan motif, ukuran, dan kebutuhan sebelum memesan.</p>
+                <p>Kami melayani pemesanan dari Jember. Untuk kunjungan, tanyakan lokasi dan jadwal melalui formulir kontak agar tim dapat membantu menyiapkannya.</p>
             </div>
             <ul class="service-card">
                 <li>
@@ -92,6 +56,10 @@
                     <span class="feature-icon"><i class="fa-solid fa-box" aria-hidden="true"></i></span>
                     <div><strong>Pesanan khusus</strong><p>Sampaikan kebutuhan motif, ukuran, atau jumlah untuk dibahas bersama tim.</p></div>
                 </li>
+                <li>
+                    <span class="feature-icon"><i class="fa-solid fa-truck" aria-hidden="true"></i></span>
+                    <div><strong>Pengiriman</strong><p>Ongkir dihitung saat checkout berdasarkan alamat yang dipilih. Resi dapat dilihat pada detail pesanan setelah dikirim.</p></div>
+                </li>
             </ul>
         </section>
 
@@ -101,14 +69,29 @@
                     <h2 id="app-title">Katalog dan pesanan dalam satu aplikasi</h2>
                     <p>Aplikasi pelanggan memuat katalog, checkout, riwayat pesanan, dan informasi pengiriman.</p>
                 </div>
-                <a class="button button-secondary" href="#contact">Tanyakan Akses Aplikasi</a>
+                <div class="app-download">
+                    @include('storefront.app-badges')
+                    @unless (config('services.storefront.google_play_url') && config('services.storefront.app_store_url'))
+                        <a class="text-link" href="#contact">Tanyakan akses aplikasi</a>
+                    @endunless
+                </div>
             </div>
         </section>
 
         <section id="contact" class="section shell split contact-section" aria-labelledby="contact-title">
             <div class="section-heading">
                 <h2 id="contact-title">Hubungi Toko</h2>
-                <p>Tanyakan ketersediaan koleksi, rencana kunjungan, atau kebutuhan pesanan khusus melalui formulir ini.</p>
+                <p>Kirim pertanyaan tentang koleksi, pengiriman, atau kebutuhan pesanan khusus. Untuk pesanan yang sudah dibuat, sertakan nomor pesanan agar tim dapat menelusurinya.</p>
+                <ul class="contact-info">
+                    <li><span class="feature-icon"><i class="fa-solid fa-location-dot" aria-hidden="true"></i></span>
+                        <div><strong>Jember, Jawa Timur</strong><p>Hubungi tim sebelum merencanakan kunjungan.</p></div></li>
+                    <li><span class="feature-icon"><i class="fa-solid fa-inbox" aria-hidden="true"></i></span>
+                        <div><strong>Layanan pelanggan</strong><p>Kami membalas melalui email yang Anda masukkan.</p>
+                            @if ($publicEmail = config('services.storefront.public_email'))
+                                <a class="text-link" href="mailto:{{ $publicEmail }}">{{ $publicEmail }}</a>
+                            @endif
+                        </div></li>
+                </ul>
             </div>
             <form class="contact-form" action="{{ route('contact.send') }}" method="POST">
                 @csrf
@@ -146,27 +129,4 @@
                 <button class="button button-primary" type="submit">Kirim Pesan</button>
             </form>
         </section>
-    </main>
-
-    <footer class="site-footer">
-        <div class="shell footer-inner">
-            <p>© {{ date('Y') }} Batik Rubung Kuning</p>
-            <a href="{{ route('login') }}">Login Admin</a>
-        </div>
-    </footer>
-
-    <script>
-        const mobileNav = document.querySelector('.mobile-nav');
-        mobileNav.querySelectorAll('a').forEach(link => {
-            link.addEventListener('click', () => { mobileNav.open = false; });
-        });
-        mobileNav.addEventListener('keydown', event => {
-            if (event.key === 'Escape' && mobileNav.open) {
-                mobileNav.open = false;
-                mobileNav.querySelector('summary').focus();
-            }
-        });
-        document.querySelector('[data-contact-feedback]')?.focus();
-    </script>
-</body>
-</html>
+@endsection
