@@ -35,6 +35,12 @@ return [
         'weight' => (int) env('RAJAONGKIR_WEIGHT', 2000),
     ],
 
+    'storefront' => [
+        'public_email' => env('STOREFRONT_EMAIL'),
+        'google_play_url' => env('STOREFRONT_GOOGLE_PLAY_URL'),
+        'app_store_url' => env('STOREFRONT_APP_STORE_URL'),
+    ],
+
     'contact' => [
         'email' => env('CONTACT_EMAIL', env('MAIL_FROM_ADDRESS')),
     ],
