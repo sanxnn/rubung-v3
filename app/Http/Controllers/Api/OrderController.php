@@ -149,7 +149,7 @@ class OrderController extends Controller
                     $variantIds = $cartItems->pluck('product_variant_id');
                     $componentIds = ProductBundleItem::whereIn('parent_variant_id', $variantIds)
                         ->pluck('component_variant_id');
-                    $variants = ProductVariant::with(['product', 'bundleComponents'])
+                    $variants = ProductVariant::with(['product.category', 'bundleComponents'])
                         ->whereIn('id', $variantIds->merge($componentIds)->unique())
                         ->orderBy('id')
                         ->lockForUpdate()
@@ -167,7 +167,7 @@ class OrderController extends Controller
                         }
 
                         $isBundle = $variant->bundleComponents->isNotEmpty();
-                        $stockQuantity = ($isBundle || $variant->stock !== 0) ? $cartItem->quantity : 0;
+                        $stockQuantity = $variant->isPreOrder() ? 0 : $cartItem->quantity;
 
                         if ($isBundle) {
                             foreach ($variant->bundleComponents as $component) {
@@ -512,13 +512,12 @@ class OrderController extends Controller
             ]);
 
             try {
-                $snapToken = $this->createMidtransPayment($order);
+                $this->createMidtransPayment($order);
             } catch (\Throwable $paymentError) {
                 Log::error('Gagal membuat token pembayaran pesanan.', [
                     'order_id' => $order->id,
                     'error' => $paymentError->getMessage(),
                 ]);
-                $snapToken = null;
             }
 
             /*
@@ -527,17 +526,17 @@ class OrderController extends Controller
             |--------------------------------------------------------------------------
             */
 
-            $order->load([
-                'items',
-                'payment',
-                'datePromo',
-                'voucher',
-            ]);
+            $order->refresh();
+            $snapToken = $order->status === 'pending_payment' && $order->payment?->isPending()
+                ? $order->payment->snap_token
+                : null;
 
             return response()->json([
                 'message' => $snapToken
                     ? 'Pesanan berhasil dibuat.'
-                    : 'Pesanan berhasil dibuat. Silakan ulangi pembuatan pembayaran.',
+                    : ($order->status === 'pending_payment'
+                        ? 'Pesanan berhasil dibuat. Silakan ulangi pembuatan pembayaran.'
+                        : 'Pesanan berhasil dibuat. Muat ulang status pesanan.'),
 
                 'data' => [
                     'order' => new OrderResource(
@@ -545,7 +544,7 @@ class OrderController extends Controller
                     ),
 
                     'payment' => [
-                        'payment_status' => 'pending',
+                        'payment_status' => $order->payment?->payment_status ?? 'pending',
 
                         'amount' => $order
                             ->final_amount,
@@ -570,7 +569,7 @@ class OrderController extends Controller
 
     private function createMidtransPayment(
         Order $order
-    ): string {
+    ): void {
         $serverKey =
             config('midtrans.server_key');
 
@@ -763,26 +762,7 @@ class OrderController extends Controller
         |--------------------------------------------------------------------------
         */
 
-        Payment::updateOrCreate(
-            [
-                'order_id' => $order->id,
-            ],
-            [
-                'midtrans_transaction_id' => null,
-
-                'snap_token' => $snapToken,
-
-                'payment_type' => 'pending',
-
-                'payment_status' => 'pending',
-
-                'amount' => $order->final_amount,
-
-                'paid_at' => null,
-            ]
-        );
-
-        return $snapToken;
+        Payment::saveSnapTokenForPendingOrder($order, $snapToken);
     }
 
     /*

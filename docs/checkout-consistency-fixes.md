@@ -15,4 +15,10 @@ Tes regresi mencakup penolakan stok gabungan yang tidak cukup, checkout saat sto
 
 ## Tindak lanjut operasional
 
-Rekonsiliasi terjadwal perlu aturan untuk transaksi yang belum terkonfirmasi, pemulihan stok, serta pemantauan scheduler. Penanda pre-order perlu pemetaan katalog sebelum aturan stok nol diubah. Keduanya tetap terpisah dari perbaikan ini agar perubahan tidak menetapkan kebijakan retrospektif pada transaksi atau katalog yang ada.
+Rekonsiliasi terjadwal perlu aturan untuk transaksi yang belum terkonfirmasi, pemulihan stok, serta pemantauan scheduler. Penanda pre-order per varian bisa dipertimbangkan jika varian Batik nantinya memerlukan status habis yang berbeda dari PO.
+
+
+## Tindak lanjut audit dev
+
+- **Respons Snap terlambat.** Pembuatan token pertama dan retry memakai penguncian pesanan yang sama seperti webhook. Token baru hanya disimpan jika pesanan masih menunggu pembayaran. Jika pembayaran sudah sukses, checkout mengembalikan status terbaru dan mempertahankan ID serta waktu pembayaran. Tes menyimulasikan settlement saat request Snap masih berjalan.
+- **Stok nol dan PO.** Keranjang dan checkout memakai syarat PO yang sama. Varian reguler kategori Batik dengan stok nol boleh dipesan tanpa cadangan stok. Varian reguler kategori lain membutuhkan stok, sedangkan bundling tetap membutuhkan stok komponen. Ini menyamakan perilaku API dengan arti badge PO di panel admin.

@@ -407,7 +407,7 @@ Tambahkan varian produk **atau varian bundling** memakai `POST /cart/items`:
 }
 ```
 
-Jumlah tambah minimal 1; menambah varian yang sama menambah jumlah lama, sedangkan `PUT` menetapkan jumlah akhir. Respons stok berlebih: `{"message":"Jumlah produk melebihi stok yang tersedia.","available_stock":5}` dengan status `422`. Stok 0 saat ini dapat mewakili produk pre-order; keputusan akhir dilakukan saat checkout. Total keranjang belum termasuk diskon dan ongkir.
+Jumlah tambah minimal 1; menambah varian yang sama menambah jumlah lama, sedangkan `PUT` menetapkan jumlah akhir. Respons stok berlebih: `{"message":"Jumlah produk melebihi stok yang tersedia.","available_stock":5}` dengan status `422`. Stok nol hanya dapat dipesan untuk varian reguler kategori Batik melalui alur pre-order. Produk reguler kategori lain dengan stok nol dan bundling tanpa stok komponen ditolak. Checkout memeriksa ulang stok. Total keranjang belum termasuk diskon dan ongkir.
 
 ## Checkout, pembayaran, dan riwayat
 
