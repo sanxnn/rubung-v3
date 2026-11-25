@@ -2,6 +2,8 @@
 
 Backend toko batik berbasis Laravel 12. API pelanggan menyediakan katalog, keranjang, alamat, pesanan biasa dan custom, OTP email, serta pembayaran Midtrans. Panel web admin mengelola katalog, promo, pesanan, pelanggan, dan laporan. Ongkir dihitung melalui RajaOngkir.
 
+Baca [dokumentasi API dan alur sistem](dokumentasi.md) untuk endpoint, contoh body request, dan proses admin.
+
 ## Kebutuhan
 
 - PHP 8.2+ dengan ekstensi MySQL
@@ -31,7 +33,7 @@ Backend toko batik berbasis Laravel 12. API pelanggan menyediakan katalog, keran
 
 Webhook Midtrans: `POST /api/payments/midtrans/webhook`. Atur URL publik endpoint ini di dashboard Midtrans. Proyek memverifikasi signature dan nominal sebelum menerima notifikasi. Gunakan kunci dan mode sandbox untuk pengembangan.
 
-Admin mengubah status pesanan sesuai urutan pembayaran dan pengiriman. Pembatalan pesanan menunggu pembayaran dilakukan melalui alur pelanggan yang mengonfirmasi pembatalan Midtrans. Pesanan yang sudah dibayar memerlukan proses pengembalian dana terpisah sebelum dapat dianggap dibatalkan.
+Admin mengubah status pesanan sesuai urutan pembayaran dan pengiriman. Pembatalan pesanan menunggu pembayaran dilakukan melalui alur pelanggan yang mengonfirmasi pembatalan Midtrans. Untuk pesanan yang sudah dibayar, pelanggan dapat mengajukan refund melalui alur terpisah. Refund tercatat pada pengajuan dan tidak mengubah status pesanan menjadi dibatalkan.
 
 ## Pengujian
 
