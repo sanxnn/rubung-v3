@@ -9,6 +9,7 @@ use App\Models\Payment;
 use App\Models\Product;
 use App\Models\ProductVariant;
 use App\Models\RefundRequest;
+use App\Models\Subcategory;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Mail;
 use Tests\TestCase;
@@ -50,6 +51,36 @@ class StorefrontTest extends TestCase
         $this->get('/katalog')->assertOk()->assertSee('Batik Kenanga')->assertSee('Bahan Katun');
         $this->get('/katalog?category=bahan&q=Katun')->assertOk()
             ->assertSee('Bahan Katun')->assertDontSee('Batik Mawar');
+    }
+
+    public function test_catalog_filters_by_subcategory_and_displayed_starting_price(): void
+    {
+        $batik = Category::factory()->batik()->create();
+        $tulis = Subcategory::create(['category_id' => $batik->id, 'name' => 'Tulis', 'slug' => 'tulis']);
+        $cap = Subcategory::create(['category_id' => $batik->id, 'name' => 'Cap', 'slug' => 'cap']);
+        $match = $this->variant($batik, 'Kain Sesuai');
+        $cheap = $this->variant($batik, 'Kain Murah');
+        $expensive = $this->variant($batik, 'Kain Mahal');
+        $other = $this->variant($batik, 'Kain Cap');
+        foreach ([$match, $cheap, $expensive] as $variant) {
+            $variant->product->update(['subcategory_id' => $tulis->id]);
+        }
+        $other->product->update(['subcategory_id' => $cap->id]);
+        $cheap->update(['price' => 90000]);
+        ProductVariant::factory()->create(['product_id' => $cheap->product_id, 'price' => 150000]);
+        $expensive->update(['price' => 250000]);
+
+        $this->get(route('company.catalog', [
+            'category' => 'batik', 'subcategory' => $tulis->id,
+            'min_price' => 150000, 'max_price' => 150000,
+        ]))->assertOk()->assertSee('Kain Sesuai')->assertDontSee('Kain Cap')
+            ->assertDontSee('Kain Murah')->assertDontSee('Kain Mahal');
+
+        $this->get(route('company.catalog', ['max_price' => 100000]))
+            ->assertOk()->assertSee('Kain Murah')->assertDontSee('Kain Sesuai');
+
+        $this->from('/katalog')->get('/katalog?min_price=200000&max_price=100000')
+            ->assertRedirect('/katalog')->assertSessionHasErrors('max_price');
     }
 
     public function test_storefront_language_persists_between_pages_and_translates_contact_feedback(): void
