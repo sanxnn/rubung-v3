@@ -135,14 +135,7 @@ button, input, textarea { font: inherit; }
 .notice-success { background: light-dark(#ecfdf3, #173429); color: light-dark(#14532d, #a7f3bf); }
 .notice-error { background: light-dark(#fff1f2, #42242a); color: light-dark(#9f1239, #ffc0c8); }
 
-.site-footer {
-    --footer-ink: #2d240f;
-    --footer-muted: #473612;
-    --footer-line: rgb(45 36 15 / 24%);
-    background: light-dark(#f4c430, #ddb02d);
-    color: var(--footer-ink);
-    font-size: .875rem;
-}
+.site-footer { background: var(--surface); color: var(--muted); font-size: .875rem; }
 .footer-inner { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: .75rem 1.5rem; min-height: 4.5rem; padding-block: 1rem; }
 .site-footer a { font-weight: 650; }
 
@@ -232,22 +225,26 @@ button, input, textarea { font: inherit; }
 .footer-grid { display: grid; grid-template-columns: 1.1fr .7fr 1.2fr; gap: 1.75rem; padding-block: 2.5rem; }
 .footer-grid nav { display: grid; gap: .45rem; justify-items: start; }
 .footer-grid p, .footer-grid .app-badges { margin-top: .75rem; }
-.footer-grid p, .footer-inner p { color: var(--footer-muted); }
-.site-footer .brand-icon { background: #fff8df; color: #463307; }
-.site-footer .text-link { color: var(--footer-ink); }
+.footer-grid strong { color: var(--ink); }
+.site-footer .text-link { color: var(--gold-ink); }
 .site-footer a:not(.store-badge):hover { text-decoration: underline; text-underline-offset: .2em; }
-.site-footer :focus-visible { outline-color: var(--footer-ink); }
-.site-footer .store-badge { background: #29220f; color: #fff; }
-.site-footer .store-badge-unavailable { background: #fff8df; color: var(--footer-muted); }
-.footer-inner { border-top: 1px solid var(--footer-line); }
-.catalog-filters {
-    display: flex;
-    flex-wrap: wrap;
-    gap: .75rem;
-    align-items: end;
-    margin-top: 1.75rem;
-}
-.catalog-filters .field { flex: 1 1 12rem; }
+.site-footer a.store-badge:hover { color: #fff; }
+.footer-inner { border-top: 1px solid var(--line); }
+
+.catalog-layout { display: grid; grid-template-columns: minmax(15rem, 17rem) minmax(0, 1fr); align-items: start; gap: clamp(1.5rem, 3vw, 2.75rem); }
+.catalog-sidebar { padding: 1.25rem; border-radius: 1rem; background: var(--card); box-shadow: var(--shadow); }
+.catalog-sidebar-heading { display: flex; align-items: center; gap: .65rem; }
+.catalog-sidebar-heading i { color: var(--gold-ink); }
+.catalog-sidebar-heading h2 { font-size: 1.125rem; }
+.catalog-filters { display: grid; gap: 1rem; margin-top: 1.125rem; }
+.catalog-price { min-width: 0; margin: 0; padding: 0; border: 0; }
+.catalog-price legend { padding: 0; font-size: .9375rem; font-weight: 650; }
+.catalog-price p { margin: .35rem 0 .7rem; font-size: .8125rem; color: var(--muted); }
+.catalog-price-fields { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: .5rem; }
+.catalog-price-fields input { padding-inline: .5rem; }
+.catalog-price-fields label { font-size: .8125rem; }
+.catalog-filter-errors { margin: 0; padding-left: 2rem; }
+.catalog-results .collection-grid { margin-top: 1rem; }
 .field select { min-height: 2.875rem; width: 100%; font: inherit; border: 1px solid var(--field-line); border-radius: .625rem; padding: .5rem .65rem; background: var(--card); color: var(--ink); }
 .section-heading h1 { font-size: clamp(2.25rem, 5vw, 3.75rem); line-height: 1.12; letter-spacing: -.045em; }
 .result-count, .empty-state { margin-top: 1.5rem; color: var(--muted); }
@@ -331,4 +328,19 @@ button, input, textarea { font: inherit; }
 @media (hover: hover) and (prefers-reduced-motion: no-preference) {
     .back-to-top { transition: transform .2s ease, background-color .2s ease; }
     .back-to-top:hover { transform: translateY(-2px); }
+}
+
+
+@media (max-width: 68rem) {
+    .catalog-results .collection-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+}
+
+@media (max-width: 48rem) {
+    .catalog-layout { grid-template-columns: minmax(0, 1fr); }
+    .catalog-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    .catalog-filter-errors, .catalog-price { grid-column: 1 / -1; }
+}
+
+@media (max-width: 34rem) {
+    .catalog-filters, .catalog-results .collection-grid { grid-template-columns: minmax(0, 1fr); }
 }

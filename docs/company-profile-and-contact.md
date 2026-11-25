@@ -6,7 +6,7 @@ Alamat penerima mengikuti `CONTACT_EMAIL`. Konfigurasi `MAIL_*` menentukan pengi
 
 ## Katalog publik
 
-Beranda menampilkan hingga tiga produk kategori Batik, diurutkan menurut jumlah unit pada pesanan dengan pembayaran sukses. Pesanan batal dan pesanan dengan refund selesai tidak ikut dihitung. Produk tanpa penjualan dapat mengisi kartu tersisa tanpa label terjual. Halaman `/katalog` memuat semua kategori dengan pencarian nama, filter kategori, dan pagination.
+Beranda menampilkan hingga tiga produk kategori Batik, diurutkan menurut jumlah unit pada pesanan dengan pembayaran sukses. Pesanan batal dan pesanan dengan refund selesai tidak ikut dihitung. Produk tanpa penjualan dapat mengisi kartu tersisa tanpa label terjual. Halaman `/katalog` memuat semua kategori dengan sidebar pencarian nama, kategori, subkategori, dan rentang harga rupiah. Rentang memakai harga varian termurah yang ditampilkan pada kartu. Batas minimum dan maksimum bersifat opsional dan inklusif. Filter tetap aktif saat berpindah halaman hasil.
 
 Atur `STOREFRONT_GOOGLE_PLAY_URL` dan `STOREFRONT_APP_STORE_URL` dengan URL listing resmi untuk mengaktifkan badge unduh. Jika kosong, badge menampilkan status tautan belum tersedia. `STOREFRONT_EMAIL` menampilkan alamat email publik secara opsional. Penerima formulir tetap diatur secara terpisah melalui `CONTACT_EMAIL`.
 
