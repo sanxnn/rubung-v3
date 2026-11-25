@@ -70,10 +70,14 @@
                                 <td class="px-6 py-4 text-right font-semibold text-gray-900">Rp
                                     {{ number_format($variant->price, 0, ',', '.') }}</td>
                                 <td class="px-6 py-4 text-center">
-                                    @php $stock = $variant->stock; @endphp
+                                    @php
+                                        $stock = $variant->stock;
+                                        $isPreOrder = $stock === 0 && $product->category?->slug === 'batik';
+                                    @endphp
                                     <span
-                                        class="inline-flex items-center justify-center rounded-lg {{ $stock < 5 ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700' }} px-3 py-1.5 text-sm font-semibold">
-                                        {{ $stock }}
+                                        @if ($isPreOrder) title="Pre-order" @endif
+                                        class="inline-flex items-center justify-center rounded-lg {{ $isPreOrder ? 'bg-amber-50 text-amber-700' : ($stock < 5 ? 'bg-red-50 text-red-700' : 'bg-green-50 text-green-700') }} px-3 py-1.5 text-sm font-semibold">
+                                        {{ $isPreOrder ? 'PO' : $stock }}
                                     </span>
                                 </td>
                                 <td class="px-6 py-4">
