@@ -194,13 +194,13 @@ class PaymentController extends Controller
         */
 
         if (
-            $order->discount_voucher > 0
+            $order->applied_voucher_discount > 0
         ) {
             $itemDetails[] = [
                 'id' => 'discount_voucher',
 
                 'price' => -$order
-                    ->discount_voucher,
+                    ->applied_voucher_discount,
 
                 'quantity' => 1,
 

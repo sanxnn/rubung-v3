@@ -9,6 +9,10 @@ Gunakan [kontrak refund pelanggan](api-reference.md#refund-pelanggan) dan [alur 
 3. Pada jalur manual, admin mencatat referensi setelah melakukan transfer. Pada jalur Midtrans, backend menunggu konfirmasi dari API status sebelum mencatat `completed`.
 4. Pelanggan melihat keputusan di detail pengajuan. Refund `completed` mengurangi omzet bersih di [laporan penjualan](sales-reports.md).
 
+## Pembayaran yang masuk setelah pembatalan
+
+Jika Midtrans mengonfirmasi pembayaran setelah pesanan dibatalkan, pesanan tetap `cancelled` dan pembayaran tercatat `success`. Pelanggan dapat mengajukan refund melalui endpoint yang sama. Admin melihat penanda di detail pesanan dan meninjau pengajuan melalui menu Refund. Status pembayaran yang belum sukses tetap tidak memenuhi syarat. Jalur ini menghindari pengaktifan kembali pesanan yang cadangan stoknya sudah dilepas.
+
 ## Konfigurasi Midtrans
 
 Aktifkan refund pada akun Midtrans untuk metode pembayaran yang akan digunakan. Untuk metode yang tidak tersedia, gunakan jalur manual. Saat respons pengiriman tidak pasti, periksa ulang melalui aksi retry di panel admin. Backend memakai kunci refund yang sama pada percobaan ulang.

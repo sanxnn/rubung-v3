@@ -60,8 +60,10 @@ class ReportController extends Controller
 
         $totalDiscount = (clone $paidOrders)
             ->selectRaw(
-                'COALESCE(SUM(discount_date_cantik), 0) +
-                 COALESCE(SUM(discount_voucher), 0) as total'
+                'COALESCE(SUM(CASE
+                    WHEN discount_date_cantik + discount_voucher > subtotal THEN subtotal
+                    ELSE discount_date_cantik + discount_voucher
+                 END), 0) as total'
             )
             ->value('total') ?? 0;
 

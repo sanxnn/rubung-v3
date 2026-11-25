@@ -6,3 +6,5 @@
 4. Pembatalan pelanggan tersedia selama pesanan masih menunggu pembayaran dan mengikuti hasil pemeriksaan transaksi. Pesanan yang sudah dibayar mengikuti alur pengajuan refund.
 
 Muat ulang detail agar status pembayaran dan ringkasan refund terbaru tampil. Refund memiliki status tersendiri. [Checkout, pembayaran, dan riwayat](api-reference.md#checkout-pembayaran-dan-riwayat) · [Konfirmasi penerimaan](api-reference.md#pengiriman-dan-konfirmasi-penerimaan)
+
+Stok untuk varian reguler dan komponen bundle yang sama dihitung bersama. Jika total kebutuhan melebihi stok, checkout ditolak dan keranjang tetap tersedia. Backend memuat dan mengunci keranjang di dalam transaksi agar dua checkout tidak sama-sama memproses isi lama.

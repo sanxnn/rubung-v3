@@ -259,6 +259,31 @@ class RefundFlowTest extends TestCase
         $this->postJson('/api/refunds/'.$replacement.'/cancel')->assertUnprocessable();
     }
 
+    public function test_cancelled_order_can_only_be_refunded_after_payment_succeeds(): void
+    {
+        Storage::fake('local');
+        $order = $this->paidOrder();
+        $order->update(['status' => 'cancelled']);
+        $order->payment()->update(['payment_status' => 'pending']);
+        $url = '/api/orders/'.$order->id.'/refund';
+
+        $this->actingAs($order->user, 'sanctum')->postJson($url, [
+            'reason' => 'Pembayaran masuk setelah pesanan dibatalkan.',
+            'evidence' => UploadedFile::fake()->image('bukti.jpg'),
+        ])->assertUnprocessable()->assertJsonValidationErrors('order');
+
+        $order->payment()->update(['payment_status' => 'success']);
+        $this->postJson($url, [
+            'reason' => 'Pembayaran masuk setelah pesanan dibatalkan.',
+            'evidence' => UploadedFile::fake()->image('bukti.jpg'),
+        ])->assertCreated()->assertJsonPath('data.status', 'pending');
+        $this->assertSame('cancelled', $order->fresh()->status);
+
+        $this->actingAs(User::factory()->admin()->create())
+            ->get(route('admin.orders.show', $order))
+            ->assertOk()->assertSee('Pembayaran tercatat pada pesanan yang dibatalkan.');
+    }
+
     public function test_only_owner_can_complete_paid_shipped_order_once(): void
     {
         $order = $this->paidOrder();

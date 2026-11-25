@@ -121,6 +121,12 @@
 
                 </p>
 
+                @if ($order->status === 'cancelled' && $order->payment?->payment_status === 'success')
+                    <p class="mt-2 text-sm font-medium text-amber-700">
+                        Pembayaran tercatat pada pesanan yang dibatalkan. Periksa pengajuan refund sebelum memproses pengembalian dana.
+                    </p>
+                @endif
+
                 @if ($order->refundRequests->isNotEmpty())
                     <a href="{{ route('admin.refunds.show', $order->refundRequests->first()) }}" class="mt-2 inline-block text-sm font-semibold text-amber-700 hover:underline">
                         Lihat pengajuan refund →
@@ -538,7 +544,7 @@
 
                             <p class="font-medium">
 
-                                Rp{{ number_format($order->discount_voucher, 0, ',', '.') }}
+                                Rp{{ number_format($order->applied_voucher_discount, 0, ',', '.') }}
 
                             </p>
 
@@ -839,7 +845,7 @@
 
                             <span class="font-medium text-red-600">
 
-                                -Rp{{ number_format($order->discount_voucher, 0, ',', '.') }}
+                                -Rp{{ number_format($order->applied_voucher_discount, 0, ',', '.') }}
 
                             </span>
 

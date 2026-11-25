@@ -61,9 +61,10 @@ class CommerceFlowTest extends TestCase
         ]);
         Order::factory()->create([
             'status' => 'paid',
-            'final_amount' => 250000,
-            'discount_date_cantik' => 10000,
-            'discount_voucher' => 5000,
+            'final_amount' => 20000,
+            'subtotal' => 100000,
+            'discount_date_cantik' => 70000,
+            'discount_voucher' => 50000,
             'shipping_cost' => 20000,
         ]);
         Order::factory()->create([
@@ -78,8 +79,8 @@ class CommerceFlowTest extends TestCase
             ->get(route('admin.reports.index', ['start_date' => today()->toDateString()]))
             ->assertOk()
             ->assertViewHas('totalOrders', 2)
-            ->assertViewHas('totalRevenue', 250000)
-            ->assertViewHas('totalDiscount', fn ($total) => (int) $total === 15000)
+            ->assertViewHas('totalRevenue', 20000)
+            ->assertViewHas('totalDiscount', fn ($total) => (int) $total === 100000)
             ->assertViewHas('totalShipping', 20000);
 
         $this->get(route('admin.reports.index', ['status' => 'pending_payment']))
