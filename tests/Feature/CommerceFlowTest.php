@@ -5,6 +5,7 @@ namespace Tests\Feature;
 use App\Models\Category;
 use App\Models\DatePromo;
 use App\Models\Order;
+use App\Models\OrderItem;
 use App\Models\Payment;
 use App\Models\Product;
 use App\Models\Subcategory;
@@ -12,6 +13,9 @@ use App\Models\User;
 use App\Models\Voucher;
 use Database\Seeders\DatabaseSeeder;
 use Illuminate\Foundation\Testing\RefreshDatabase;
+use Mockery;
+use PHPUnit\Framework\Attributes\PreserveGlobalState;
+use PHPUnit\Framework\Attributes\RunInSeparateProcess;
 use Tests\TestCase;
 
 class CommerceFlowTest extends TestCase
@@ -110,6 +114,45 @@ class CommerceFlowTest extends TestCase
             ->assertOk();
 
         $this->assertSame('cancelled', $order->fresh()->status);
+    }
+
+    #[RunInSeparateProcess]
+    #[PreserveGlobalState(false)]
+    public function test_cancel_waits_for_midtrans_confirmation_even_without_snap_token(): void
+    {
+        $voucher = Voucher::factory()->create(['used_count' => 1]);
+        $order = Order::factory()->create([
+            'status' => 'pending_payment',
+            'stock_reserved_at' => now(),
+            'voucher_id' => $voucher->id,
+        ]);
+        $item = OrderItem::factory()->create(['order_id' => $order->id, 'quantity' => 2, 'stock_quantity' => 2]);
+        $variant = $item->productVariant;
+        $variant->update(['stock' => 3]);
+        $payment = Payment::factory()->create([
+            'order_id' => $order->id,
+            'payment_status' => 'pending',
+            'midtrans_transaction_id' => 'pending-midtrans-transaction',
+            'snap_token' => null,
+        ]);
+
+        Mockery::mock('alias:Midtrans\Transaction')->shouldReceive('cancel')
+            ->with($order->order_number)->twice()->andReturn('412', '200');
+
+        $url = '/api/orders/'.$order->id.'/cancel';
+        $this->actingAs($order->user, 'sanctum')->postJson($url)->assertConflict();
+        $this->assertSame('pending_payment', $order->fresh()->status);
+        $this->assertSame('pending', $payment->fresh()->payment_status);
+        $this->assertSame(3, $variant->fresh()->stock);
+        $this->assertSame(1, $voucher->fresh()->used_count);
+
+        $this->postJson($url)->assertOk()->assertJsonPath('data.status', 'cancelled');
+        $this->assertSame('failed', $payment->fresh()->payment_status);
+        $this->assertSame('pending-midtrans-transaction', $payment->fresh()->midtrans_transaction_id);
+        $this->assertSame(5, $variant->fresh()->stock);
+        $this->assertSame(0, $voucher->fresh()->used_count);
+        $this->postJson($url)->assertUnprocessable();
+        $this->assertSame(5, $variant->fresh()->stock);
     }
 
     public function test_seeders_can_run_twice_without_duplicate_catalog_data(): void

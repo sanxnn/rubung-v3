@@ -483,7 +483,7 @@ Objek order pada response riwayat tetap mempunyai field lain seperti `promo`, `s
 { "message": "Pesanan berhasil dibatalkan.", "data": { "id": 25, "order_number": "BRK-20261111080000-ABCDE", "status": "cancelled", "is_custom_order": false, "pricing": { "subtotal": 500000, "discount_date_cantik": 0, "discount_voucher": 50000, "total_discount": 50000, "shipping_cost": 20000, "final_amount": 470000 } } }
 ```
 
-`data` pada contoh pembatalan disingkat; server mengirim `OrderResource` lengkap. Order yang sudah dibayar tidak bisa dibatalkan melalui endpoint ini. Pelanggan dapat mengajukan refund penuh melalui API. Lihat [alur refund pelanggan](#refund-pelanggan). Saat ini `shipping.weight` pada `OrderResource` selalu `2000`, walaupun berat untuk perhitungan ongkir dapat diubah melalui konfigurasi; jangan gunakan field itu sebagai bukti berat aktual bila konfigurasi diubah.
+`data` pada contoh pembatalan disingkat; server mengirim `OrderResource` lengkap. Order yang sudah dibayar tidak bisa dibatalkan melalui endpoint ini. Pembayaran pending dengan token Snap atau ID transaksi Midtrans harus dikonfirmasi batal oleh Midtrans sebelum stok dan kuota dilepas. Jika pembatalan belum terkonfirmasi, API mengembalikan `409` dan pelanggan dapat mencoba lagi. Pelanggan dapat mengajukan refund penuh melalui API. Lihat [alur refund pelanggan](#refund-pelanggan). Saat ini `shipping.weight` pada `OrderResource` selalu `2000`, walaupun berat untuk perhitungan ongkir dapat diubah melalui konfigurasi; jangan gunakan field itu sebagai bukti berat aktual bila konfigurasi diubah.
 
 ### Pratinjau voucher
 
