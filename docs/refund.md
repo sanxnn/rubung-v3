@@ -1,27 +1,10 @@
-# Refund pesanan
+# Operasional refund
 
-Satu pengajuan mencakup refund penuh untuk satu pesanan. Customer dapat mengajukan saat pembayaran berhasil dan pesanan berstatus `paid`, `processing`, `packing`, `shipped`, atau `completed`. Alasan minimal 20 karakter dan satu foto bukti JPEG/PNG/WebP maksimal 5 MB wajib dilampirkan. Foto disimpan pada disk `local` privat dan hanya dapat dibuka oleh pemilik melalui API atau admin melalui website.
+Gunakan [kontrak refund pelanggan](../roadmap.md#refund-pelanggan) dan [alur panel admin](../roadmap.md#refund-pada-panel-admin) untuk endpoint, field, dan transisi status.
 
-## API customer
+## Konfigurasi Midtrans
 
-Semua endpoint memakai `auth:sanctum`.
-
-- `POST /api/orders/{order}/refund`: multipart `reason` dan `evidence`; menghasilkan status `pending`.
-- `GET /api/refunds`: daftar pengajuan customer.
-- `GET /api/refunds/{refundRequest}`: detail dan keputusan admin.
-- `POST /api/refunds/{refundRequest}/cancel`: tanpa body, hanya oleh pemilik saat `pending`. Mengembalikan `data.status: "cancelled"`. Pengulangan pada pengajuan yang dibatalkan mengembalikan status yang sama.
-- `GET /api/refunds/{refundRequest}/evidence`: foto bukti privat.
-- `GET /api/orders/{order}` dan daftar pesanan memuat ringkasan pengajuan terakhir pada field `refund`.
-
-Pengajuan kedua ditolak selama ada refund aktif atau selesai. Setelah penolakan atau pembatalan, customer boleh mengajukan ulang dengan bukti baru.
-
-## Website admin
-
-Menu **Refund** menampilkan daftar, filter status, detail, dan bukti. Admin dapat menolak dengan alasan, menyetujui jalur manual atau Midtrans, mencatat referensi transfer manual, dan memeriksa/ mengulang status Midtrans. Status yang dipakai: `pending`, `approved`, `processing`, `completed`, `rejected`, `cancelled`.
-
-Jalur manual baru selesai setelah admin mencatat referensi transfer. Jalur Midtrans memakai `refund_key` tetap agar permintaan ulang tidak menciptakan refund baru. Respons sukses API berarti permintaan diterima; status `completed` baru dicatat setelah API status Midtrans mengonfirmasi `bank_confirmed_at` untuk kunci dan nominal refund yang sesuai. Webhook refund memicu pemeriksaan tersebut. Jika respons pengiriman tidak pasti, status tetap `processing` dan pengalihan manual diblokir.
-
-Refund Midtrans hanya dipilih untuk metode yang didukung API dan transaksi berstatus `settlement`. Kemampuan refund juga harus aktif di akun Midtrans. Untuk metode lain, pilih jalur manual. Pesanan, pembayaran, stok, dan pemakaian voucher tetap menyimpan riwayat aslinya; omzet bersih pada dashboard dan laporan mengurangi refund yang telah `completed`.
+Aktifkan refund pada akun Midtrans untuk metode pembayaran yang akan digunakan. Untuk metode yang tidak tersedia, gunakan jalur manual. Saat respons pengiriman tidak pasti, periksa ulang melalui aksi retry di panel admin. Backend memakai kunci refund yang sama pada percobaan ulang.
 
 ## Pengujian terpisah
 
