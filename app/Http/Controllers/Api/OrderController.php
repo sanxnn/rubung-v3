@@ -796,12 +796,18 @@ class OrderController extends Controller
             return response()->json(['message' => 'Pesanan sudah dibayar.'], 422);
         }
 
-        if ($payment?->snap_token && $payment->payment_status === 'pending') {
+        $requiresMidtransCancellation = $payment?->isPending()
+            && ($payment->snap_token || $payment->midtrans_transaction_id);
+
+        if ($requiresMidtransCancellation) {
             try {
                 Config::$serverKey = config('midtrans.server_key');
                 Config::$isProduction = config('midtrans.is_production');
-                MidtransTransaction::cancel($order->order_number);
-            } catch (\Throwable $e) {
+                $statusCode = MidtransTransaction::cancel($order->order_number);
+                if ((string) $statusCode !== '200') {
+                    throw new \RuntimeException('Midtrans tidak mengonfirmasi pembatalan.');
+                }
+            } catch (\Throwable) {
                 return response()->json([
                     'message' => 'Pembatalan pembayaran belum terkonfirmasi. Silakan coba lagi.',
                 ], 409);
@@ -809,60 +815,40 @@ class OrderController extends Controller
         }
 
         try {
-            DB::transaction(
-                function () use ($order) {
-                    $order =
-                        Order::query()
-                            ->lockForUpdate()
-                            ->findOrFail(
-                                $order->id
-                            );
-
-                    if (
-                        $order->status !==
-                        'pending_payment'
-                    ) {
-                        throw new \Exception(
-                            'Pesanan sudah tidak dapat dibatalkan.'
-                        );
-                    }
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | RESTORE STOCK
-                    |--------------------------------------------------------------------------
-                    */
-
-                    $restored =
-                        $this
-                            ->restoreOrderStock(
-                                $order
-                            );
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | RESTORE VOUCHER
-                    |--------------------------------------------------------------------------
-                    */
-
-                    if ($restored) {
-                        $this
-                            ->restoreVoucherUsage(
-                                $order
-                            );
-                    }
-
-                    /*
-                    |--------------------------------------------------------------------------
-                    | CANCEL
-                    |--------------------------------------------------------------------------
-                    */
-
-                    $order->update([
-                        'status' => 'cancelled',
-                    ]);
+            $cancelled = DB::transaction(function () use ($order, $requiresMidtransCancellation) {
+                $order = Order::lockForUpdate()->findOrFail($order->id);
+                if ($order->status === 'cancelled') {
+                    return true;
                 }
-            );
+
+                $payment = $order->payment()->first();
+                if ($order->status !== 'pending_payment' || $payment?->isSuccess()) {
+                    throw new \RuntimeException('Pesanan sudah tidak dapat dibatalkan.');
+                }
+
+                if (! $requiresMidtransCancellation && $payment?->isPending()
+                    && ($payment->snap_token || $payment->midtrans_transaction_id)) {
+                    return false;
+                }
+
+                $restored = $this->restoreOrderStock($order);
+                if ($restored) {
+                    $this->restoreVoucherUsage($order);
+                }
+
+                if ($payment?->isPending()) {
+                    $payment->update(['payment_status' => 'failed']);
+                }
+                $order->update(['status' => 'cancelled']);
+
+                return true;
+            });
+
+            if (! $cancelled) {
+                return response()->json([
+                    'message' => 'Pembayaran baru tercatat. Silakan ulangi pembatalan.',
+                ], 409);
+            }
 
             $order->refresh();
 
