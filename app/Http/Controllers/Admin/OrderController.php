@@ -151,6 +151,7 @@ class OrderController extends Controller
             'items:id,order_id,product_variant_id,product_name,variant_name,quantity,unit_price,subtotal',
 
             'statusHistories.changedBy:id,name',
+            'refundRequests',
         ]);
 
         $statusLabels = [

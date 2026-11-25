@@ -4,7 +4,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Batik Rubung Kuning — Company Profile</title>
+    <title>Batik Rubung Kuning — Platform & Galeri Batik Profesional</title>
 
     {{-- Tailwind CSS CDN --}}
     <script src="https://cdn.tailwindcss.com"></script>
@@ -13,801 +13,697 @@
             theme: {
                 extend: {
                     colors: {
-                        ivory: '#FDFBF7',
-                        cream: '#F9F5EC',
-                        gold: '#D4A843',
-                        mustard: '#E5B84B',
-                        charcoal: '#2D2D2D',
-                        slate: '#5A5A5A',
-                        sage: '#8A9A86',
+                        pure: '#FFFFFF',
+                        surface: '#FFFDF7',
+                        sunsoft: '#FFF8E1',
+                        sunlight: '#FACC15',
+                        amberbrand: '#EAB308',
+                        golddeep: '#CA8A04',
+                        ink: '#111827',
+                        muted: '#4B5563',
+                        line: '#FDE68A',
                     },
                     fontFamily: {
-                        serif: ['"Playfair Display"', 'Georgia', 'serif'],
-                        sans: ['"Montserrat"', 'system-ui', 'sans-serif'],
+                        sans: ['"Plus Jakarta Sans"', 'system-ui', '-apple-system', 'sans-serif'],
+                        display: ['"Playfair Display"', 'Georgia', 'serif'],
                     }
                 }
             }
         }
     </script>
 
-    {{-- Google Fonts --}}
+    {{-- Google Fonts: Plus Jakarta Sans (SaaS UI/Body) & Playfair Display (Heritage Accent) --}}
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link
-        href="https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700&family=Playfair+Display:ital,wght@0,400;0,600;0,700;1,400&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=Plus+Jakarta+Sans:wght@400;500;600;700;800&display=swap"
         rel="stylesheet">
 
     {{-- Lucide Icons CDN --}}
     <script src="https://unpkg.com/lucide@latest"></script>
 
     <style>
-        /* Custom scrollbar */
         ::-webkit-scrollbar {
-            width: 6px;
+            width: 7px;
         }
 
         ::-webkit-scrollbar-track {
-            background: #FDFBF7;
+            background: #FFFFFF;
         }
 
         ::-webkit-scrollbar-thumb {
-            background: #D4A843;
-            border-radius: 3px;
+            background: #EAB308;
+            border-radius: 9999px;
         }
 
-        /* Fade-in animation */
-        .fade-up {
+        .reveal {
             opacity: 0;
-            transform: translateY(30px);
-            transition: opacity 0.8s ease, transform 0.8s ease;
+            transform: translateY(20px);
+            transition: opacity 0.65s ease, transform 0.65s ease;
         }
 
-        .fade-up.visible {
+        .reveal.is-visible {
             opacity: 1;
             transform: translateY(0);
         }
 
-        /* Gold line accent */
-        .gold-line::after {
-            content: '';
-            display: block;
-            width: 60px;
-            height: 2px;
-            background: #D4A843;
-            margin-top: 16px;
-        }
-
-        .gold-line-center::after {
-            content: '';
-            display: block;
-            width: 60px;
-            height: 2px;
-            background: #D4A843;
-            margin: 16px auto 0;
-        }
-
-        /* Hero parallax-like overlay */
-        .hero-overlay {
-            background: linear-gradient(135deg,
-                    rgba(253, 251, 247, 0.92) 0%,
-                    rgba(253, 251, 247, 0.75) 50%,
-                    rgba(253, 251, 247, 0.55) 100%);
+        .saas-grid-bg {
+            background-image:
+                linear-gradient(to right, rgba(234, 179, 8, 0.08) 1px, transparent 1px),
+                linear-gradient(to bottom, rgba(234, 179, 8, 0.08) 1px, transparent 1px);
+            background-size: 36px 36px;
         }
     </style>
 </head>
 
-<body class="bg-ivory text-charcoal font-sans antialiased">
+<body class="bg-pure text-ink font-sans antialiased selection:bg-sunlight selection:text-ink">
 
     {{-- ============================================================ --}}
-    {{-- NAVBAR                                                        --}}
+    {{-- NAVBAR (SAAS CLEAN WHITE & YELLOW ACCENT)                     --}}
     {{-- ============================================================ --}}
-    <nav id="navbar" class="fixed top-0 left-0 w-full z-50 transition-all duration-500 bg-transparent">
-        <div class="max-w-7xl mx-auto px-6 lg:px-12 flex items-center justify-between h-20">
-            {{-- Logo --}}
-            <a href="#hero" class="flex items-center gap-3 group">
+    <header id="navbar" class="sticky top-0 z-50 bg-pure/90 backdrop-blur-md border-b border-amber-200/70 transition-shadow">
+        <div class="max-w-7xl mx-auto px-6 lg:px-10 h-20 flex items-center justify-between">
+            <a href="#top" class="flex items-center gap-3 group">
                 <div
-                    class="w-10 h-10 rounded-full bg-gold flex items-center justify-center
-                            group-hover:scale-110 transition-transform duration-300">
-                    <span class="text-ivory font-serif font-bold text-lg">R</span>
+                    class="w-10 h-10 rounded-xl bg-sunlight border border-amber-400 flex items-center justify-center shadow-sm group-hover:scale-105 transition-transform">
+                    <span class="font-display font-bold text-ink text-lg">RK</span>
                 </div>
-                <div class="leading-tight">
-                    <span class="font-serif font-semibold text-charcoal text-lg tracking-wide">Rubung Kuning</span>
-                    <span class="block text-[10px] tracking-[0.25em] uppercase text-slate font-medium">Batik
-                        Premium</span>
+                <div>
+                    <div class="flex items-center gap-2">
+                        <span class="font-bold text-ink text-base tracking-tight">Batik Rubung Kuning</span>
+                        <span
+                            class="hidden sm:inline-block text-[10px] font-bold uppercase tracking-wider px-2 py-0.5 rounded-full bg-sunsoft text-golddeep border border-amber-300">
+                            Official
+                        </span>
+                    </div>
+                    <p class="text-xs text-muted">Galeri &amp; Katalog Digital</p>
                 </div>
             </a>
 
-            {{-- Desktop Menu --}}
-            <ul class="hidden md:flex items-center gap-8 text-sm font-medium tracking-wide text-slate">
-                <li><a href="#about" class="hover:text-gold transition-colors">Tentang</a></li>
-                <li><a href="#vision" class="hover:text-gold transition-colors">Visi & Misi</a></li>
-                <li><a href="#values" class="hover:text-gold transition-colors">Filosofi</a></li>
-                <li><a href="#collection" class="hover:text-gold transition-colors">Koleksi</a></li>
-                <li><a href="#why" class="hover:text-gold transition-colors">Keunggulan</a></li>
-                <li><a href="#contact"
-                        class="px-5 py-2 border border-gold text-gold rounded-full
-                                                 hover:bg-gold hover:text-ivory transition-all duration-300">
-                        Hubungi Kami
-                    </a></li>
-            </ul>
+            <nav class="hidden lg:flex items-center gap-7 text-sm font-medium text-muted">
+                <a href="#metrics" class="hover:text-ink transition-colors">Statistik</a>
+                <a href="#store-info" class="hover:text-ink transition-colors">Informasi Toko</a>
+                <a href="#catalog" class="hover:text-ink transition-colors">Produk</a>
+                <a href="#download-app" class="hover:text-ink transition-colors">Download Apps</a>
+                <a href="#contact" class="hover:text-ink transition-colors">Kontak</a>
+            </nav>
 
-            {{-- Mobile Hamburger --}}
-            <button id="menuBtn" class="md:hidden text-charcoal focus:outline-none">
-                <i data-lucide="menu" class="w-6 h-6"></i>
+            <div class="hidden lg:flex items-center gap-3">
+                <a href="#download-app"
+                    class="px-4 py-2 text-sm font-semibold text-ink bg-sunsoft hover:bg-sunlight border border-amber-300 rounded-lg transition-colors">
+                    Unduh Aplikasi
+                </a>
+                <a href="#contact"
+                    class="px-4 py-2 text-sm font-semibold text-ink bg-sunlight hover:bg-amberbrand rounded-lg shadow-sm transition-colors">
+                    Hubungi Toko
+                </a>
+            </div>
+
+            <button id="menuBtn" type="button" aria-label="Buka Menu"
+                class="lg:hidden p-2 rounded-lg border border-amber-200 text-ink hover:bg-sunsoft transition-colors">
+                <i data-lucide="menu" class="w-5 h-5"></i>
             </button>
         </div>
 
-        {{-- Mobile Menu --}}
-        <div id="mobileMenu" class="md:hidden hidden bg-ivory/95 backdrop-blur-md border-t border-gold/20">
-            <ul class="flex flex-col items-center gap-4 py-8 text-sm font-medium text-slate">
-                <li><a href="#about" class="hover:text-gold transition-colors">Tentang</a></li>
-                <li><a href="#vision" class="hover:text-gold transition-colors">Visi & Misi</a></li>
-                <li><a href="#values" class="hover:text-gold transition-colors">Filosofi</a></li>
-                <li><a href="#collection" class="hover:text-gold transition-colors">Koleksi</a></li>
-                <li><a href="#why" class="hover:text-gold transition-colors">Keunggulan</a></li>
-                <li><a href="#contact"
-                        class="px-5 py-2 border border-gold text-gold rounded-full
-                                                 hover:bg-gold hover:text-ivory transition-all">Hubungi
-                        Kami</a></li>
-            </ul>
+        {{-- Mobile Drawer --}}
+        <div id="mobileMenu" class="lg:hidden hidden bg-pure border-t border-amber-200/70">
+            <div class="px-6 py-5 space-y-3 text-sm font-medium text-muted">
+                <a href="#metrics" class="block py-1.5 hover:text-ink">Statistik Pengguna &amp; Produk</a>
+                <a href="#store-info" class="block py-1.5 hover:text-ink">Informasi Toko</a>
+                <a href="#catalog" class="block py-1.5 hover:text-ink">Katalog Produk</a>
+                <a href="#download-app" class="block py-1.5 hover:text-ink">Download Apps</a>
+                <a href="#contact" class="block py-1.5 hover:text-ink">Kontak &amp; Pesan</a>
+                <div class="pt-3 flex gap-3 border-t border-amber-100">
+                    <a href="#download-app"
+                        class="flex-1 text-center py-2.5 rounded-lg bg-sunsoft border border-amber-300 font-semibold text-ink">
+                        Apps
+                    </a>
+                    <a href="#contact"
+                        class="flex-1 text-center py-2.5 rounded-lg bg-sunlight font-semibold text-ink">
+                        Kontak
+                    </a>
+                </div>
+            </div>
         </div>
-    </nav>
+    </header>
 
+    <main id="top">
+        {{-- ============================================================ --}}
+        {{-- HERO SECTION (SAAS SPLIT LAYOUT)                              --}}
+        {{-- ============================================================ --}}
+        <section class="relative overflow-hidden bg-pure saas-grid-bg border-b border-amber-100">
+            <div class="max-w-7xl mx-auto px-6 lg:px-10 py-16 lg:py-24">
+                <div class="grid lg:grid-cols-12 gap-12 items-center">
+                    {{-- Left Content --}}
+                    <div class="lg:col-span-6 space-y-6">
+                        <div
+                            class="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-sunsoft border border-amber-300 text-xs font-semibold text-golddeep">
+                            <span class="w-2 h-2 rounded-full bg-amberbrand"></span>
+                            Platform Katalog &amp; Pemesanan Batik Rubung Kuning
+                        </div>
 
-    {{-- ============================================================ --}}
-    {{-- HERO / COVER                                                  --}}
-    {{-- ============================================================ --}}
-    {{-- ============================================================ --}}
-    {{-- HERO SECTION (UPGRADED PREMIUM VERSION)                       --}}
-    {{-- ============================================================ --}}
-    <section id="hero" class="relative min-h-screen flex items-center overflow-hidden bg-ivory">
+                        <h1 class="text-4xl sm:text-5xl font-extrabold tracking-tight text-ink leading-[1.12]">
+                            Batik Berkualitas Tinggi, <br>
+                            <span class="font-display italic font-bold text-golddeep">Terhubung &amp; Terkelola</span>
+                        </h1>
 
-        {{-- 1. Subtle Background Pattern & Gradient --}}
-        <div class="absolute inset-0 opacity-[0.03]"
-            style="background-image: radial-gradient(#D4A843 1px, transparent 1px); background-size: 24px 24px;">
-        </div>
-        <div
-            class="absolute top-0 right-0 w-1/2 h-full bg-gradient-to-l from-gold/5 to-transparent pointer-events-none">
-        </div>
+                        <p class="text-base sm:text-lg text-muted leading-relaxed max-w-xl">
+                            Batik Rubung Kuning menghadirkan koleksi batik tulis, cap, busana siap pakai, dan
+                            kebutuhan seragam korporat dengan pengalaman belanja digital yang cepat, transparan, dan
+                            terintegrasi langsung dengan galeri kami.
+                        </p>
 
-        <div class="relative z-10 max-w-7xl mx-auto px-6 lg:px-12 py-32 w-full">
-            <div class="grid lg:grid-cols-2 gap-12 lg:gap-20 items-center">
+                        <div class="flex flex-wrap items-center gap-3.5 pt-1">
+                            <a href="#download-app"
+                                class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-sunlight hover:bg-amberbrand text-ink font-bold text-sm shadow-sm transition-all">
+                                <i data-lucide="smartphone" class="w-4 h-4"></i>
+                                Download Apps Sekarang
+                            </a>
+                            <a href="#catalog"
+                                class="inline-flex items-center gap-2 px-6 py-3.5 rounded-xl bg-pure hover:bg-sunsoft text-ink font-semibold text-sm border border-amber-300 transition-colors">
+                                Jelajahi Produk
+                                <i data-lucide="arrow-right" class="w-4 h-4"></i>
+                            </a>
+                        </div>
 
-                {{-- LEFT COLUMN: Text & CTA --}}
-                <div class="space-y-8 order-2 lg:order-1">
-
-                    {{-- Heading --}}
-                    <h1 class="fade-up font-serif text-5xl md:text-6xl lg:text-7xl font-bold leading-[1.1] text-charcoal"
-                        style="transition-delay: 200ms;">
-                        Sentuhan Emas <br>
-                        <span class="text-gold italic">Warisan</span> Nusantara
-                    </h1>
-
-                    {{-- Subheading --}}
-                    <p class="fade-up text-slate text-lg md:text-xl font-light leading-relaxed max-w-md"
-                        style="transition-delay: 300ms;">
-                        Batik Rubung Kuning menghadirkan keanggunan kontemporer.
-                        Setiap helai kain adalah mahakarya yang menceritakan identitas,
-                        kualitas, dan peradaban.
-                    </p>
-
-                    {{-- CTA Buttons --}}
-                    <div class="fade-up flex flex-wrap gap-4" style="transition-delay: 400ms;">
-                        <a href="#collection"
-                            class="group relative px-8 py-4 bg-charcoal text-ivory font-medium rounded-full overflow-hidden transition-all duration-300 hover:shadow-xl hover:shadow-charcoal/20">
-                            <span class="relative z-10 flex items-center gap-2">
-                                Lihat Koleksi
-                                <i data-lucide="arrow-right"
-                                    class="w-4 h-4 group-hover:translate-x-1 transition-transform"></i>
+                        {{-- Quick Trust Strip --}}
+                        <div class="pt-4 flex flex-wrap items-center gap-6 text-xs font-medium text-muted">
+                            <span class="inline-flex items-center gap-1.5">
+                                <i data-lucide="check-circle-2" class="w-4 h-4 text-golddeep"></i>
+                                Pengrajin Terverifikasi
                             </span>
-                            <div
-                                class="absolute inset-0 bg-gold transform scale-x-0 group-hover:scale-x-100 transition-transform origin-left duration-300">
+                            <span class="inline-flex items-center gap-1.5">
+                                <i data-lucide="check-circle-2" class="w-4 h-4 text-golddeep"></i>
+                                Katalog Stok Real-Time
+                            </span>
+                            <span class="inline-flex items-center gap-1.5">
+                                <i data-lucide="check-circle-2" class="w-4 h-4 text-golddeep"></i>
+                                Dukungan Pesanan Korporat
+                            </span>
+                        </div>
+                    </div>
+
+                    {{-- Right Visual (Dummy SVG Dashboard + Batik Preview) --}}
+                    <div class="lg:col-span-6">
+                        <div class="bg-pure rounded-2xl border border-amber-200 shadow-xl shadow-amber-500/5 p-5 sm:p-6">
+                            <div class="flex items-center justify-between pb-4 mb-5 border-b border-amber-100">
+                                <div>
+                                    <p class="text-xs font-semibold uppercase tracking-wider text-golddeep">Ringkasan
+                                        Operasional</p>
+                                    <h2 class="text-base font-bold text-ink">Rubung Kuning Storefront</h2>
+                                </div>
+                                <span
+                                    class="px-3 py-1 rounded-full text-xs font-semibold bg-sunsoft text-golddeep border border-amber-200">
+                                    Aktif • Solo &amp; Online
+                                </span>
                             </div>
-                        </a>
-                        <a href="#about"
-                            class="px-8 py-4 border border-charcoal/20 text-charcoal font-medium rounded-full
-                                  hover:border-gold hover:text-gold hover:bg-gold/5 transition-all duration-300 flex items-center gap-2">
-                            <i data-lucide="play-circle" class="w-5 h-5"></i>
-                            Tentang Kami
-                        </a>
-                    </div>
 
-                </div>
+                            {{-- Dummy Batik Showcase Card (Inline SVG Data URI) --}}
+                            <div class="rounded-xl overflow-hidden border border-amber-200/80 bg-sunsoft mb-5">
+                                <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 800 380'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0%25' stop-color='%23FFFBEB'/%3E%3Cstop offset='100%25' stop-color='%23FEF08A'/%3E%3C/linearGradient%3E%3Cpattern id='p' width='48' height='48' patternUnits='userSpaceOnUse'%3E%3Ccircle cx='24' cy='24' r='14' fill='none' stroke='%23CA8A04' stroke-opacity='0.22' stroke-width='2'/%3E%3Cpath d='M24 6 L30 24 L24 42 L18 24 Z' fill='%23EAB308' fill-opacity='0.18'/%3E%3C/pattern%3E%3C/defs%3E%3Crect width='800' height='380' fill='url(%23g)'/%3E%3Crect width='800' height='380' fill='url(%23p)'/%3E%3Crect x='28' y='28' width='744' height='324' rx='16' fill='%23FFFFFF' fill-opacity='0.88' stroke='%23FACC15' stroke-width='2'/%3E%3Ctext x='64' y='96' font-family='sans-serif' font-size='14' font-weight='700' fill='%23CA8A04'%3EDUMMY PREVIEW • KOLEKSI UNGGULAN%3C/text%3E%3Ctext x='64' y='142' font-family='Georgia, serif' font-size='34' font-weight='700' fill='%23111827'%3EBatik Rubung Kuning%3C/text%3E%3Ctext x='64' y='180' font-family='sans-serif' font-size='17' fill='%234B5563'%3EMotif Klasik &amp; Kontemporer • Katun Primissima &amp; Sutra%3C/text%3E%3Crect x='64' y='215' width='190' height='42' rx='10' fill='%23FACC15'/%3E%3Ctext x='92' y='241' font-family='sans-serif' font-size='14' font-weight='700' fill='%23111827'%3E12.480+ Pengguna%3C/text%3E%3Crect x='272' y='215' width='190' height='42' rx='10' fill='%23FFFBEB' stroke='%23EAB308'/%3E%3Ctext x='300' y='241' font-family='sans-serif' font-size='14' font-weight='700' fill='%23111827'%3E640+ Produk Aktif%3C/text%3E%3C/svg%3E"
+                                    alt="Dummy Preview Batik Rubung Kuning" class="w-full h-48 sm:h-56 object-cover">
+                            </div>
 
-                {{-- RIGHT COLUMN: Visual Composition --}}
-                <div class="relative order-1 lg:order-2 fade-up" style="transition-delay: 300ms;">
-                    {{-- Decorative Frame --}}
-                    <div
-                        class="absolute -top-6 -right-6 w-full h-full border-2 border-gold/30 rounded-3xl hidden lg:block">
-                    </div>
-
-                    {{-- Main Image --}}
-                    <div
-                        class="relative rounded-3xl overflow-hidden shadow-2xl shadow-gold/10 aspect-[4/5] lg:aspect-[3/4]">
-                        <img src="https://images.unsplash.com/photo-1680345575812-2f6878d7d775?q=80&w=387"
-                            alt="Batik Rubung Kuning Premium"
-                            class="w-full h-full object-cover hover:scale-105 transition-transform duration-700">
-
-                        {{-- Gradient Overlay at bottom for text readability if needed --}}
-                        <div class="absolute inset-0 bg-gradient-to-t from-charcoal/40 via-transparent to-transparent">
+                            <div class="grid grid-cols-2 gap-4">
+                                <div class="p-4 rounded-xl bg-surface border border-amber-200/70">
+                                    <p class="text-xs font-medium text-muted">Total Pengguna Terdaftar</p>
+                                    <p class="text-2xl font-extrabold text-ink mt-1">12.480</p>
+                                    <p class="text-xs font-semibold text-golddeep mt-1">+18,4% bulan ini</p>
+                                </div>
+                                <div class="p-4 rounded-xl bg-surface border border-amber-200/70">
+                                    <p class="text-xs font-medium text-muted">Total Produk Tersedia</p>
+                                    <p class="text-2xl font-extrabold text-ink mt-1">640</p>
+                                    <p class="text-xs font-semibold text-golddeep mt-1">4 kategori utama</p>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
-
             </div>
-        </div>
+        </section>
 
-        {{-- Scroll indicator --}}
-        <div class="absolute bottom-10 left-1/2 -translate-x-1/2 flex flex-col items-center gap-3 text-slate/50 z-20">
-            <span class="text-[10px] tracking-[0.3em] uppercase font-medium">Scroll</span>
-            <div class="w-px h-12 bg-gradient-to-b from-gold via-gold/50 to-transparent animate-pulse"></div>
-        </div>
-    </section>
-
-
-    {{-- ============================================================ --}}
-    {{-- ABOUT US                                                      --}}
-    {{-- ============================================================ --}}
-    <section id="about" class="py-24 md:py-32">
-        <div class="max-w-7xl mx-auto px-6 lg:px-12">
-            <div class="grid md:grid-cols-2 gap-16 items-center">
-                {{-- Image --}}
-                <div class="fade-up relative">
-                    <div class="absolute -top-4 -left-4 w-full h-full border border-gold/30 rounded-2xl"></div>
-                    <img src="https://images.unsplash.com/photo-1761516659497-8478e39d2b26?q=80&w=580"
-                        alt="Proses Membatik" class="relative rounded-2xl shadow-xl w-full h-[500px] object-cover">
-                    {{-- Floating badge --}}
-                    <div class="absolute -bottom-6 -right-6 bg-gold text-ivory px-6 py-4 rounded-xl shadow-lg">
-                        <span class="font-serif text-3xl font-bold">10+</span>
-                        <span class="block text-xs tracking-wider uppercase">Tahun Pengalaman</span>
+        {{-- ============================================================ --}}
+        {{-- TOTAL PENGGUNA & TOTAL PRODUK (KPI METRICS)                   --}}
+        {{-- ============================================================ --}}
+        <section id="metrics" class="py-16 lg:py-20 bg-surface border-b border-amber-100">
+            <div class="max-w-7xl mx-auto px-6 lg:px-10">
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-10 reveal">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-golddeep">Metrik Utama</span>
+                        <h2 class="text-3xl sm:text-4xl font-extrabold text-ink mt-1">
+                            Total Pengguna &amp; Total Produk
+                        </h2>
                     </div>
+                    <p class="text-sm text-muted max-w-md">
+                        Data ringkas performa ekosistem Batik Rubung Kuning yang memadukan galeri fisik dan aplikasi
+                        digital.
+                    </p>
                 </div>
 
-                {{-- Text --}}
-                <div class="fade-up">
-                    <p class="text-gold font-medium tracking-[0.3em] uppercase text-xs mb-3">Tentang Kami</p>
-                    <h2 class="font-serif text-4xl md:text-5xl font-bold text-charcoal mb-6 gold-line">
-                        Warisan yang<br>Hidup Kembali
-                    </h2>
-                    <p class="text-slate leading-relaxed mb-6">
-                        Batik Rubung Kuning adalah rumah mode dan tekstil premium yang berdedikasi untuk
-                        melestarikan warisan budaya Nusantara melalui lensa estetika kontemporer. Nama
-                        <strong class="text-charcoal">"Rubung Kuning"</strong> terinspirasi dari keindahan alam
-                        dan filosofi warna kuning dalam budaya Jawa yang melambangkan kemakmuran, kehangatan,
-                        dan keagungan.
-                    </p>
-                    <p class="text-slate leading-relaxed mb-8">
-                        Kami tidak sekadar memproduksi kain batik — kami menciptakan karya seni yang dapat
-                        dikenakan. Dengan memadukan teknik tradisional yang otentik dan desain yang relevan
-                        dengan gaya hidup modern, Batik Rubung Kuning hadir sebagai pilihan utama bagi
-                        individu dan korporasi yang menghargai kualitas, kehalusan, dan nilai budaya.
-                    </p>
-                    <div class="flex gap-12">
+                <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {{-- Metric 1: Total Pengguna --}}
+                    <div class="reveal bg-pure rounded-2xl p-6 border border-amber-200/80 shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-xs font-bold uppercase tracking-wider text-muted">Total Pengguna</span>
+                            <div class="w-10 h-10 rounded-xl bg-sunsoft flex items-center justify-center text-golddeep">
+                                <i data-lucide="users" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-extrabold text-ink">12.480</p>
+                        <p class="text-xs text-muted mt-2">
+                            <span class="font-bold text-golddeep">8.920</span> pengguna aplikasi &amp;
+                            <span class="font-bold text-ink">3.560</span> akun web/mitra
+                        </p>
+                    </div>
+
+                    {{-- Metric 2: Total Produk --}}
+                    <div class="reveal bg-pure rounded-2xl p-6 border border-amber-200/80 shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-xs font-bold uppercase tracking-wider text-muted">Total Produk</span>
+                            <div class="w-10 h-10 rounded-xl bg-sunsoft flex items-center justify-center text-golddeep">
+                                <i data-lucide="package" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-extrabold text-ink">640</p>
+                        <p class="text-xs text-muted mt-2">
+                            <span class="font-bold text-golddeep">512</span> siap kirim &amp;
+                            <span class="font-bold text-ink">128</span> edisi terbatas/custom
+                        </p>
+                    </div>
+
+                    {{-- Metric 3: Total Unduhan App --}}
+                    <div class="reveal bg-pure rounded-2xl p-6 border border-amber-200/80 shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-xs font-bold uppercase tracking-wider text-muted">Unduhan Aplikasi</span>
+                            <div class="w-10 h-10 rounded-xl bg-sunsoft flex items-center justify-center text-golddeep">
+                                <i data-lucide="download" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-extrabold text-ink">9.350+</p>
+                        <p class="text-xs text-muted mt-2">
+                            Tersedia di Android &amp; iOS dengan rating rata-rata <span class="font-bold text-ink">4,9/5</span>
+                        </p>
+                    </div>
+
+                    {{-- Metric 4: Klien Korporat --}}
+                    <div class="reveal bg-pure rounded-2xl p-6 border border-amber-200/80 shadow-sm">
+                        <div class="flex items-center justify-between mb-4">
+                            <span class="text-xs font-bold uppercase tracking-wider text-muted">Klien &amp; Komunitas</span>
+                            <div class="w-10 h-10 rounded-xl bg-sunsoft flex items-center justify-center text-golddeep">
+                                <i data-lucide="building-2" class="w-5 h-5"></i>
+                            </div>
+                        </div>
+                        <p class="text-3xl font-extrabold text-ink">145+</p>
+                        <p class="text-xs text-muted mt-2">
+                            Instansi &amp; perusahaan serta <span class="font-bold text-ink">50+</span> pengrajin binaan
+                        </p>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        {{-- ============================================================ --}}
+        {{-- INFORMASI TOKO                                                --}}
+        {{-- ============================================================ --}}
+        <section id="store-info" class="py-20 lg:py-24 bg-pure border-b border-amber-100">
+            <div class="max-w-7xl mx-auto px-6 lg:px-10">
+                <div class="grid lg:grid-cols-12 gap-12 items-start">
+                    {{-- Left: Store Visual + Overview --}}
+                    <div class="lg:col-span-5 space-y-6 reveal">
+                        <div class="rounded-2xl overflow-hidden border border-amber-200 bg-sunsoft">
+                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 640 420'%3E%3Crect width='640' height='420' fill='%23FFFBEB'/%3E%3Crect x='24' y='24' width='592' height='372' rx='18' fill='%23FFFFFF' stroke='%23FACC15' stroke-width='2'/%3E%3Ccircle cx='320' cy='155' r='54' fill='%23FEF08A' stroke='%23EAB308' stroke-width='2'/%3E%3Ctext x='320' y='166' text-anchor='middle' font-family='Georgia, serif' font-size='32' font-weight='700' fill='%23111827'%3ERK%3C/text%3E%3Ctext x='320' y='248' text-anchor='middle' font-family='sans-serif' font-size='22' font-weight='700' fill='%23111827'%3EGaleri &amp; Workshop Solo%3C/text%3E%3Ctext x='320' y='278' text-anchor='middle' font-family='sans-serif' font-size='14' fill='%234B5563'%3EJl. Batik Indah No. 88, Surakarta, Jawa Tengah%3C/text%3E%3Crect x='170' y='308' width='300' height='36' rx='18' fill='%23FACC15'/%3E%3Ctext x='320' y='331' text-anchor='middle' font-family='sans-serif' font-size='13' font-weight='700' fill='%23111827'%3EDUMMY STOREFRONT ASSET%3C/text%3E%3C/svg%3E"
+                                alt="Dummy Foto Galeri Batik Rubung Kuning" class="w-full h-64 object-cover">
+                        </div>
+
                         <div>
-                            <span class="font-serif text-3xl font-bold text-gold">500+</span>
-                            <p class="text-sm text-slate mt-1">Motif Eksklusif</p>
-                        </div>
-                        <div>
-                            <span class="font-serif text-3xl font-bold text-gold">50+</span>
-                            <p class="text-sm text-slate mt-1">Pengrajin Lokal</p>
-                        </div>
-                        <div>
-                            <span class="font-serif text-3xl font-bold text-gold">1K+</span>
-                            <p class="text-sm text-slate mt-1">Klien Puas</p>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </section>
-
-
-    {{-- ============================================================ --}}
-    {{-- VISI & MISI                                                   --}}
-    {{-- ============================================================ --}}
-    <section id="vision" class="py-24 md:py-32 bg-cream">
-        <div class="max-w-7xl mx-auto px-6 lg:px-12">
-            <div class="text-center mb-16 fade-up">
-                <p class="text-gold font-medium tracking-[0.3em] uppercase text-xs mb-3">Arah & Tujuan</p>
-                <h2 class="font-serif text-4xl md:text-5xl font-bold text-charcoal gold-line-center">
-                    Visi & Misi
-                </h2>
-            </div>
-
-            <div class="grid md:grid-cols-2 gap-12">
-                {{-- Visi --}}
-                <div
-                    class="fade-up bg-ivory rounded-2xl p-10 shadow-sm border border-gold/10
-                            hover:shadow-lg hover:border-gold/30 transition-all duration-500">
-                    <div class="w-14 h-14 rounded-full bg-gold/10 flex items-center justify-center mb-6">
-                        <i data-lucide="eye" class="w-6 h-6 text-gold"></i>
-                    </div>
-                    <h3 class="font-serif text-2xl font-bold text-charcoal mb-4">Visi Kami</h3>
-                    <p class="text-slate leading-relaxed">
-                        Menjadi brand batik premium terdepan yang diakui secara nasional dan internasional,
-                        serta menjadi jembatan yang menghubungkan warisan leluhur dengan gaya hidup modern
-                        yang berkelanjutan.
-                    </p>
-                </div>
-
-                {{-- Misi --}}
-                <div
-                    class="fade-up bg-ivory rounded-2xl p-10 shadow-sm border border-gold/10
-                            hover:shadow-lg hover:border-gold/30 transition-all duration-500">
-                    <div class="w-14 h-14 rounded-full bg-gold/10 flex items-center justify-center mb-6">
-                        <i data-lucide="target" class="w-6 h-6 text-gold"></i>
-                    </div>
-                    <h3 class="font-serif text-2xl font-bold text-charcoal mb-4">Misi Kami</h3>
-                    <ul class="space-y-4 text-slate">
-                        <li class="flex gap-3">
-                            <span class="mt-1.5 w-2 h-2 rounded-full bg-gold flex-shrink-0"></span>
-                            <span><strong class="text-charcoal">Kualitas Tanpa Kompromi</strong> — Material terbaik dan
-                                pengerjaan presisi.</span>
-                        </li>
-                        <li class="flex gap-3">
-                            <span class="mt-1.5 w-2 h-2 rounded-full bg-gold flex-shrink-0"></span>
-                            <span><strong class="text-charcoal">Desain Kontemporer</strong> — Menghormati pakem
-                                tradisional, relevan untuk masa kini.</span>
-                        </li>
-                        <li class="flex gap-3">
-                            <span class="mt-1.5 w-2 h-2 rounded-full bg-gold flex-shrink-0"></span>
-                            <span><strong class="text-charcoal">Pemberdayaan & Keberlanjutan</strong> — Mendukung
-                                pengrajin lokal & produksi ramah lingkungan.</span>
-                        </li>
-                        <li class="flex gap-3">
-                            <span class="mt-1.5 w-2 h-2 rounded-full bg-gold flex-shrink-0"></span>
-                            <span><strong class="text-charcoal">Pelayanan Eksklusif</strong> — Pengalaman personal dan
-                                profesional bagi setiap klien.</span>
-                        </li>
-                    </ul>
-                </div>
-            </div>
-        </div>
-    </section>
-
-
-    {{-- ============================================================ --}}
-    {{-- FILOSOFI & NILAI                                              --}}
-    {{-- ============================================================ --}}
-    <section id="values" class="py-24 md:py-32">
-        <div class="max-w-7xl mx-auto px-6 lg:px-12">
-            <div class="text-center mb-16 fade-up">
-                <p class="text-gold font-medium tracking-[0.3em] uppercase text-xs mb-3">The Rubung Kuning Values</p>
-                <h2 class="font-serif text-4xl md:text-5xl font-bold text-charcoal gold-line-center">
-                    Filosofi & Nilai
-                </h2>
-            </div>
-
-            <div class="grid md:grid-cols-3 gap-8">
-                {{-- Putih --}}
-                <div class="fade-up text-center group">
-                    <div
-                        class="w-24 h-24 mx-auto rounded-full bg-ivory border-2 border-gold/30
-                                flex items-center justify-center mb-6
-                                group-hover:bg-gold group-hover:border-gold transition-all duration-500">
-                        <i data-lucide="shield-check"
-                            class="w-8 h-8 text-gold group-hover:text-ivory transition-colors duration-500"></i>
-                    </div>
-                    <h3 class="font-serif text-xl font-bold text-charcoal mb-3">Autentisitas</h3>
-                    <p class="text-xs tracking-[0.2em] uppercase text-gold mb-3">Putih</p>
-                    <p class="text-slate text-sm leading-relaxed">
-                        Seperti warna dasar kain kami yang suci, kami menjunjung tinggi kejujuran dalam proses
-                        kreasi dan keaslian motif warisan.
-                    </p>
-                </div>
-
-                {{-- Kuning --}}
-                <div class="fade-up text-center group">
-                    <div
-                        class="w-24 h-24 mx-auto rounded-full bg-ivory border-2 border-gold/30
-                                flex items-center justify-center mb-6
-                                group-hover:bg-gold group-hover:border-gold transition-all duration-500">
-                        <i data-lucide="sun"
-                            class="w-8 h-8 text-gold group-hover:text-ivory transition-colors duration-500"></i>
-                    </div>
-                    <h3 class="font-serif text-xl font-bold text-charcoal mb-3">Kemakmuran & Kehangatan</h3>
-                    <p class="text-xs tracking-[0.2em] uppercase text-gold mb-3">Kuning</p>
-                    <p class="text-slate text-sm leading-relaxed">
-                        Melambangkan energi positif, kesuksesan, dan kehangatan yang kami harapkan dapat
-                        dirasakan oleh siapa pun yang mengenakan karya kami.
-                    </p>
-                </div>
-
-                {{-- Emas --}}
-                <div class="fade-up text-center group">
-                    <div
-                        class="w-24 h-24 mx-auto rounded-full bg-ivory border-2 border-gold/30
-                                flex items-center justify-center mb-6
-                                group-hover:bg-gold group-hover:border-gold transition-all duration-500">
-                        <i data-lucide="gem"
-                            class="w-8 h-8 text-gold group-hover:text-ivory transition-colors duration-500"></i>
-                    </div>
-                    <h3 class="font-serif text-xl font-bold text-charcoal mb-3">Keanggunan</h3>
-                    <p class="text-xs tracking-[0.2em] uppercase text-gold mb-3">Emas</p>
-                    <p class="text-slate text-sm leading-relaxed">
-                        Refleksi dari profesionalisme dan dedikasi kami terhadap detail, memastikan setiap
-                        helai benang memiliki nilai estetika yang tinggi.
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-
-    {{-- ============================================================ --}}
-    {{-- KOLEKSI & PRODUK                                              --}}
-    {{-- ============================================================ --}}
-    <section id="collection" class="py-24 md:py-32 bg-cream">
-        <div class="max-w-7xl mx-auto px-6 lg:px-12">
-            <div class="text-center mb-16 fade-up">
-                <p class="text-gold font-medium tracking-[0.3em] uppercase text-xs mb-3">Produk Kami</p>
-                <h2 class="font-serif text-4xl md:text-5xl font-bold text-charcoal gold-line-center">
-                    Koleksi
-                </h2>
-            </div>
-
-            <div class="grid md:grid-cols-2 lg:grid-cols-4 gap-6">
-                {{-- Card 1 --}}
-                <div class="fade-up group cursor-pointer">
-                    <div class="relative overflow-hidden rounded-2xl mb-5 aspect-[3/4]">
-                        <img src="https://images.unsplash.com/photo-1594040226829-7f251ab46d80?w=600&q=80"
-                            alt="Batik Tulis"
-                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
-                        <div
-                            class="absolute inset-0 bg-gradient-to-t from-charcoal/60 to-transparent
-                                    opacity-0 group-hover:opacity-100 transition-opacity duration-500
-                                    flex items-end p-6">
-                            <span class="text-ivory text-sm font-medium">Lihat Detail →</span>
+                            <span class="text-xs font-bold uppercase tracking-widest text-golddeep">Informasi Toko</span>
+                            <h2 class="text-3xl font-extrabold text-ink mt-1">
+                                Galeri &amp; Pusat Layanan Batik Rubung Kuning
+                            </h2>
+                            <p class="text-sm sm:text-base text-muted leading-relaxed mt-3">
+                                Kami melayani pembelian satuan, konsultasi bahan dan motif, hingga pengadaan seragam
+                                instansi maupun suvenir resmi. Setiap produk melewati proses kurasi kualitas kain dan
+                                pewarnaan sebelum masuk katalog toko.
+                            </p>
                         </div>
                     </div>
-                    <h3 class="font-serif text-lg font-bold text-charcoal">The Heritage Collection</h3>
-                    <p class="text-slate text-sm mt-1">Batik Tulis Premium</p>
-                </div>
 
-                {{-- Card 2 --}}
-                <div class="fade-up group cursor-pointer">
-                    <div class="relative overflow-hidden rounded-2xl mb-5 aspect-[3/4]">
-                        <img src="https://images.unsplash.com/photo-1596755094514-f87e34085b2c?w=600&q=80"
-                            alt="Batik Corporate"
-                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
-                        <div
-                            class="absolute inset-0 bg-gradient-to-t from-charcoal/60 to-transparent
-                                    opacity-0 group-hover:opacity-100 transition-opacity duration-500
-                                    flex items-end p-6">
-                            <span class="text-ivory text-sm font-medium">Lihat Detail →</span>
-                        </div>
-                    </div>
-                    <h3 class="font-serif text-lg font-bold text-charcoal">The Corporate Line</h3>
-                    <p class="text-slate text-sm mt-1">Batik Cap & Printing Premium</p>
-                </div>
-
-                {{-- Card 3 --}}
-                <div class="fade-up group cursor-pointer">
-                    <div class="relative overflow-hidden rounded-2xl mb-5 aspect-[3/4]">
-                        <img src="https://images.unsplash.com/photo-1558171813-4c088753af8f?w=600&q=80"
-                            alt="Ready to Wear"
-                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
-                        <div
-                            class="absolute inset-0 bg-gradient-to-t from-charcoal/60 to-transparent
-                                    opacity-0 group-hover:opacity-100 transition-opacity duration-500
-                                    flex items-end p-6">
-                            <span class="text-ivory text-sm font-medium">Lihat Detail →</span>
-                        </div>
-                    </div>
-                    <h3 class="font-serif text-lg font-bold text-charcoal">Everyday Elegance</h3>
-                    <p class="text-slate text-sm mt-1">Ready-to-Wear</p>
-                </div>
-
-                {{-- Card 4 --}}
-                <div class="fade-up group cursor-pointer">
-                    <div class="relative overflow-hidden rounded-2xl mb-5 aspect-[3/4]">
-                        <img src="https://images.unsplash.com/photo-1606760227091-3dd870d97f1d?w=600&q=80"
-                            alt="Home & Accessories"
-                            class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-700">
-                        <div
-                            class="absolute inset-0 bg-gradient-to-t from-charcoal/60 to-transparent
-                                    opacity-0 group-hover:opacity-100 transition-opacity duration-500
-                                    flex items-end p-6">
-                            <span class="text-ivory text-sm font-medium">Lihat Detail →</span>
-                        </div>
-                    </div>
-                    <h3 class="font-serif text-lg font-bold text-charcoal">Rubung Living</h3>
-                    <p class="text-slate text-sm mt-1">Home & Accessories</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-
-    {{-- ============================================================ --}}
-    {{-- KEUNGGULAN                                                    --}}
-    {{-- ============================================================ --}}
-    <section id="why" class="py-24 md:py-32">
-        <div class="max-w-7xl mx-auto px-6 lg:px-12">
-            <div class="text-center mb-16 fade-up">
-                <p class="text-gold font-medium tracking-[0.3em] uppercase text-xs mb-3">Mengapa Kami</p>
-                <h2 class="font-serif text-4xl md:text-5xl font-bold text-charcoal gold-line-center">
-                    Keunggulan Kami
-                </h2>
-            </div>
-
-            <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-8">
-                {{-- 1 --}}
-                <div
-                    class="fade-up text-center p-8 rounded-2xl bg-ivory border border-gold/10
-                            hover:border-gold/40 hover:shadow-lg transition-all duration-500">
-                    <div class="w-16 h-16 mx-auto rounded-xl bg-gold/10 flex items-center justify-center mb-5">
-                        <i data-lucide="award" class="w-7 h-7 text-gold"></i>
-                    </div>
-                    <h3 class="font-serif text-lg font-bold text-charcoal mb-3">Material Premium</h3>
-                    <p class="text-slate text-sm leading-relaxed">
-                        Sutra, Katun Primissima, dan Linen berkualitas tinggi yang nyaman di iklim tropis.
-                    </p>
-                </div>
-
-                {{-- 2 --}}
-                <div
-                    class="fade-up text-center p-8 rounded-2xl bg-ivory border border-gold/10
-                            hover:border-gold/40 hover:shadow-lg transition-all duration-500">
-                    <div class="w-16 h-16 mx-auto rounded-xl bg-gold/10 flex items-center justify-center mb-5">
-                        <i data-lucide="palette" class="w-7 h-7 text-gold"></i>
-                    </div>
-                    <h3 class="font-serif text-lg font-bold text-charcoal mb-3">Pewarnaan Berkualitas</h3>
-                    <p class="text-slate text-sm leading-relaxed">
-                        Pewarna color-fast yang ramah lingkungan, termasuk opsi pewarna alam untuk koleksi tertentu.
-                    </p>
-                </div>
-
-                {{-- 3 --}}
-                <div
-                    class="fade-up text-center p-8 rounded-2xl bg-ivory border border-gold/10
-                            hover:border-gold/40 hover:shadow-lg transition-all duration-500">
-                    <div class="w-16 h-16 mx-auto rounded-xl bg-gold/10 flex items-center justify-center mb-5">
-                        <i data-lucide="pen-tool" class="w-7 h-7 text-gold"></i>
-                    </div>
-                    <h3 class="font-serif text-lg font-bold text-charcoal mb-3">Custom & Personalisasi</h3>
-                    <p class="text-slate text-sm leading-relaxed">
-                        Desain motif eksklusif dan bordir personal untuk kebutuhan korporat dan souvenir premium.
-                    </p>
-                </div>
-
-                {{-- 4 --}}
-                <div
-                    class="fade-up text-center p-8 rounded-2xl bg-ivory border border-gold/10
-                            hover:border-gold/40 hover:shadow-lg transition-all duration-500">
-                    <div class="w-16 h-16 mx-auto rounded-xl bg-gold/10 flex items-center justify-center mb-5">
-                        <i data-lucide="gift" class="w-7 h-7 text-gold"></i>
-                    </div>
-                    <h3 class="font-serif text-lg font-bold text-charcoal mb-3">Kemasan Eksklusif</h3>
-                    <p class="text-slate text-sm leading-relaxed">
-                        Dikemas dalam packaging elegan yang siap menjadi hadiah berkesan (gifting-ready).
-                    </p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-
-    {{-- ============================================================ --}}
-    {{-- TESTIMONI                                                     --}}
-    {{-- ============================================================ --}}
-    <section class="py-24 md:py-32 bg-charcoal text-ivory relative overflow-hidden">
-        {{-- Decorative --}}
-        <div class="absolute top-0 right-0 w-96 h-96 bg-gold/5 rounded-full -translate-y-1/2 translate-x-1/2"></div>
-        <div class="absolute bottom-0 left-0 w-64 h-64 bg-gold/5 rounded-full translate-y-1/2 -translate-x-1/2"></div>
-
-        <div class="max-w-4xl mx-auto px-6 lg:px-12 text-center relative z-10 fade-up">
-            <i data-lucide="quote" class="w-12 h-12 text-gold/40 mx-auto mb-8"></i>
-            <blockquote class="font-serif text-2xl md:text-3xl italic leading-relaxed mb-8 text-ivory/90">
-                "Batik Rubung Kuning berhasil menerjemahkan visi perusahaan kami ke dalam seragam yang tidak
-                hanya formal, tetapi juga memiliki nilai seni dan kenyamanan yang luar biasa."
-            </blockquote>
-            <div class="flex items-center justify-center gap-4">
-                <img src="https://i.pravatar.cc/80?img=12" alt="Client"
-                    class="w-12 h-12 rounded-full border-2 border-gold/50">
-                <div class="text-left">
-                    <p class="font-semibold text-ivory">Ahmad Fauzan</p>
-                    <p class="text-sm text-ivory/50">CEO, PT Nusantara Jaya</p>
-                </div>
-            </div>
-        </div>
-    </section>
-
-
-    {{-- ============================================================ --}}
-    {{-- KONTAK / CTA                                                  --}}
-    {{-- ============================================================ --}}
-    <section id="contact" class="py-24 md:py-32">
-        <div class="max-w-7xl mx-auto px-6 lg:px-12">
-            <div class="grid md:grid-cols-2 gap-16 items-center">
-                {{-- Text --}}
-                <div class="fade-up">
-                    <p class="text-gold font-medium tracking-[0.3em] uppercase text-xs mb-3">Hubungi Kami</p>
-                    <h2 class="font-serif text-4xl md:text-5xl font-bold text-charcoal mb-6 gold-line">
-                        Mari<br>Berkolaborasi
-                    </h2>
-                    <p class="text-slate leading-relaxed mb-10">
-                        Kami siap menjadi mitra Anda dalam menghadirkan keanggunan warisan Nusantara.
-                        Untuk konsultasi desain, pemesanan korporat, atau kunjungan ke galeri kami,
-                        silakan hubungi kami.
-                    </p>
-
-                    <div class="space-y-6">
-                        <div class="flex items-start gap-4">
-                            <div
-                                class="w-10 h-10 rounded-full bg-gold/10 flex items-center justify-center flex-shrink-0">
-                                <i data-lucide="map-pin" class="w-4 h-4 text-gold"></i>
+                    {{-- Right: Store Details Cards --}}
+                    <div class="lg:col-span-7 grid sm:grid-cols-2 gap-5 reveal">
+                        <div class="p-6 rounded-2xl bg-surface border border-amber-200/80">
+                            <div class="w-10 h-10 rounded-xl bg-sunlight/30 flex items-center justify-center text-golddeep mb-4">
+                                <i data-lucide="map-pin" class="w-5 h-5"></i>
                             </div>
+                            <h3 class="font-bold text-ink text-base">Alamat Galeri Utama</h3>
+                            <p class="text-sm text-muted mt-1.5 leading-relaxed">
+                                Jl. Batik Indah No. 88, Kota Surakarta (Solo), Jawa Tengah 57100
+                            </p>
+                        </div>
+
+                        <div class="p-6 rounded-2xl bg-surface border border-amber-200/80">
+                            <div class="w-10 h-10 rounded-xl bg-sunlight/30 flex items-center justify-center text-golddeep mb-4">
+                                <i data-lucide="clock" class="w-5 h-5"></i>
+                            </div>
+                            <h3 class="font-bold text-ink text-base">Jam Operasional Toko</h3>
+                            <p class="text-sm text-muted mt-1.5 leading-relaxed">
+                                Senin – Sabtu: 08.30 – 17.30 WIB<br>
+                                Minggu &amp; Hari Libur: 10.00 – 15.00 WIB
+                            </p>
+                        </div>
+
+                        <div class="p-6 rounded-2xl bg-surface border border-amber-200/80">
+                            <div class="w-10 h-10 rounded-xl bg-sunlight/30 flex items-center justify-center text-golddeep mb-4">
+                                <i data-lucide="phone-call" class="w-5 h-5"></i>
+                            </div>
+                            <h3 class="font-bold text-ink text-base">Layanan Pelanggan &amp; WhatsApp</h3>
+                            <p class="text-sm text-muted mt-1.5 leading-relaxed">
+                                Telepon / WA: +62 812-3456-7890<br>
+                                Email: hello@rubungkuning.com
+                            </p>
+                        </div>
+
+                        <div class="p-6 rounded-2xl bg-surface border border-amber-200/80">
+                            <div class="w-10 h-10 rounded-xl bg-sunlight/30 flex items-center justify-center text-golddeep mb-4">
+                                <i data-lucide="truck" class="w-5 h-5"></i>
+                            </div>
+                            <h3 class="font-bold text-ink text-base">Pengiriman &amp; Pickup</h3>
+                            <p class="text-sm text-muted mt-1.5 leading-relaxed">
+                                Pengiriman ke seluruh Indonesia dengan kemasan pelindung aman atau ambil langsung di toko.
+                            </p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+
+        {{-- ============================================================ --}}
+        {{-- KATALOG PRODUK (RINGKAS & PROFESIONAL)                        --}}
+        {{-- ============================================================ --}}
+        <section id="catalog" class="py-20 lg:py-24 bg-surface border-b border-amber-100">
+            <div class="max-w-7xl mx-auto px-6 lg:px-10">
+                <div class="flex flex-col md:flex-row md:items-end justify-between gap-4 mb-12 reveal">
+                    <div>
+                        <span class="text-xs font-bold uppercase tracking-widest text-golddeep">Katalog Produk</span>
+                        <h2 class="text-3xl sm:text-4xl font-extrabold text-ink mt-1">
+                            Lini Produk Utama (640+ Item)
+                        </h2>
+                    </div>
+                    <p class="text-sm text-muted max-w-md">
+                        Seluruh koleksi menggunakan aset ilustrasi dummy sebagai pratinjau katalog sebelum sinkronisasi
+                        stok penuh.
+                    </p>
+                </div>
+
+                <div class="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+                    {{-- Produk 1 --}}
+                    <div class="reveal bg-pure rounded-2xl border border-amber-200/80 overflow-hidden shadow-sm flex flex-col">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 260'%3E%3Crect width='400' height='260' fill='%23FFFBEB'/%3E%3Crect x='20' y='20' width='360' height='220' rx='12' fill='%23FEF08A' fill-opacity='0.55' stroke='%23EAB308'/%3E%3Ctext x='200' y='118' text-anchor='middle' font-family='Georgia, serif' font-size='22' font-weight='700' fill='%23111827'%3EBatik Tulis Klasik%3C/text%3E%3Ctext x='200' y='148' text-anchor='middle' font-family='sans-serif' font-size='13' fill='%234B5563'%3EDUMMY ASSET • 140 PRODUK%3C/text%3E%3C/svg%3E"
+                            alt="Dummy Produk Batik Tulis" class="w-full h-44 object-cover border-b border-amber-100">
+                        <div class="p-5 flex-1 flex flex-col justify-between">
                             <div>
-                                <p class="font-semibold text-charcoal text-sm">Alamat</p>
-                                <p class="text-slate text-sm">Jl. Batik Indah No. 88, Solo, Jawa Tengah 57100</p>
+                                <span class="text-[11px] font-bold uppercase tracking-wider text-golddeep">140 Produk</span>
+                                <h3 class="font-bold text-ink text-lg mt-1">Batik Tulis Premium</h3>
+                                <p class="text-sm text-muted mt-1.5">
+                                    Karya tangan pengrajin pada katun primissima dan sutra dengan motif berkarakter.
+                                </p>
                             </div>
                         </div>
-                        <div class="flex items-start gap-4">
-                            <div
-                                class="w-10 h-10 rounded-full bg-gold/10 flex items-center justify-center flex-shrink-0">
-                                <i data-lucide="phone" class="w-4 h-4 text-gold"></i>
-                            </div>
+                    </div>
+
+                    {{-- Produk 2 --}}
+                    <div class="reveal bg-pure rounded-2xl border border-amber-200/80 overflow-hidden shadow-sm flex flex-col">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 260'%3E%3Crect width='400' height='260' fill='%23FFFBEB'/%3E%3Crect x='20' y='20' width='360' height='220' rx='12' fill='%23FDE047' fill-opacity='0.35' stroke='%23EAB308'/%3E%3Ctext x='200' y='118' text-anchor='middle' font-family='Georgia, serif' font-size='22' font-weight='700' fill='%23111827'%3ESeragam Korporat%3C/text%3E%3Ctext x='200' y='148' text-anchor='middle' font-family='sans-serif' font-size='13' fill='%234B5563'%3EDUMMY ASSET • 220 PRODUK%3C/text%3E%3C/svg%3E"
+                            alt="Dummy Produk Seragam Korporat" class="w-full h-44 object-cover border-b border-amber-100">
+                        <div class="p-5 flex-1 flex flex-col justify-between">
                             <div>
-                                <p class="font-semibold text-charcoal text-sm">Telepon / WhatsApp</p>
-                                <p class="text-slate text-sm">+62 812-3456-7890</p>
+                                <span class="text-[11px] font-bold uppercase tracking-wider text-golddeep">220 Produk</span>
+                                <h3 class="font-bold text-ink text-lg mt-1">Batik Cap &amp; Korporat</h3>
+                                <p class="text-sm text-muted mt-1.5">
+                                    Konsistensi pola dan warna presisi untuk kebutuhan seragam instansi dan tim kerja.
+                                </p>
                             </div>
                         </div>
-                        <div class="flex items-start gap-4">
-                            <div
-                                class="w-10 h-10 rounded-full bg-gold/10 flex items-center justify-center flex-shrink-0">
-                                <i data-lucide="mail" class="w-4 h-4 text-gold"></i>
-                            </div>
+                    </div>
+
+                    {{-- Produk 3 --}}
+                    <div class="reveal bg-pure rounded-2xl border border-amber-200/80 overflow-hidden shadow-sm flex flex-col">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 260'%3E%3Crect width='400' height='260' fill='%23FFFBEB'/%3E%3Crect x='20' y='20' width='360' height='220' rx='12' fill='%23FEF9C3' stroke='%23EAB308'/%3E%3Ctext x='200' y='118' text-anchor='middle' font-family='Georgia, serif' font-size='22' font-weight='700' fill='%23111827'%3EReady-to-Wear%3C/text%3E%3Ctext x='200' y='148' text-anchor='middle' font-family='sans-serif' font-size='13' fill='%234B5563'%3EDUMMY ASSET • 185 PRODUK%3C/text%3E%3C/svg%3E"
+                            alt="Dummy Produk Ready to Wear" class="w-full h-44 object-cover border-b border-amber-100">
+                        <div class="p-5 flex-1 flex flex-col justify-between">
                             <div>
-                                <p class="font-semibold text-charcoal text-sm">Email</p>
-                                <p class="text-slate text-sm">hello@rubungkuning.com</p>
+                                <span class="text-[11px] font-bold uppercase tracking-wider text-golddeep">185 Produk</span>
+                                <h3 class="font-bold text-ink text-lg mt-1">Busana Siap Pakai</h3>
+                                <p class="text-sm text-muted mt-1.5">
+                                    Kemeja, outer, dan setelan modern yang nyaman untuk aktivitas harian maupun formal.
+                                </p>
+                            </div>
+                        </div>
+                    </div>
+
+                    {{-- Produk 4 --}}
+                    <div class="reveal bg-pure rounded-2xl border border-amber-200/80 overflow-hidden shadow-sm flex flex-col">
+                        <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 400 260'%3E%3Crect width='400' height='260' fill='%23FFFBEB'/%3E%3Crect x='20' y='20' width='360' height='220' rx='12' fill='%23FACC15' fill-opacity='0.22' stroke='%23EAB308'/%3E%3Ctext x='200' y='118' text-anchor='middle' font-family='Georgia, serif' font-size='22' font-weight='700' fill='%23111827'%3EAksesoris &amp; Living%3C/text%3E%3Ctext x='200' y='148' text-anchor='middle' font-family='sans-serif' font-size='13' fill='%234B5563'%3EDUMMY ASSET • 95 PRODUK%3C/text%3E%3C/svg%3E"
+                            alt="Dummy Produk Aksesoris dan Living" class="w-full h-44 object-cover border-b border-amber-100">
+                        <div class="p-5 flex-1 flex flex-col justify-between">
+                            <div>
+                                <span class="text-[11px] font-bold uppercase tracking-wider text-golddeep">95 Produk</span>
+                                <h3 class="font-bold text-ink text-lg mt-1">Aksesoris &amp; Home Living</h3>
+                                <p class="text-sm text-muted mt-1.5">
+                                    Selendang, pouch, cushion, dan paket hadiah eksklusif dengan sentuhan kuning emas.
+                                </p>
                             </div>
                         </div>
                     </div>
                 </div>
+            </div>
+        </section>
 
-                {{-- Contact Form --}}
-                <div class="fade-up bg-cream rounded-2xl p-8 md:p-10 border border-gold/10">
-                    <h3 class="font-serif text-2xl font-bold text-charcoal mb-6">Kirim Pesan</h3>
-                    @if (session('contact_success'))
-                        <p class="text-sm text-green-700">{{ session('contact_success') }}</p>
-                    @endif
-                    @if ($errors->any())
-                        <ul class="text-sm text-red-700">
-                            @foreach ($errors->all() as $error)
-                                <li>{{ $error }}</li>
-                            @endforeach
+        {{-- ============================================================ --}}
+        {{-- DOWNLOAD APPS SECTION (SAAS HIGHLIGHT)                        --}}
+        {{-- ============================================================ --}}
+        <section id="download-app" class="py-20 lg:py-24 bg-pure border-b border-amber-100">
+            <div class="max-w-7xl mx-auto px-6 lg:px-10">
+                <div
+                    class="rounded-3xl bg-sunsoft border border-amber-300/80 p-8 sm:p-12 lg:p-14 grid lg:grid-cols-12 gap-10 items-center reveal">
+                    <div class="lg:col-span-7 space-y-5">
+                        <span
+                            class="inline-flex items-center gap-2 px-3.5 py-1 rounded-full bg-pure border border-amber-300 text-xs font-bold text-golddeep">
+                            <i data-lucide="download-cloud" class="w-3.5 h-3.5"></i>
+                            Aplikasi Mobile Resmi
+                        </span>
+
+                        <h2 class="text-3xl sm:text-4xl font-extrabold text-ink leading-tight">
+                            Download Apps Batik Rubung Kuning
+                        </h2>
+
+                        <p class="text-sm sm:text-base text-muted leading-relaxed max-w-2xl">
+                            Kelola pesanan, cek ketersediaan motif dan ukuran secara langsung, lacak pengiriman, serta
+                            akses promo anggota langsung dari smartphone Anda.
+                        </p>
+
+                        <ul class="grid sm:grid-cols-2 gap-3 text-sm font-medium text-ink pt-1">
+                            <li class="flex items-center gap-2.5">
+                                <i data-lucide="check" class="w-4 h-4 text-golddeep flex-shrink-0"></i>
+                                Katalog interaktif &amp; detail bahan
+                            </li>
+                            <li class="flex items-center gap-2.5">
+                                <i data-lucide="check" class="w-4 h-4 text-golddeep flex-shrink-0"></i>
+                                Notifikasi status pesanan real-time
+                            </li>
+                            <li class="flex items-center gap-2.5">
+                                <i data-lucide="check" class="w-4 h-4 text-golddeep flex-shrink-0"></i>
+                                Riwayat pembelian &amp; invoice digital
+                            </li>
+                            <li class="flex items-center gap-2.5">
+                                <i data-lucide="check" class="w-4 h-4 text-golddeep flex-shrink-0"></i>
+                                Akses cepat layanan pelanggan toko
+                            </li>
                         </ul>
-                    @endif
-                    <form action="{{ route('contact.send') }}" method="POST" class="space-y-5">
-                        @csrf
-                        <input type="text" name="website" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true">
-                        <div>
-                            <label class="block text-xs font-medium text-slate tracking-wide uppercase mb-2">Nama
-                                Lengkap</label>
-                            <input type="text" name="name" value="{{ old('name') }}" required maxlength="100" placeholder="Masukkan nama Anda"
-                                class="w-full px-4 py-3 bg-ivory border border-gold/20 rounded-xl text-sm
-                                          focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-all">
+
+                        <div class="flex flex-wrap gap-3.5 pt-3">
+                            <a href="#download-app"
+                                class="inline-flex items-center gap-3 px-5 py-3.5 rounded-xl bg-ink hover:bg-neutral-800 text-pure text-left transition-colors shadow-sm">
+                                <i data-lucide="play" class="w-5 h-5 text-sunlight"></i>
+                                <div>
+                                    <span class="block text-[10px] uppercase tracking-wider text-pure/70">Unduh di</span>
+                                    <span class="block text-sm font-bold leading-tight">Google Play</span>
+                                </div>
+                            </a>
+
+                            <a href="#download-app"
+                                class="inline-flex items-center gap-3 px-5 py-3.5 rounded-xl bg-pure hover:bg-amber-50 text-ink border border-amber-400 text-left transition-colors">
+                                <i data-lucide="apple" class="w-5 h-5 text-ink"></i>
+                                <div>
+                                    <span class="block text-[10px] uppercase tracking-wider text-muted">Unduh di</span>
+                                    <span class="block text-sm font-bold leading-tight">App Store</span>
+                                </div>
+                            </a>
                         </div>
-                        <div>
-                            <label
-                                class="block text-xs font-medium text-slate tracking-wide uppercase mb-2">Email</label>
-                            <input type="email" name="email" value="{{ old('email') }}" required maxlength="100" placeholder="email@contoh.com"
-                                class="w-full px-4 py-3 bg-ivory border border-gold/20 rounded-xl text-sm
-                                          focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-all">
+                    </div>
+
+                    {{-- Dummy Mobile App Mockup --}}
+                    <div class="lg:col-span-5">
+                        <div class="bg-pure rounded-2xl border border-amber-200 p-4 shadow-lg">
+                            <img src="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 420 460'%3E%3Crect width='420' height='460' rx='20' fill='%23FFFDF7'/%3E%3Crect x='65' y='20' width='290' height='420' rx='32' fill='%23FFFFFF' stroke='%23111827' stroke-width='8'/%3E%3Crect x='165' y='32' width='90' height='10' rx='5' fill='%23111827'/%3E%3Crect x='85' y='62' width='250' height='84' rx='14' fill='%23FACC15'/%3E%3Ctext x='103' y='94' font-family='sans-serif' font-size='12' font-weight='700' fill='%23111827'%3ERUBUNG KUNING APP%3C/text%3E%3Ctext x='103' y='122' font-family='sans-serif' font-size='18' font-weight='800' fill='%23111827'%3E12.480 Pengguna Aktif%3C/text%3E%3Crect x='85' y='162' width='118' height='92' rx='12' fill='%23FFFBEB' stroke='%23FACC15'/%3E%3Ctext x='100' y='194' font-family='sans-serif' font-size='20' font-weight='800' fill='%23111827'%3E640%3C/text%3E%3Ctext x='100' y='218' font-family='sans-serif' font-size='12' fill='%234B5563'%3ETotal Produk%3C/text%3E%3Crect x='217' y='162' width='118' height='92' rx='12' fill='%23FFFBEB' stroke='%23FACC15'/%3E%3Ctext x='232' y='194' font-family='sans-serif' font-size='20' font-weight='800' fill='%23111827'%3E4,9 ★%3C/text%3E%3Ctext x='232' y='218' font-family='sans-serif' font-size='12' fill='%234B5563'%3ERating Aplikasi%3C/text%3E%3Crect x='85' y='270' width='250' height='142' rx='14' fill='%23FFFDF7' stroke='%23FDE68A'/%3E%3Ctext x='103' y='302' font-family='sans-serif' font-size='13' font-weight='700' fill='%23111827'%3EDUMMY APP MOCKUP%3C/text%3E%3Ctext x='103' y='328' font-family='sans-serif' font-size='12' fill='%234B5563'%3E• Cek stok kain &amp; ukuran%3C/text%3E%3Ctext x='103' y='352' font-family='sans-serif' font-size='12' fill='%234B5563'%3E• Pesan seragam &amp; custom%3C/text%3E%3Ctext x='103' y='376' font-family='sans-serif' font-size='12' fill='%234B5563'%3E• Lacak status pengiriman%3C/text%3E%3C/svg%3E"
+                                alt="Dummy Mockup Aplikasi Mobile Batik Rubung Kuning" class="w-full h-auto rounded-xl">
                         </div>
-                        <div>
-                            <label
-                                class="block text-xs font-medium text-slate tracking-wide uppercase mb-2">Pesan</label>
-                            <textarea rows="4" name="message" required minlength="10" maxlength="5000" placeholder="Ceritakan kebutuhan Anda..."
-                                class="w-full px-4 py-3 bg-ivory border border-gold/20 rounded-xl text-sm resize-none
-                                             focus:outline-none focus:border-gold focus:ring-1 focus:ring-gold/30 transition-all">{{ old('message') }}</textarea>
-                        </div>
-                        <button type="submit"
-                            class="w-full py-3 bg-gold text-ivory font-medium rounded-xl
-                                       hover:bg-mustard transition-colors duration-300 shadow-lg shadow-gold/20">
-                            Kirim Pesan
-                        </button>
-                    </form>
+                    </div>
                 </div>
             </div>
-        </div>
-    </section>
+        </section>
 
+        {{-- ============================================================ --}}
+        {{-- KONTAK & FORMULIR PESAN                                       --}}
+        {{-- ============================================================ --}}
+        <section id="contact" class="py-20 lg:py-24 bg-surface">
+            <div class="max-w-7xl mx-auto px-6 lg:px-10">
+                <div class="grid lg:grid-cols-12 gap-12 items-start">
+                    <div class="lg:col-span-5 space-y-5 reveal">
+                        <span class="text-xs font-bold uppercase tracking-widest text-golddeep">Kontak Toko</span>
+                        <h2 class="text-3xl sm:text-4xl font-extrabold text-ink">
+                            Butuh Bantuan atau Pesanan Khusus?
+                        </h2>
+                        <p class="text-sm sm:text-base text-muted leading-relaxed">
+                            Kirimkan pertanyaan seputar ketersediaan produk, kunjungan galeri, atau pengadaan dalam
+                            jumlah besar. Tim kami siap merespons pada jam operasional.
+                        </p>
+
+                        <div class="space-y-4 pt-2 text-sm">
+                            <div class="flex items-center gap-3 text-ink">
+                                <i data-lucide="map-pin" class="w-4 h-4 text-golddeep"></i>
+                                <span>Jl. Batik Indah No. 88, Solo, Jawa Tengah 57100</span>
+                            </div>
+                            <div class="flex items-center gap-3 text-ink">
+                                <i data-lucide="phone" class="w-4 h-4 text-golddeep"></i>
+                                <span>+62 812-3456-7890</span>
+                            </div>
+                            <div class="flex items-center gap-3 text-ink">
+                                <i data-lucide="mail" class="w-4 h-4 text-golddeep"></i>
+                                <span>hello@rubungkuning.com</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="lg:col-span-7 reveal">
+                        <div class="bg-pure rounded-2xl p-6 sm:p-8 border border-amber-200/80 shadow-sm">
+                            <h3 class="text-xl font-bold text-ink mb-5">Kirim Pesan ke Toko</h3>
+
+                            @if (session('contact_success'))
+                                <div class="mb-4 p-3.5 rounded-xl bg-sunsoft border border-amber-300 text-sm font-medium text-ink">
+                                    {{ session('contact_success') }}
+                                </div>
+                            @endif
+
+                            @if ($errors->any())
+                                <div class="mb-4 p-3.5 rounded-xl bg-red-50 border border-red-200 text-sm text-red-700">
+                                    <ul class="list-disc list-inside space-y-1">
+                                        @foreach ($errors->all() as $error)
+                                            <li>{{ $error }}</li>
+                                        @endforeach
+                                    </ul>
+                                </div>
+                            @endif
+
+                            <form action="{{ route('contact.send') }}" method="POST" class="space-y-4">
+                                @csrf
+                                <input type="text" name="website" tabindex="-1" autocomplete="off" class="hidden" aria-hidden="true">
+
+                                <div class="grid sm:grid-cols-2 gap-4">
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-muted mb-1.5">
+                                            Nama Lengkap
+                                        </label>
+                                        <input type="text" name="name" value="{{ old('name') }}" required maxlength="100"
+                                            placeholder="Nama Anda"
+                                            class="w-full px-4 py-3 rounded-xl bg-pure border border-amber-200 text-sm text-ink focus:outline-none focus:border-amberbrand focus:ring-2 focus:ring-sunlight/50">
+                                    </div>
+                                    <div>
+                                        <label class="block text-xs font-bold uppercase tracking-wider text-muted mb-1.5">
+                                            Email
+                                        </label>
+                                        <input type="email" name="email" value="{{ old('email') }}" required maxlength="100"
+                                            placeholder="nama@email.com"
+                                            class="w-full px-4 py-3 rounded-xl bg-pure border border-amber-200 text-sm text-ink focus:outline-none focus:border-amberbrand focus:ring-2 focus:ring-sunlight/50">
+                                    </div>
+                                </div>
+
+                                <div>
+                                    <label class="block text-xs font-bold uppercase tracking-wider text-muted mb-1.5">
+                                        Pesan
+                                    </label>
+                                    <textarea rows="4" name="message" required minlength="10" maxlength="5000"
+                                        placeholder="Tuliskan kebutuhan produk, ukuran, atau pertanyaan Anda..."
+                                        class="w-full px-4 py-3 rounded-xl bg-pure border border-amber-200 text-sm text-ink resize-none focus:outline-none focus:border-amberbrand focus:ring-2 focus:ring-sunlight/50">{{ old('message') }}</textarea>
+                                </div>
+
+                                <button type="submit"
+                                    class="w-full sm:w-auto px-7 py-3.5 rounded-xl bg-sunlight hover:bg-amberbrand text-ink font-bold text-sm transition-colors shadow-sm">
+                                    Kirim Pesan
+                                </button>
+                            </form>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </section>
+    </main>
 
     {{-- ============================================================ --}}
     {{-- FOOTER                                                        --}}
     {{-- ============================================================ --}}
-    <footer class="bg-charcoal text-ivory/60 py-16">
-        <div class="max-w-7xl mx-auto px-6 lg:px-12">
-            <div class="grid md:grid-cols-4 gap-12 mb-12">
-                {{-- Brand --}}
-                <div class="md:col-span-2">
-                    <div class="flex items-center gap-3 mb-4">
-                        <div class="w-10 h-10 rounded-full bg-gold flex items-center justify-center">
-                            <span class="text-ivory font-serif font-bold text-lg">R</span>
-                        </div>
-                        <div class="leading-tight">
-                            <span class="font-serif font-semibold text-ivory text-lg">Rubung Kuning</span>
-                            <span class="block text-[10px] tracking-[0.25em] uppercase text-ivory/40">Batik
-                                Premium</span>
-                        </div>
+    <footer class="bg-pure border-t border-amber-200/80 py-12">
+        <div class="max-w-7xl mx-auto px-6 lg:px-10">
+            <div class="flex flex-col md:flex-row items-start md:items-center justify-between gap-6 pb-8 border-b border-amber-100">
+                <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-lg bg-sunlight flex items-center justify-center font-display font-bold text-ink">
+                        RK
                     </div>
-                    <p class="text-sm leading-relaxed max-w-sm mb-6">
-                        Menghidupkan warisan Nusantara melalui keanggunan kontemporer.
-                        Setiap helai kain adalah karya seni yang bercerita.
-                    </p>
+                    <div>
+                        <p class="font-bold text-ink text-sm">Batik Rubung Kuning</p>
+                        <p class="text-xs text-muted">Jl. Batik Indah No. 88, Solo • hello@rubungkuning.com</p>
+                    </div>
                 </div>
 
-                {{-- Quick Links --}}
-                <div>
-                    <h4 class="font-semibold text-ivory text-sm tracking-wide uppercase mb-4">Navigasi</h4>
-                    <ul class="space-y-3 text-sm">
-                        <li><a href="#about" class="hover:text-gold transition-colors">Tentang Kami</a></li>
-                        <li><a href="#vision" class="hover:text-gold transition-colors">Visi & Misi</a></li>
-                        <li><a href="#collection" class="hover:text-gold transition-colors">Koleksi</a></li>
-                        <li><a href="#contact" class="hover:text-gold transition-colors">Kontak</a></li>
-                    </ul>
-                </div>
-
-                <div>
-                    <h4 class="font-semibold text-ivory text-sm tracking-wide uppercase mb-4">Hubungi Kami</h4>
-                    <a href="#contact" class="text-sm hover:text-gold transition-colors">Kirim pesan melalui formulir kontak</a>
+                <div class="flex flex-wrap gap-6 text-sm font-medium text-muted">
+                    <a href="#metrics" class="hover:text-ink transition-colors">Statistik</a>
+                    <a href="#store-info" class="hover:text-ink transition-colors">Informasi Toko</a>
+                    <a href="#catalog" class="hover:text-ink transition-colors">Produk</a>
+                    <a href="#download-app" class="hover:text-ink transition-colors">Download Apps</a>
+                    <a href="#contact" class="hover:text-ink transition-colors">Kontak</a>
                 </div>
             </div>
 
-            {{-- Bottom bar --}}
-            <div
-                class="border-t border-ivory/10 pt-8 flex flex-col md:flex-row items-center justify-between gap-4 text-xs">
-                <p>&copy; {{ date('Y') }} Batik Rubung Kuning. All rights reserved.</p>
-                <p class="italic font-serif text-ivory/40">Crafted with Heritage, Worn with Pride.</p>
+            <div class="pt-6 flex flex-col sm:flex-row items-center justify-between gap-3 text-xs text-muted">
+                <p>&copy; {{ date('Y') }} Batik Rubung Kuning. Seluruh hak cipta dilindungi.</p>
+                <p>Landing Page • Tema Putih &amp; Kuning</p>
             </div>
         </div>
     </footer>
-
 
     {{-- ============================================================ --}}
     {{-- SCRIPTS                                                       --}}
     {{-- ============================================================ --}}
     <script>
-        // Initialize Lucide icons
         lucide.createIcons();
 
-        // Navbar scroll effect
-        const navbar = document.getElementById('navbar');
-        window.addEventListener('scroll', () => {
-            if (window.scrollY > 80) {
-                navbar.classList.add('bg-ivory/95', 'backdrop-blur-md', 'shadow-sm');
-                navbar.classList.remove('bg-transparent');
-            } else {
-                navbar.classList.remove('bg-ivory/95', 'backdrop-blur-md', 'shadow-sm');
-                navbar.classList.add('bg-transparent');
-            }
-        });
-
-        // Mobile menu toggle
         const menuBtn = document.getElementById('menuBtn');
         const mobileMenu = document.getElementById('mobileMenu');
         menuBtn.addEventListener('click', () => {
             mobileMenu.classList.toggle('hidden');
         });
-        // Close mobile menu on link click
         mobileMenu.querySelectorAll('a').forEach(link => {
             link.addEventListener('click', () => mobileMenu.classList.add('hidden'));
         });
 
-        // Fade-up on scroll (Intersection Observer)
-        const observer = new IntersectionObserver((entries) => {
+        const revealObserver = new IntersectionObserver((entries) => {
             entries.forEach(entry => {
                 if (entry.isIntersecting) {
-                    entry.target.classList.add('visible');
+                    entry.target.classList.add('is-visible');
                 }
             });
-        }, {
-            threshold: 0.15
-        });
+        }, { threshold: 0.12 });
 
-        document.querySelectorAll('.fade-up').forEach(el => observer.observe(el));
+        document.querySelectorAll('.reveal').forEach(el => revealObserver.observe(el));
     </script>
 
 </body>

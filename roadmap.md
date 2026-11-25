@@ -90,6 +90,13 @@ Error aturan bisnis biasanya hanya memuat `message`, kadang disertai `available_
 | `GET /orders/{id}` | Privat | Detail dan status pembayaran terbaru. |
 | `POST /orders/{id}/cancel` | Privat | Batalkan pesanan `pending_payment`; tanpa body. |
 | `POST /payments/{orderId}/snap-token` | Privat | Buat/ambil token pembayaran; tanpa body. |
+| `POST /vouchers/validate` | Privat | Pratinjau voucher pada keranjang pelanggan: body `{code}`. Gunakan `data.subtotal_after_voucher` untuk subtotal setelah voucher. |
+| `POST /orders/{id}/complete` | Privat | Konfirmasi penerimaan pesanan yang sudah dibayar: `shipped → completed`; tanpa body. |
+| `POST /orders/{id}/refund` | Privat | Ajukan refund penuh dengan `reason` dan `evidence` (multipart). |
+| `GET /refunds` | Privat | Daftar pengajuan milik pelanggan. |
+| `GET /refunds/{id}` | Privat | Detail pengajuan. |
+| `GET /refunds/{id}/evidence` | Privat | Foto bukti privat. |
+| `POST /refunds/{id}/cancel` | Privat | Batalkan pengajuan `pending`; tanpa body. |
 | `GET /custom-orders` | Privat | Riwayat custom order, query `page`. |
 | `POST /custom-orders` | Privat | `description` minimal 10 karakter; `attachments[]` gambar opsional. |
 | `GET /custom-orders/{id}` | Privat | Detail custom order. |
@@ -476,7 +483,11 @@ Objek order pada response riwayat tetap mempunyai field lain seperti `promo`, `s
 { "message": "Pesanan berhasil dibatalkan.", "data": { "id": 25, "order_number": "BRK-20261111080000-ABCDE", "status": "cancelled", "is_custom_order": false, "pricing": { "subtotal": 500000, "discount_date_cantik": 0, "discount_voucher": 50000, "total_discount": 50000, "shipping_cost": 20000, "final_amount": 470000 } } }
 ```
 
-`data` pada contoh pembatalan disingkat; server mengirim `OrderResource` lengkap. Order yang sudah dibayar tidak bisa dibatalkan melalui endpoint ini. Pengembalian dana belum tersedia melalui API pelanggan. Saat ini `shipping.weight` pada `OrderResource` selalu `2000`, walaupun berat untuk perhitungan ongkir dapat diubah melalui konfigurasi; jangan gunakan field itu sebagai bukti berat aktual bila konfigurasi diubah.
+`data` pada contoh pembatalan disingkat; server mengirim `OrderResource` lengkap. Order yang sudah dibayar tidak bisa dibatalkan melalui endpoint ini. Pelanggan dapat mengajukan refund penuh melalui API. Lihat [kontrak refund](docs/refund.md). Saat ini `shipping.weight` pada `OrderResource` selalu `2000`, walaupun berat untuk perhitungan ongkir dapat diubah melalui konfigurasi; jangan gunakan field itu sebagai bukti berat aktual bila konfigurasi diubah.
+
+Untuk tombol **Pesanan Diterima**, panggil `POST /orders/{id}/complete` saat order berstatus `shipped` dan pembayaran berstatus `success`. Respons sukses memuat `data.status: "completed"`. Percobaan ulang pada order yang sudah selesai mengembalikan status yang sama.
+
+Pratinjau voucher memakai harga keranjang dari server. Field `data.subtotal_after_voucher` belum memasukkan promo tanggal atau ongkir. Field `data.final_amount` pada respons pratinjau adalah alias lama untuk nilai yang sama. Total bayar ada pada `data.order.pricing.final_amount` setelah checkout.
 
 ## Custom order
 

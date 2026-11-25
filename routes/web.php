@@ -9,6 +9,7 @@ use App\Http\Controllers\Admin\ProductController;
 use App\Http\Controllers\Admin\ProductVariantController;
 use App\Http\Controllers\Admin\PromoController;
 use App\Http\Controllers\Admin\ReportController;
+use App\Http\Controllers\Admin\RefundController;
 use App\Http\Controllers\Admin\SubcategoryController;
 use App\Http\Controllers\Admin\VoucherController;
 use App\Http\Controllers\AuthController;
@@ -38,6 +39,15 @@ Route::middleware(['auth', 'role'])->group(function () {
         Route::get('/orders/{order}', [OrderController::class, 'show'])->name('orders.show');
         Route::patch('/orders/{order}/status', [OrderController::class, 'updateStatus'])->name('orders.status.update');
         Route::patch('/orders/{order}/shipping', [OrderController::class, 'updateShipping'])->name('orders.shipping.update');
+
+        Route::get('/refunds', [RefundController::class, 'index'])->name('refunds.index');
+        Route::get('/refunds/{refundRequest}', [RefundController::class, 'show'])->name('refunds.show');
+        Route::get('/refunds/{refundRequest}/evidence', [RefundController::class, 'evidence'])->name('refunds.evidence');
+        Route::post('/refunds/{refundRequest}/approve', [RefundController::class, 'approve'])->name('refunds.approve');
+        Route::post('/refunds/{refundRequest}/reject', [RefundController::class, 'reject'])->name('refunds.reject');
+        Route::post('/refunds/{refundRequest}/retry', [RefundController::class, 'retry'])->name('refunds.retry');
+        Route::post('/refunds/{refundRequest}/manual', [RefundController::class, 'switchToManual'])->name('refunds.manual');
+        Route::post('/refunds/{refundRequest}/complete', [RefundController::class, 'completeManual'])->name('refunds.complete');
 
         Route::get('/custom-orders', [CustomOrderController::class, 'index'])->name('custom-orders.index');
         Route::get('/custom-orders/{customOrder}', [CustomOrderController::class, 'show'])->name('custom-orders.show');

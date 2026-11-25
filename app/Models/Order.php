@@ -117,6 +117,11 @@ class Order extends Model
         );
     }
 
+    public function refundRequests()
+    {
+        return $this->hasMany(RefundRequest::class)->latest();
+    }
+
     public function customOrder()
     {
         return $this->hasOne(

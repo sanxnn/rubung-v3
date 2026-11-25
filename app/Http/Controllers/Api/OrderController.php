@@ -17,6 +17,7 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Str;
+use Illuminate\Validation\ValidationException;
 use Midtrans\Config;
 use Midtrans\Snap;
 use Midtrans\Transaction as MidtransTransaction;
@@ -36,6 +37,7 @@ class OrderController extends Controller
                 'datePromo',
                 'voucher',
                 'customOrder',
+                'refundRequests',
             ])
             ->latest()
             ->paginate(10);
@@ -63,6 +65,7 @@ class OrderController extends Controller
             'voucher',
             'customOrder',
             'statusHistories',
+            'refundRequests',
         ]);
 
         return new OrderResource(
@@ -1292,5 +1295,113 @@ class OrderController extends Controller
                 'used_count'
             );
         }
+    }
+
+    public function validateVoucher(Request $request)
+    {
+        $validated = $request->validate([
+            'code' => ['required', 'string', 'max:50'],
+        ]);
+
+        $cart = Cart::query()
+            ->where('user_id', $request->user()->id)
+            ->with('items.productVariant')
+            ->first();
+
+        if (! $cart || $cart->items->isEmpty() || $cart->items->contains(fn ($item) => ! $item->productVariant)) {
+            return response()->json(['message' => 'Keranjang kosong atau tidak valid.', 'data' => null], 422);
+        }
+
+        $subtotal = $cart->items->sum(fn ($item) => $item->productVariant->price * $item->quantity);
+
+        $voucher = Voucher::query()
+            ->where('code', strtoupper(trim($validated['code'])))
+            ->first();
+
+        if (! $voucher) {
+            return response()->json([
+                'message' => 'Voucher tidak ditemukan.',
+                'data' => null,
+            ], 404);
+        }
+
+        if (! $voucher->isValid()) {
+            return response()->json([
+                'message' => 'Voucher sudah tidak aktif atau kuotanya habis.',
+                'data' => null,
+            ], 422);
+        }
+
+        if ($subtotal < $voucher->min_purchase) {
+            return response()->json([
+                'message' => 'Minimal pembelian untuk voucher adalah Rp ' . number_format($voucher->min_purchase, 0, ',', '.'),
+                'data' => null,
+            ], 422);
+        }
+
+        $discount = $voucher->calculateDiscount($subtotal);
+
+        if ($discount <= 0) {
+            return response()->json(['message' => 'Voucher tidak dapat digunakan.', 'data' => null], 422);
+        }
+
+        return response()->json([
+            'message' => 'Voucher valid.',
+            'data' => [
+                'code' => $voucher->code,
+                'discount_type' => $voucher->discount_type,
+                'discount_value' => $voucher->discount_value,
+                'max_discount' => $voucher->max_discount,
+                'min_purchase' => $voucher->min_purchase,
+                'usage_limit' => $voucher->usage_limit,
+                'used_count' => $voucher->used_count,
+                'is_active' => $voucher->is_active,
+                'start_date' => $voucher->start_date,
+                'end_date' => $voucher->end_date,
+                'subtotal' => $subtotal,
+                'subtotal_after_voucher' => max(0, $subtotal - $discount),
+                'discount' => $discount,
+                'final_amount' => max(0, $subtotal - $discount),
+            ],
+        ]);
+    }
+
+    public function completeOrder(Request $request, Order $order)
+    {
+        if ($order->user_id !== $request->user()->id) {
+            abort(404);
+        }
+
+        $order = DB::transaction(function () use ($order, $request) {
+            $order = Order::query()->lockForUpdate()->findOrFail($order->id);
+            if (! in_array($order->status, ['shipped', 'completed'], true)
+                || $order->payment?->payment_status !== 'success') {
+                throw ValidationException::withMessages([
+                    'status' => 'Hanya pesanan yang sudah dibayar dan dikirim yang dapat diselesaikan.',
+                ]);
+            }
+
+            if ($order->status === 'shipped') {
+                $order->update(['status' => 'completed']);
+                $order->statusHistories()->create([
+                    'old_status' => 'shipped',
+                    'new_status' => 'completed',
+                    'changed_by' => $request->user()->id,
+                ]);
+            }
+
+            return $order;
+        });
+
+        return response()->json([
+            'message' => 'Pesanan berhasil diselesaikan.',
+            'data' => new OrderResource($order->load([
+                'items',
+                'payment',
+                'datePromo',
+                'voucher',
+                'customOrder',
+            ])),
+        ]);
     }
 }

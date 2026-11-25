@@ -7,12 +7,16 @@ use App\Models\Order;
 use App\Models\Payment;
 use App\Models\ProductBundleItem;
 use App\Models\ProductVariant;
+use App\Models\RefundRequest;
 use App\Models\Voucher;
+use App\Services\MidtransRefundService;
+use Illuminate\Http\Client\ConnectionException;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Log;
 use Midtrans\Config;
 use Midtrans\Snap;
+use RuntimeException;
 
 class PaymentController extends Controller
 {
@@ -498,6 +502,36 @@ class PaymentController extends Controller
             return response()->json([
                 'message' => 'Nominal pembayaran tidak sesuai.',
             ], 200);
+        }
+
+        if ($transactionStatus === 'refund') {
+            $refund = RefundRequest::where('order_id', $order->id)
+                ->where('refund_method', 'midtrans')
+                ->whereIn('status', ['approved', 'processing'])
+                ->whereNotNull('refund_key')
+                ->first();
+
+            if ($refund) {
+                try {
+                    $status = app(MidtransRefundService::class)->checkConfirmation($refund->setRelation('order', $order));
+                } catch (ConnectionException|RuntimeException) {
+                    Log::warning('Konfirmasi refund Midtrans gagal.', ['order_id' => $order->id]);
+
+                    return response()->json(['message' => 'Konfirmasi refund belum tersedia.'], 503);
+                }
+
+                if ($status !== null) {
+                    RefundRequest::whereKey($refund->id)
+                        ->where('refund_method', 'midtrans')
+                        ->whereIn('status', ['approved', 'processing'])
+                        ->update([
+                            'status' => $status,
+                            'completed_at' => $status === 'completed' ? now() : null,
+                        ]);
+                }
+            }
+
+            return response()->json(['message' => 'Notifikasi refund diterima.'], 200);
         }
 
         /*

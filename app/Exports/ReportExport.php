@@ -34,6 +34,7 @@ class ReportExport implements
                 'user',
                 'items',
             ]);
+        $query->withSum(['refundRequests as refunded_amount' => fn ($q) => $q->where('status', 'completed')], 'amount');
 
         /*
         |--------------------------------------------------------------------------
@@ -98,6 +99,8 @@ class ReportExport implements
             'Total Diskon',
             'Ongkir',
             'Total',
+            'Refund',
+            'Total Bersih',
             'Status',
         ];
     }
@@ -171,6 +174,11 @@ class ReportExport implements
             $order->shipping_cost ?? 0,
 
             $order->final_amount ?? 0,
+
+            $order->refunded_amount ?? 0,
+
+            in_array($order->status, ['paid', 'processing', 'packing', 'shipped', 'completed'], true)
+                ? (int) $order->final_amount - (int) ($order->refunded_amount ?? 0) : 0,
 
             $statusLabel,
         ];
