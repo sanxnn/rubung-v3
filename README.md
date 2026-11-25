@@ -2,7 +2,7 @@
 
 Backend toko batik berbasis Laravel 12. API pelanggan menyediakan katalog, keranjang, alamat, pesanan biasa dan custom, OTP email, serta pembayaran Midtrans. Panel web admin mengelola katalog, promo, pesanan, pelanggan, dan laporan. Ongkir dihitung melalui RajaOngkir.
 
-Baca [dokumentasi API dan alur sistem](dokumentasi.md) untuk endpoint, contoh body request, dan proses admin.
+Baca [kontrak API dan alur sistem](roadmap.md) untuk endpoint, contoh body request, dan proses admin. Lihat juga [arsitektur backend](docs/backend-architecture.md) dan [operasional refund](docs/refund.md).
 
 ## Kebutuhan
 

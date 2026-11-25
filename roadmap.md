@@ -37,15 +37,15 @@ Contoh error validasi Laravel (`422`):
 
 Error aturan bisnis biasanya hanya memuat `message`, kadang disertai `available_stock` atau `current_quantity`. Tampilkan `message` dari server dan gunakan `errors` untuk field form. Semua contoh response berikut menampilkan field yang relevan untuk Flutter; objek model langsung dapat memiliki `created_at`, `updated_at`, dan field model lain.
 
-## Alur layar Flutter
+## Alur sistem dan integrasi Flutter
 
 1. **Beranda/katalog:** panggil `GET /categories`, `GET /products`, dan `GET /bundles`. Gunakan ID kategori/subkategori untuk filter produk dan `page` untuk memuat halaman berikutnya.
 2. **Detail:** panggil `GET /products/{id}` atau `GET /bundles/{id}`. Pengguna memilih `variant.id` sebelum menambah keranjang.
 3. **Akun:** registrasi → verifikasi OTP email → login; atau login langsung untuk akun yang sudah diverifikasi. Simpan token Sanctum.
 4. **Keranjang:** panggil `GET /cart`, tambah/ubah/hapus item. `cart.items[].id` adalah ID item keranjang, berbeda dari `variant.id`.
-5. **Checkout:** pilih alamat dari `GET /addresses`, lalu `POST /orders` dengan `address_id` dan voucher opsional. Backend mengambil isi keranjang dan menghitung stok, diskon, ongkir, serta total.
+5. **Checkout:** pilih alamat dari `GET /addresses`, lalu `POST /orders` dengan `address_id` dan voucher opsional. Gunakan `POST /vouchers/validate` untuk pratinjau jika pelanggan memasukkan voucher. Backend mengambil isi keranjang dan menghitung stok, diskon, ongkir, serta total.
 6. **Pembayaran:** gunakan `data.payment.snap_token` dari checkout. Jika kosong atau ingin melanjutkan pembayaran, panggil `POST /payments/{orderId}/snap-token`. Setelah proses Midtrans, muat ulang `GET /orders/{id}`; status final ditetapkan webhook server, bukan callback Flutter.
-7. **Riwayat:** `GET /orders` dan `GET /orders/{id}`. Pesanan custom juga muncul di riwayat pesanan setelah quotation disetujui.
+7. **Riwayat:** `GET /orders` dan `GET /orders/{id}`. Pesanan custom juga muncul di riwayat pesanan setelah quotation disetujui. Setelah admin mengirim pesanan, pelanggan dapat mengonfirmasi penerimaan. Pelanggan dapat mengajukan dan memantau refund untuk pesanan yang memenuhi syarat.
 
 ## Ringkasan endpoint
 
@@ -483,11 +483,63 @@ Objek order pada response riwayat tetap mempunyai field lain seperti `promo`, `s
 { "message": "Pesanan berhasil dibatalkan.", "data": { "id": 25, "order_number": "BRK-20261111080000-ABCDE", "status": "cancelled", "is_custom_order": false, "pricing": { "subtotal": 500000, "discount_date_cantik": 0, "discount_voucher": 50000, "total_discount": 50000, "shipping_cost": 20000, "final_amount": 470000 } } }
 ```
 
-`data` pada contoh pembatalan disingkat; server mengirim `OrderResource` lengkap. Order yang sudah dibayar tidak bisa dibatalkan melalui endpoint ini. Pelanggan dapat mengajukan refund penuh melalui API. Lihat [kontrak refund](docs/refund.md). Saat ini `shipping.weight` pada `OrderResource` selalu `2000`, walaupun berat untuk perhitungan ongkir dapat diubah melalui konfigurasi; jangan gunakan field itu sebagai bukti berat aktual bila konfigurasi diubah.
+`data` pada contoh pembatalan disingkat; server mengirim `OrderResource` lengkap. Order yang sudah dibayar tidak bisa dibatalkan melalui endpoint ini. Pelanggan dapat mengajukan refund penuh melalui API. Lihat [alur refund pelanggan](#refund-pelanggan). Saat ini `shipping.weight` pada `OrderResource` selalu `2000`, walaupun berat untuk perhitungan ongkir dapat diubah melalui konfigurasi; jangan gunakan field itu sebagai bukti berat aktual bila konfigurasi diubah.
 
-Untuk tombol **Pesanan Diterima**, panggil `POST /orders/{id}/complete` saat order berstatus `shipped` dan pembayaran berstatus `success`. Respons sukses memuat `data.status: "completed"`. Percobaan ulang pada order yang sudah selesai mengembalikan status yang sama.
+### Pratinjau voucher
 
-Pratinjau voucher memakai harga keranjang dari server. Field `data.subtotal_after_voucher` belum memasukkan promo tanggal atau ongkir. Field `data.final_amount` pada respons pratinjau adalah alias lama untuk nilai yang sama. Total bayar ada pada `data.order.pricing.final_amount` setelah checkout.
+`POST /vouchers/validate` memakai Bearer token dan body JSON:
+
+```json
+{"code": "HEMAT10"}
+```
+
+`code` wajib, berupa string maksimal 50 karakter. Server menghitung subtotal dari harga varian dan kuantitas keranjang, lalu memeriksa periode, status aktif, kuota, dan minimal belanja. Respons `200` memuat `data.code`, `data.subtotal`, `data.discount`, dan `data.subtotal_after_voucher`. Kode tidak ditemukan menghasilkan `404`. Keranjang kosong dan voucher yang tidak memenuhi syarat menghasilkan `422`. Pratinjau tidak memakai kuota. `data.final_amount` pada endpoint ini sama dengan `data.subtotal_after_voucher`. Keduanya belum memasukkan promo tanggal dan ongkir. Ambil total bayar dari `data.order.pricing.final_amount` setelah checkout.
+
+## Pengiriman dan konfirmasi penerimaan
+
+Setelah pembayaran berhasil, admin memproses pesanan melalui `paid → processing → packing → shipped`. Admin mengisi resi ketika mengubah status ke `shipped`. Untuk tombol **Pesanan Diterima**, tampilkan aksi ketika status `shipped` dan `payment.payment_status == "success"`, lalu minta konfirmasi pelanggan.
+
+Kirim `POST /orders/{id}/complete` dengan Bearer token dan **body kosong**. Respons `200` berisi `message` dan `data.status: "completed"`. Mengulang aksi pada pesanan yang telah selesai dan pembayarannya berhasil tetap sukses tanpa menambah riwayat baru. Pesanan milik akun lain menghasilkan `404`, dan status yang tidak memenuhi syarat menghasilkan `422`.
+
+Muat ulang `GET /orders/{id}` setelah sukses untuk memperoleh detail termasuk ringkasan refund. Respons aksi complete tidak memuat ringkasan itu. Admin juga bisa menyelesaikan pesanan yang sudah dikirim. Riwayat mencatat siapa yang mengubah status, sehingga `completed` sendiri tidak membuktikan konfirmasi dari pelanggan. Refund `pending` tidak menghalangi penyelesaian pesanan pada implementasi saat ini.
+
+## Refund pelanggan
+
+Untuk pembayaran berstatus `success`, pemilik pesanan dapat mengajukan refund penuh saat pesanan berstatus `paid`, `processing`, `packing`, `shipped`, atau `completed`. Nominal diambil dari pembayaran oleh server. Pelanggan dapat mengajukan ulang setelah `rejected` atau `cancelled`. Selama masih ada pengajuan aktif atau selesai, server menolak pengajuan baru.
+
+| Endpoint privat | Body atau query | Hasil sukses |
+| --- | --- | --- |
+| `POST /orders/{orderId}/refund` | Multipart `reason` (20–2.000 karakter) dan `evidence` (satu JPEG/PNG/WebP, maksimal 5 MB) | `201`, `data.status: "pending"` |
+| `GET /refunds` | Query `page?` | Daftar berhalaman, 10 per halaman |
+| `GET /refunds/{refundId}` | Tanpa body | Detail termasuk nominal, status, dan keputusan admin |
+| `GET /refunds/{refundId}/evidence` | Tanpa body | File privat. Kirim token juga saat mengambil gambar. |
+| `POST /refunds/{refundId}/cancel` | Body kosong | Status `cancelled` dari `pending`. Pengulangan pada status `cancelled` tetap sukses. |
+
+Contoh request pada server lokal:
+
+```bash
+curl -X POST 'http://localhost:8000/api/orders/25/refund' \
+  -H "Authorization: Bearer ${API_TOKEN}" \
+  -H 'Accept: application/json' \
+  -F 'reason=Produk rusak ketika diterima dan perlu pengembalian dana.' \
+  -F 'evidence=@bukti.jpg'
+```
+
+Setelah sukses, tampilkan status pengajuan dan muat ulang detail pesanan. Daftar dan detail pesanan memuat ringkasan refund terbaru sebagai `refund: {id, status, amount}` atau `refund: null`. Detail refund juga memuat `order_id`, `order_number`, `reason`, `evidence_url`, `refund_method`, `admin_notes`, `manual_reference`, dan waktu pemrosesan. Lihat [resource refund](app/Http/Resources/RefundRequestResource.php) untuk daftar field.
+
+## Refund pada panel admin
+
+Admin membuka `/dashboard/refunds`, memeriksa bukti, lalu menyetujui atau menolak permintaan. Aksi berikut memakai sesi admin dan CSRF dari form web. Path berikut relatif terhadap `/dashboard/refunds/{refundId}`.
+
+| Aksi POST | Field form | Aturan |
+| --- | --- | --- |
+| `/approve` | `method` wajib (`manual` atau `midtrans`), `admin_notes?` maksimal 2.000 karakter | Persetujuan dari `pending` |
+| `/reject` | `admin_notes` wajib, 10–2.000 karakter | Penolakan dari `pending` |
+| `/complete` | `manual_reference` wajib, maksimal 100 karakter | Selesaikan refund manual setelah transfer dilakukan |
+| `/retry` | Tanpa field bisnis | Cek atau ulangi refund Midtrans dari `approved` atau `processing` |
+| `/manual` | Tanpa field bisnis | Ubah jalur Midtrans yang masih `approved` setelah pemeriksaan status provider |
+
+Jalur manual berjalan dari `pending → approved → completed`. Jalur Midtrans memerlukan metode yang didukung dan transaksi `settlement`. Permintaan yang diterima provider masuk `processing`. Backend menetapkan `completed` setelah API status Midtrans menunjukkan konfirmasi bank untuk kunci dan nominal yang sesuai. Status hasil pengiriman yang belum pasti tetap `processing` dan memblokir pengalihan ke manual. Rekonsiliasi berjalan melalui webhook atau retry admin. Refund selesai mengurangi omzet bersih pada dashboard dan laporan. Riwayat pesanan, pembayaran, stok, dan pemakaian voucher tetap tercatat. [Detail operasional dan pengujian refund](docs/refund.md)
 
 ## Custom order
 
@@ -546,7 +598,7 @@ Response `201`:
 | --- | --- | --- |
 | 1. Dasar aplikasi | Tinggi | Konfigurasi base URL per environment, client HTTP dengan header JSON/Bearer, penyimpanan token aman, parsing error `401/403/422/429`, dan model pagination katalog vs resource collection. |
 | 2. Katalog | Tinggi | Beranda, kategori/subkategori, filter `category_id`/`subcategory_id`, pencarian, detail produk/bundling, pilihan varian, dan pemuatan gambar. |
-| 3. Akun dan transaksi | Tinggi | OTP email, login/profil, alamat, keranjang, checkout, Snap Midtrans, polling/refresh detail order, riwayat, pembatalan pending. Uji bersama MySQL, RajaOngkir, SMTP, dan Midtrans sandbox. |
+| 3. Akun dan transaksi | Tinggi | OTP email, login/profil, alamat, keranjang, checkout, Snap Midtrans, polling/refresh detail order, riwayat, pembatalan pending, pratinjau voucher, konfirmasi penerimaan, serta pengajuan dan pelacakan refund. Uji bersama MySQL, RajaOngkir, SMTP, dan Midtrans sandbox. |
 | 4. Custom order | Sedang | Permintaan teks dan gambar, daftar/detail, quotation, approve, pembayaran, dan pembatalan. |
 | 5. Perluasan API | Sedang | Jika dibutuhkan desain Flutter: pratinjau total checkout yang mencakup ongkir dan promo tanggal (pratinjau voucher sudah tersedia), daftar voucher publik, dan filter/sort produk menurut harga/stok. Upload lampiran gambar custom order sudah tersedia. `shipping.weight` pada response order tetap `2000` dan tidak digunakan sebagai bukti berat aktual. Endpoint perluasan lainnya **belum tersedia**; jangan panggil sebagai endpoint aktif. |
 | 6. Operasional | Sedang | Tetapkan kontrak API versi stabil, tambah pengujian respons JSON dan perangkat nyata terhadap URL production, serta pastikan webhook Midtrans mengarah ke URL production. |
