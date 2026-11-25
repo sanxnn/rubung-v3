@@ -1,6 +1,6 @@
-# Roadmap dan kontrak API Flutter — Batik Rubung Kuning
+# Referensi API backend — Batik Rubung Kuning
 
-Dokumen ini menjelaskan backend yang **sudah tersedia** untuk aplikasi Flutter pelanggan, contoh request/response, dan pekerjaan API yang masih perlu direncanakan. Sumber kontrak saat ini: `routes/api.php`, controller di `app/Http/Controllers/Api`, dan resource di `app/Http/Resources`. Contoh ID, tanggal, harga, dan token di bawah adalah data ilustrasi; field tambahan dari model Laravel dapat muncul pada endpoint yang mengembalikan model langsung.
+Dokumen ini mencatat endpoint backend untuk aplikasi pelanggan, contoh request dan respons, serta alur yang menghubungkan aplikasi dengan web admin. Lihat [indeks dokumentasi](README.md) untuk panduan tiap fitur. Sumber kontrak saat ini: `routes/api.php`, controller di `app/Http/Controllers/Api`, dan resource di `app/Http/Resources`. Contoh ID, tanggal, harga, dan token di bawah adalah data ilustrasi; field tambahan dari model Laravel dapat muncul pada endpoint yang mengembalikan model langsung.
 
 ## Gambaran backend
 
@@ -525,7 +525,7 @@ curl -X POST 'http://localhost:8000/api/orders/25/refund' \
   -F 'evidence=@bukti.jpg'
 ```
 
-Setelah sukses, tampilkan status pengajuan dan muat ulang detail pesanan. Daftar dan detail pesanan memuat ringkasan refund terbaru sebagai `refund: {id, status, amount}` atau `refund: null`. Detail refund juga memuat `order_id`, `order_number`, `reason`, `evidence_url`, `refund_method`, `admin_notes`, `manual_reference`, dan waktu pemrosesan. Lihat [resource refund](app/Http/Resources/RefundRequestResource.php) untuk daftar field.
+Setelah sukses, tampilkan status pengajuan dan muat ulang detail pesanan. Daftar dan detail pesanan memuat ringkasan refund terbaru sebagai `refund: {id, status, amount}` atau `refund: null`. Detail refund juga memuat `order_id`, `order_number`, `reason`, `evidence_url`, `refund_method`, `admin_notes`, `manual_reference`, dan waktu pemrosesan. Lihat [resource refund](../app/Http/Resources/RefundRequestResource.php) untuk daftar field.
 
 ## Refund pada panel admin
 
@@ -539,7 +539,7 @@ Admin membuka `/dashboard/refunds`, memeriksa bukti, lalu menyetujui atau menola
 | `/retry` | Tanpa field bisnis | Cek atau ulangi refund Midtrans dari `approved` atau `processing` |
 | `/manual` | Tanpa field bisnis | Ubah jalur Midtrans yang masih `approved` setelah pemeriksaan status provider |
 
-Jalur manual berjalan dari `pending → approved → completed`. Jalur Midtrans memerlukan metode yang didukung dan transaksi `settlement`. Permintaan yang diterima provider masuk `processing`. Backend menetapkan `completed` setelah API status Midtrans menunjukkan konfirmasi bank untuk kunci dan nominal yang sesuai. Status hasil pengiriman yang belum pasti tetap `processing` dan memblokir pengalihan ke manual. Rekonsiliasi berjalan melalui webhook atau retry admin. Refund selesai mengurangi omzet bersih pada dashboard dan laporan. Riwayat pesanan, pembayaran, stok, dan pemakaian voucher tetap tercatat. [Detail operasional dan pengujian refund](docs/refund.md)
+Jalur manual berjalan dari `pending → approved → completed`. Jalur Midtrans memerlukan metode yang didukung dan transaksi `settlement`. Permintaan yang diterima provider masuk `processing`. Backend menetapkan `completed` setelah API status Midtrans menunjukkan konfirmasi bank untuk kunci dan nominal yang sesuai. Status hasil pengiriman yang belum pasti tetap `processing` dan memblokir pengalihan ke manual. Rekonsiliasi berjalan melalui webhook atau retry admin. Refund selesai mengurangi omzet bersih pada dashboard dan laporan. Riwayat pesanan, pembayaran, stok, dan pemakaian voucher tetap tercatat. [Detail operasional dan pengujian refund](refund.md)
 
 ## Custom order
 
@@ -592,15 +592,10 @@ Response `201`:
 
 `data` di atas adalah `OrderResource` lengkap yang disingkat untuk contoh. Sesudah approve, panggil `POST /payments/26/snap-token` untuk pembayaran. `POST /custom-orders/4/cancel` tanpa body hanya berlaku sebelum approve (`pending_review` atau `quoted`) dan mengembalikan `{"message":"Custom Order berhasil dibatalkan.","data":<CustomOrderResource>}`. Status custom order yang relevan untuk Flutter: `pending_review`, `quoted`, `approved`, `rejected`, `cancelled`.
 
-## Roadmap integrasi Flutter dan gap backend
+## Batas integrasi
 
-| Tahap | Prioritas | Pekerjaan |
-| --- | --- | --- |
-| 1. Dasar aplikasi | Tinggi | Konfigurasi base URL per environment, client HTTP dengan header JSON/Bearer, penyimpanan token aman, parsing error `401/403/422/429`, dan model pagination katalog vs resource collection. |
-| 2. Katalog | Tinggi | Beranda, kategori/subkategori, filter `category_id`/`subcategory_id`, pencarian, detail produk/bundling, pilihan varian, dan pemuatan gambar. |
-| 3. Akun dan transaksi | Tinggi | OTP email, login/profil, alamat, keranjang, checkout, Snap Midtrans, polling/refresh detail order, riwayat, pembatalan pending, pratinjau voucher, konfirmasi penerimaan, serta pengajuan dan pelacakan refund. Uji bersama MySQL, RajaOngkir, SMTP, dan Midtrans sandbox. |
-| 4. Custom order | Sedang | Permintaan teks dan gambar, daftar/detail, quotation, approve, pembayaran, dan pembatalan. |
-| 5. Perluasan API | Sedang | Jika dibutuhkan desain Flutter: pratinjau total checkout yang mencakup ongkir dan promo tanggal (pratinjau voucher sudah tersedia), daftar voucher publik, dan filter/sort produk menurut harga/stok. Upload lampiran gambar custom order sudah tersedia. `shipping.weight` pada response order tetap `2000` dan tidak digunakan sebagai bukti berat aktual. Endpoint perluasan lainnya **belum tersedia**; jangan panggil sebagai endpoint aktif. |
-| 6. Operasional | Sedang | Tetapkan kontrak API versi stabil, tambah pengujian respons JSON dan perangkat nyata terhadap URL production, serta pastikan webhook Midtrans mengarah ke URL production. |
+- Total sebelum membuat pesanan belum tersedia sebagai endpoint terpisah. Pratinjau voucher memakai subtotal keranjang dan belum mencakup promo tanggal atau ongkir.
+- Katalog mendukung filter dan pagination sesuai tabel rute. Daftar voucher publik dan pengurutan katalog berdasarkan harga atau stok belum tersedia.
+- `shipping.weight` pada respons pesanan bernilai tetap `2000`. Nilai aktual untuk perhitungan ongkir mengikuti konfigurasi backend.
 
-Dokumen ini mencatat perilaku backend saat ini, bukan janji endpoint baru. Jika kontrak API berubah, perbarui contoh response dan model Flutter bersama perubahan controller/resource terkait.
+Perbarui panduan ini bersama perubahan rute, validasi request, atau resource API.
