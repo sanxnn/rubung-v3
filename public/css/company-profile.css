@@ -231,8 +231,19 @@ button, input, textarea { font: inherit; }
 .site-footer a.store-badge:hover { color: #fff; }
 .footer-inner { border-top: 1px solid var(--line); }
 
-.catalog-layout { display: grid; grid-template-columns: minmax(15rem, 17rem) minmax(0, 1fr); align-items: start; gap: clamp(1.5rem, 3vw, 2.75rem); }
-.catalog-sidebar { padding: 1.25rem; border-radius: 1rem; background: var(--card); box-shadow: var(--shadow); }
+.catalog-layout { --catalog-sticky-top: calc(var(--catalog-header-height, 4.75rem) + 1rem); display: grid; grid-template-columns: minmax(15rem, 17rem) minmax(0, 1fr); align-items: start; gap: clamp(1.5rem, 3vw, 2.75rem); }
+.catalog-sidebar {
+    position: sticky;
+    top: var(--catalog-sticky-top);
+    max-height: calc(100dvh - var(--catalog-sticky-top) - 1rem);
+    overflow: auto;
+    z-index: 2;
+    padding: 1.25rem;
+    border-radius: 1rem;
+    background: var(--card);
+    box-shadow: var(--shadow);
+}
+.catalog-filter-toggle { display: none; }
 .catalog-sidebar-heading { display: flex; align-items: center; gap: .65rem; }
 .catalog-sidebar-heading i { color: var(--gold-ink); }
 .catalog-sidebar-heading h2 { font-size: 1.125rem; }
@@ -336,7 +347,22 @@ button, input, textarea { font: inherit; }
 }
 
 @media (max-width: 48rem) {
-    .catalog-layout { grid-template-columns: minmax(0, 1fr); }
+    .catalog-layout { display: block; }
+    .catalog-sidebar { margin-bottom: 1.5rem; padding: .625rem 1rem; }
+    .catalog-filter-toggle:not([hidden]) {
+        display: inline-grid;
+        place-items: center;
+        width: 2.75rem;
+        height: 2.75rem;
+        margin-left: auto;
+        border: 0;
+        border-radius: .625rem;
+        background: var(--surface);
+        color: var(--ink);
+        cursor: pointer;
+    }
+    .catalog-filter-toggle[aria-expanded="true"] i { transform: rotate(180deg); }
+    .catalog-sidebar[data-collapsed="true"] .catalog-filters { display: none; }
     .catalog-filters { grid-template-columns: repeat(2, minmax(0, 1fr)); }
     .catalog-filter-errors, .catalog-price { grid-column: 1 / -1; }
 }

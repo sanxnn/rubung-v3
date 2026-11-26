@@ -8,8 +8,12 @@
             <div class="catalog-sidebar-heading">
                 <i class="fa-solid fa-sliders" aria-hidden="true"></i>
                 <h2 id="catalog-filters-title">{{ __('storefront.filters') }}</h2>
+                <button class="catalog-filter-toggle" type="button" aria-labelledby="catalog-filters-title"
+                    aria-controls="catalog-filter-form" aria-expanded="true" hidden>
+                    <i class="fa-solid fa-chevron-down" aria-hidden="true"></i>
+                </button>
             </div>
-            <form class="catalog-filters" action="{{ route('company.catalog') }}" method="get">
+            <form id="catalog-filter-form" class="catalog-filters" action="{{ route('company.catalog') }}" method="get">
                 @if ($errors->any())
                     <ul class="catalog-filter-errors notice notice-error" role="alert">
                         @foreach ($errors->all() as $error)
@@ -113,5 +117,32 @@
 
         catalogCategory.addEventListener('change', filterSubcategories);
         filterSubcategories();
+
+        const catalogLayout = document.querySelector('.catalog-layout');
+        const catalogSidebar = document.querySelector('.catalog-sidebar');
+        const filterToggle = document.querySelector('.catalog-filter-toggle');
+        const storefrontHeader = document.querySelector('.site-header');
+
+        function setFiltersExpanded(expanded) {
+            catalogSidebar.dataset.collapsed = String(!expanded);
+            filterToggle.setAttribute('aria-expanded', String(expanded));
+        }
+
+        function updateCatalogOffset() {
+            catalogLayout.style.setProperty('--catalog-header-height', `${storefrontHeader.offsetHeight}px`);
+        }
+
+        filterToggle.hidden = false;
+        setFiltersExpanded(Boolean(catalogSidebar.querySelector('[role="alert"]')));
+        filterToggle.addEventListener('click', () => {
+            setFiltersExpanded(filterToggle.getAttribute('aria-expanded') !== 'true');
+        });
+
+        updateCatalogOffset();
+        if ('ResizeObserver' in window) {
+            new ResizeObserver(updateCatalogOffset).observe(storefrontHeader);
+        } else {
+            window.addEventListener('resize', updateCatalogOffset);
+        }
     </script>
 @endsection
